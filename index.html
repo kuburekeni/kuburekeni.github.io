@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUNDAI BUREKENI :: PORTFOLIO 95</title>
+<style>
+
+  :root{
+    --face:#c0c0c0;
+    --face-light:#dfdfdf;
+    --face-dark:#808080;
+    --face-darker:#000000;
+    --white:#ffffff;
+    --titlebar-l:#000080;
+    --titlebar-r:#1084d0;
+    --titlebar-inactive-l:#808080;
+    --titlebar-inactive-r:#b5b5b5;
+    --desktop:#008080;
+    --highlight:#0000af;
+    --font: "Perfect DOS VGA 437","MS Sans Serif", Tahoma, Geneva, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+    font-family: var(--font);
+    -webkit-font-smoothing:none;
+    user-select:none;
+  }
+
+  /* ---------- Win95 3D border helpers ---------- */
+  .raised{
+    border-top:2px solid var(--white);
+    border-left:2px solid var(--white);
+    border-right:2px solid var(--face-darker);
+    border-bottom:2px solid var(--face-darker);
+    box-shadow: inset 1px 1px 0 var(--face-light), inset -1px -1px 0 var(--face-dark);
+  }
+  .sunken{
+    border-top:2px solid var(--face-dark);
+    border-left:2px solid var(--face-dark);
+    border-right:2px solid var(--white);
+    border-bottom:2px solid var(--white);
+    box-shadow: inset 1px 1px 0 var(--face-darker);
+  }
+  .btn95{
+    background:var(--face);
+    padding:4px 10px;
+    cursor:pointer;
+    font-size:12px;
+    color:#000;
+  }
+  .btn95:active{
+    border-top:2px solid var(--face-dark);
+    border-left:2px solid var(--face-dark);
+    border-right:2px solid var(--white);
+    border-bottom:2px solid var(--white);
+    box-shadow:none;
+    padding:5px 9px 3px 11px;
+  }
+
+  ::-webkit-scrollbar{width:16px;height:16px;}
+  ::-webkit-scrollbar-track{background:var(--face);}
+  ::-webkit-scrollbar-thumb{background:var(--face); border-top:2px solid var(--white);border-left:2px solid var(--white);border-right:2px solid var(--face-darker);border-bottom:2px solid var(--face-darker);}
+  ::-webkit-scrollbar-button{background:var(--face);height:16px;width:16px;}
+
+  /* ================= POWER-ON SPLASH ================= */
+  #power-on{
+    position:fixed;inset:0;background:#000;z-index:10000;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:opacity .3s ease;
+  }
+  #power-on.hide{opacity:0;pointer-events:none;}
+  #power-on-text{
+    color:#0f0;font-family:"Courier New",monospace;font-size:18px;letter-spacing:2px;
+  }
+  #power-on-cursor{animation:pocblink 1s step-end infinite;}
+  @keyframes pocblink{ 50%{ opacity:0; } }
+
+  /* ================= BOOT SCREEN ================= */
+  #boot{
+    position:fixed;inset:0;background:#000;color:#fff;z-index:9999;
+    font-family:"Courier New",monospace;
+    display:flex;flex-direction:column;
+    padding:18px 24px;font-size:14px;line-height:1.5;
+    transition:opacity .5s ease;
+  }
+  #boot.hide{opacity:0;pointer-events:none;}
+  #boot .bios-line{opacity:0;white-space:pre;}
+  #boot .bios-line.show{opacity:1;}
+  #boot-logo-screen{
+    position:fixed;inset:0;background:#000;display:none;
+    flex-direction:column;align-items:center;justify-content:center;color:#fff;
+    z-index:9999;
+  }
+  #boot-logo-screen.show{display:flex;}
+  .win95-logo{
+    display:flex;align-items:center;gap:18px;
+    font-family:Arial,sans-serif;
+  }
+  .flag95{
+    width:60px;height:56px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;
+    transform:skewY(-6deg);
+  }
+  .flag95 span{display:block;}
+  .flag95 .r{background:#ff4d4d;}
+  .flag95 .g{background:#4dff4d;}
+  .flag95 .b{background:#4d4dff;}
+  .flag95 .y{background:#ffd24d;}
+  .win95-wordmark{font-size:34px;color:#fff;font-weight:400;}
+  .win95-wordmark b{font-weight:700;}
+  .win95-sub{font-size:12px;letter-spacing:2px;color:#ccc;margin-top:4px;font-family:"MS Sans Serif",Tahoma,sans-serif;}
+  #boot-progress-wrap{margin-top:34px;width:220px;}
+  #boot-progress{
+    width:100%;height:14px;background:#000;border:2px solid #fff;padding:2px;
+  }
+  #boot-progress-bar{height:100%;width:0%;background:repeating-linear-gradient(90deg,#c0c0c0 0 6px,#000080 6px 8px);transition:width .25s linear;}
+
+  /* ================= DESKTOP ================= */
+  #desktop{
+    position:fixed;inset:0;background:var(--desktop);
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0, transparent 60%);
+    display:none;
+    overflow:hidden;
+  }
+  #desktop.show{display:block;}
+
+  #icons{
+    position:absolute;top:0;left:0;right:0;bottom:46px;
+  }
+  .desk-icon{
+    position:absolute;
+    width:78px;height:80px;
+    display:flex;flex-direction:column;align-items:center;
+    gap:4px;padding:4px;cursor:pointer;
+  }
+  .desk-icon canvas{image-rendering:pixelated;image-rendering:crisp-edges;width:40px;height:40px;filter:drop-shadow(1px 1px 0 rgba(0,0,0,.4));}
+  .desk-icon span{
+    color:#fff;font-size:11px;text-align:center;line-height:1.2;
+    text-shadow:1px 1px 1px #000;padding:1px 3px;
+  }
+  .desk-icon.selected span{background:var(--highlight);}
+  .desk-icon:focus{outline:none;}
+  .desk-icon.selected canvas{opacity:.85;}
+  .desk-icon.dragging{opacity:.65;z-index:50;}
+
+  /* ================= WINDOWS ================= */
+  .win95-window{
+    position:absolute;
+    background:var(--face);
+    min-width:260px;
+    display:flex;flex-direction:column;
+    box-shadow:2px 2px 8px rgba(0,0,0,.5);
+  }
+  .win-titlebar{
+    background:linear-gradient(90deg,var(--titlebar-l),var(--titlebar-r));
+    color:#fff;font-weight:bold;font-size:13px;
+    display:flex;align-items:center;gap:5px;
+    padding:3px 3px 3px 5px;cursor:default;
+  }
+  .win95-window.inactive .win-titlebar{
+    background:linear-gradient(90deg,var(--titlebar-inactive-l),var(--titlebar-inactive-r));
+  }
+  .win-titlebar canvas{image-rendering:pixelated;width:16px;height:16px;flex-shrink:0;}
+  .win-title-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .win-controls{display:flex;gap:2px;}
+  .win-ctrl-btn{
+    width:18px;height:16px;background:var(--face);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:bold;color:#000;cursor:pointer;line-height:0;
+  }
+  .win-body{
+    flex:1;overflow:auto;padding:14px;background:var(--face);font-size:13px;color:#000;
+  }
+  .win-body.no-pad{padding:0;}
+  .win-resize{
+    position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize;
+  }
+
+  /* ================= TASKBAR ================= */
+  #taskbar{
+    position:absolute;left:0;right:0;bottom:0;height:38px;
+    background:var(--face);
+    border-top:2px solid var(--white);
+    display:flex;align-items:center;gap:4px;padding:3px 4px;
+    z-index:5000;
+  }
+  #start-btn{
+    display:flex;align-items:center;gap:4px;padding:3px 8px;font-weight:bold;font-size:13px;
+  }
+  #start-btn canvas{width:18px;height:18px;image-rendering:pixelated;}
+  #start-btn.active{
+    border-top:2px solid var(--face-dark);border-left:2px solid var(--face-dark);
+    border-right:2px solid var(--white);border-bottom:2px solid var(--white);
+    box-shadow:none;
+  }
+  #quicklaunch{display:flex;gap:2px;padding:0 4px;border-left:1px solid var(--face-dark);border-right:1px solid var(--face-dark);height:28px;align-items:center;}
+  #quicklaunch .ql-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  #quicklaunch .ql-btn canvas{width:18px;height:18px;image-rendering:pixelated;}
+  #taskbar-buttons{flex:1;display:flex;gap:3px;overflow:hidden;height:28px;}
+  .task-btn{
+    display:flex;align-items:center;gap:5px;padding:3px 8px;font-size:12px;max-width:160px;
+    overflow:hidden;white-space:nowrap;text-overflow:ellipsis;height:100%;
+  }
+  .task-btn canvas{width:16px;height:16px;flex-shrink:0;image-rendering:pixelated;}
+  .task-btn.pressed{
+    border-top:2px solid var(--face-dark);border-left:2px solid var(--face-dark);
+    border-right:2px solid var(--white);border-bottom:2px solid var(--white);
+    box-shadow:none;
+  }
+  #clock{
+    padding:5px 10px;font-size:12px;
+  }
+
+  /* ================= START MENU ================= */
+  #start-menu{
+    position:absolute;left:2px;bottom:40px;width:210px;
+    background:var(--face);display:none;flex-direction:row;
+    z-index:6000;
+  }
+  #start-menu.show{display:flex;}
+  #start-menu-strip{
+    width:26px;background:linear-gradient(180deg,#000080,#1084d0);
+    display:flex;align-items:flex-end;justify-content:center;padding:8px 0;
+  }
+  #start-menu-strip span{
+    writing-mode:vertical-rl;transform:rotate(180deg);color:#fff;font-weight:bold;font-size:17px;letter-spacing:1px;
+    font-family:Arial,sans-serif;
+  }
+  #start-menu-items{flex:1;padding:3px;}
+  .sm-item{
+    display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:13px;cursor:pointer;
+  }
+  .sm-item canvas{width:22px;height:22px;image-rendering:pixelated;}
+  .sm-item:hover{background:var(--highlight);color:#fff;}
+  .sm-sep{border-top:1px solid var(--face-dark);border-bottom:1px solid var(--white);margin:3px 4px;}
+
+  /* misc content styling inside windows */
+  .doc-paper{background:#fff;border:1px solid #888;padding:22px;font-family:Georgia,serif;color:#111;min-height:100%;}
+  .doc-paper h1{margin:0 0 2px;font-size:20px;}
+  .doc-paper h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #000080;color:#000080;margin-top:18px;margin-bottom:6px;}
+  .doc-paper .role{font-weight:bold;}
+  .doc-paper .meta{color:#555;font-size:12px;margin-bottom:10px;}
+  .field-row{display:flex;margin-bottom:6px;}
+  .field-row label{width:90px;font-weight:bold;font-size:12px;}
+  .profile-wrap{display:flex;gap:14px;}
+  .profile-avatar canvas{width:96px;height:96px;image-rendering:pixelated;border:2px solid #808080;background:#fff;}
+  .tabs{display:flex;margin-bottom:-2px;}
+  .tab{padding:5px 12px;background:var(--face);font-size:12px;cursor:pointer;border-top:2px solid var(--white);border-left:2px solid var(--white);border-right:1px solid var(--face-dark);}
+  .tab.active{background:var(--face);position:relative;z-index:2;}
+  .weather-widget{display:flex;align-items:center;gap:16px;}
+  .weather-widget canvas{width:64px;height:64px;image-rendering:pixelated;}
+  .weather-temp{font-size:34px;font-weight:bold;}
+  .forecast-row{display:flex;gap:10px;margin-top:14px;}
+  .forecast-day{background:#fff;flex:1;padding:8px 4px;text-align:center;font-size:11px;}
+  .forecast-day canvas{width:24px;height:24px;image-rendering:pixelated;}
+
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:14px;}
+  .proj-icon-cell{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:6px;}
+  .proj-icon-cell canvas{width:38px;height:38px;image-rendering:pixelated;}
+  .proj-icon-cell span{font-size:11px;text-align:center;}
+  .proj-icon-cell:hover{background:var(--highlight);}
+  .proj-icon-cell:hover span{color:#fff;}
+
+  .album-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:10px;}
+  .album-thumb{position:relative;background:#fff;border:1px solid #888;padding:4px;}
+  .album-thumb img{width:100%;height:90px;object-fit:cover;display:block;}
+  .album-thumb .del{position:absolute;top:2px;right:2px;background:#c0c0c0;width:16px;height:16px;font-size:10px;line-height:14px;text-align:center;cursor:pointer;}
+
+  input[type=text],input[type=password],textarea{
+    font-family:var(--font);font-size:12px;padding:4px;width:100%;
+    border-top:2px solid var(--face-dark);border-left:2px solid var(--face-dark);
+    border-right:2px solid var(--white);border-bottom:2px solid var(--white);
+  }
+  .clippy-msg{display:flex;gap:10px;align-items:flex-start;background:#ffffe1;border:1px solid #000;padding:8px;font-size:12px;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<!-- ================= POWER-ON SPLASH (captures the user gesture browsers require before audio can play) ================= -->
+<div id="power-on">
+  <div id="power-on-text">PRESS ANY KEY TO START<span id="power-on-cursor">_</span></div>
+</div>
+
+<!-- ================= BOOT: BIOS-ish text ================= -->
+<div id="boot">
+  <div id="bios-lines"></div>
+</div>
+
+<!-- ================= BOOT: Windows 95 logo screen ================= -->
+<div id="boot-logo-screen">
+  <div class="win95-logo">
+    <div class="flag95"><span class="r"></span><span class="g"></span><span class="b"></span><span class="y"></span></div>
+    <div>
+      <div class="win95-wordmark">Windows<b>95</b></div>
+    </div>
+  </div>
+  <div class="win95-sub">PORTFOLIO EDITION</div>
+  <div id="boot-progress-wrap">
+    <div id="boot-progress"><div id="boot-progress-bar"></div></div>
+  </div>
+</div>
+
+<!-- ================= DESKTOP ================= -->
+<div id="desktop">
+  <div id="icons"></div>
+
+  <!-- windows get injected here -->
+  <div id="window-layer"></div>
+
+  <div id="taskbar">
+    <div id="start-btn" class="raised">
+      <canvas id="start-icon" width="16" height="16"></canvas>
+      <span>Start</span>
+    </div>
+    <div id="quicklaunch"></div>
+    <div id="taskbar-buttons"></div>
+    <div id="clock" class="sunken"></div>
+  </div>
+
+  <div id="start-menu" class="raised">
+    <div id="start-menu-strip"><span>WINDOWS 95</span></div>
+    <div id="start-menu-items"></div>
+  </div>
+</div>
+
+<script>
+
+const SITE = {
+  name: "Kundai Burekeni",
+  title: "Aspiring IT Support Professional & Developer",
+  location: "Stafford, QLD, Australia",
+  email: "Kuburekeni1212@gmail.com",
+  phone: "0468 477 920",
+  age: 21,
+  bio: "21-year-old aspiring IT support professional with hands-on experience in customer-facing technical environments, including POS systems, ticketing software, and backend troubleshooting. Strong communicator with foundational coding and cybersecurity knowledge. Currently completing a Bachelor of Information Technology (Computer Science major) at QUT, finishing December this year.",
+  resumeUrl: "https://drive.google.com/file/d/13rETycYokDIXD3CTEhBFAKyz7Xy-g5Cx/view?usp=sharing",                         
+  albumPassword: "windows95",                
+  projects: [
+    {
+      icon:"code", title:"Dementia Chatbot Web Platform", tag:"WordPress \u00b7 PHP",
+      desc:"Developed the backend for a chatbot that analyses user-uploaded media. Integrated plugins and PHP scripts within a WordPress framework for an industry client, as part of my QUT capstone team.",
+      link:"https://drive.google.com/file/d/1I5vKmeWPNPFOiNHEg0bRf71AWXXVF4Ut/view?usp=sharing"
+    },
+    {
+      icon:"globe", title:"Event Planning Web App", tag:"JavaScript \u00b7 SQL",
+      desc:"Built a planner that lets users schedule and manage events, with an interactive frontend and a relational database backend. University project.",
+      link:"https://github.com/kvn-van/GroupUp"
+    },
+    {
+      icon:"palette", title:"Portfolio Website", tag:"HTML \u00b7 CSS \u00b7 JavaScript",
+      desc:"This site \u2014 a Windows 95-themed portfolio with a boot sequence, draggable windows, live weather, and a private photo album. In progress.",
+      link:"#"
+    },
+    {
+      icon:"chatpi", title:"LAN Chat Pi", tag:"Raspberry Pi \u00b7 Python \u00b7 WebSockets",
+      desc:"A self-hosted chat service running on a Raspberry Pi. Anyone on the same WiFi network can join and chat in real time \u2014 no internet connection or external server required.",
+      link:"https://www.youtube.com/watch?v=v-QE3cnSnvM"
+    },
+  ]
+};
+
+/* ---- OpenWeatherMap config ---- */
+const OWM_API_KEY = "e9229b855a058df8c8bad24c054f3d0e";
+const OWM_CITY = "Brisbane,AU";           
+const OWM_UNITS = "metric";           
+
+function owmIconName(code){
+  if(code >= 200 && code < 600) return "rain";
+  if(code >= 600 && code < 700) return "rain";
+  if(code === 800) return "sun";
+  if(code > 800) return "partlycloudy";
+  return "partlycloudy";
+}
+
+async function fetchWeather(){
+  const cur = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(OWM_CITY)}&units=${OWM_UNITS}&appid=${OWM_API_KEY}`).then(r=>r.json());
+  const fc = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(OWM_CITY)}&units=${OWM_UNITS}&appid=${OWM_API_KEY}`).then(r=>r.json());
+
+  const daily = {};
+  (fc.list || []).forEach(item=>{
+    const date = item.dt_txt.split(" ")[0];
+    const hour = item.dt_txt.split(" ")[1];
+    if(hour === "12:00:00") daily[date] = item;
+  });
+  const forecast = Object.values(daily).slice(0,3).map(item=>({
+    day: new Date(item.dt*1000).toLocaleDateString(undefined,{weekday:'short'}),
+    tempC: Math.round(item.main.temp),
+    condition: owmIconName(item.weather[0].id)
+  }));
+
+  return {
+    city: `${cur.name}, ${cur.sys.country}`,
+    tempC: Math.round(cur.main.temp),
+    condition: owmIconName(cur.weather[0].id),
+    forecast
+  };
+}
+
+const T = null; // transparent
+function drawIcon(canvas, matrix, palette){
+  const rows = matrix.length, cols = matrix[0].length;
+  canvas.width = cols; canvas.height = rows;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,cols,rows);
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      const c = matrix[y][x];
+      if(c === '.') continue;
+      ctx.fillStyle = palette[c];
+      ctx.fillRect(x,y,1,1);
+    }
+  }
+}
+
+const ICONS = {
+  folder: {
+    p:{K:'#5a4200', Y:'#ffcf4d', L:'#ffe08a'},
+    m:[
+"................",
+"................",
+".KKKKK..........",
+".LLLLLKKKKKKKK..",
+".LYYYYYYYYYYYK..",
+".LYYYYYYYYYYYK..",
+".LYYYYYYYYYYYK..",
+".LYYYYYYYYYYYK..",
+".KKKKKKKKKKKKK..",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  computer:{
+    p:{K:'#1a1a1a', G:'#c0c0c0', B:'#4d9de0', W:'#ffffff', D:'#808080'},
+    m:[
+"................",
+".KKKKKKKKKKKK...",
+".KBBBBBBBBBBK...",
+".KBWWWWWWWWBK...",
+".KBWWWWWWWWBK...",
+".KBBBBBBBBBBK...",
+".KKKKKKKKKKKK...",
+"....GGGGGG......",
+"...GDDDDDDG.....",
+"..GGGGGGGGGG....",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  bin:{
+    p:{K:'#2b2b2b', G:'#a9a9a9', L:'#d4d4d4'},
+    m:[
+"................",
+"....KKKKKKK.....",
+"...KLLLLLLLK....",
+"................",
+"...GGGGGGGGG....",
+"...GLGLGLGLG....",
+"...GLGLGLGLG....",
+"...GLGLGLGLG....",
+"...GLGLGLGLG....",
+"...GLGLGLGLG....",
+"...GLGLGLGLG....",
+"....GGGGGGG.....",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  document:{
+    p:{K:'#333333', W:'#ffffff', R:'#c02222', L:'#999999'},
+    m:[
+"................",
+"...WWWWWWWWK....",
+"...WRRRRRRWK....",
+"...WWWWWWWWK....",
+"...WLLLLLWWK....",
+"...WLLLLLWWK....",
+"...WWWWWWWWK....",
+"...WLLLLWWWK....",
+"...WLLLLWWWK....",
+"...WWWWWWWWK....",
+"...WLLLWWWWK....",
+"...WWWWWWWWK....",
+"...KKKKKKKKK....",
+"................",
+"................",
+"................",
+    ]
+  },
+  profile:{
+    p:{H:'#1f1b16', S:'#6b4226', G:'#141414', L:'#dbe7f0', C:'#9c948a'},
+    m:[
+"................",
+".....HHHHHH.....",
+"....HHHHHHHH....",
+"...HHHHHHHHHH...",
+"..HHSSSSSSSSHH..",
+"..HSSSSSSSSSSH..",
+"..SSSSSSSSSSSS..",
+"..SGGLLGGLLGGS..",
+"..SSSSSSSSSSSS..",
+"..SSSSSSSSSSSS..",
+"...SSSSSSSSSS...",
+"....CCCCCCCC....",
+"...CCCCCCCCCC...",
+"................",
+"................",
+"................",
+    ]
+  },
+  camera:{
+    p:{K:'#1c1c1c', G:'#909090', W:'#ffffff', B:'#66ccff'},
+    m:[
+"................",
+"......KKK.......",
+"....KKKKKKK.....",
+"..KKKKKKKKKKKK..",
+"..KGGGGGGGGGGK..",
+"..KG.WWWWW.GGK..",
+"..KG.WBBBW.GGK..",
+"..KG.WBBBW.GGK..",
+"..KG.WWWWW.GGK..",
+"..KGGGGGGGGGGK..",
+"..KKKKKKKKKKKK..",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  rocket:{
+    p:{K:'#333333', R:'#d63b3b', W:'#ffffff', Y:'#f2a93b', L:'#66ccff'},
+    m:[
+"................",
+".......WW.......",
+"......WRRW......",
+"......WRRW......",
+".....WWRRWW.....",
+".....WLWLWW.....",
+".....WLWLWW.....",
+"....WWWWWWWW....",
+"....WYWYWYWW....",
+".....Y....Y.....",
+"....YY....YY....",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  globe:{
+    p:{B:'#2f6fbf', G:'#4caf50', W:'#eaf4ff'},
+    m:[
+"................",
+".....WBBBBW.....",
+"...WBBGGBBBW....",
+"..WBBBGGBBBBW...",
+"..BBGGBBGGBBB...",
+"..BBBBGGBBBBB...",
+"..WBBBGGBBBBW...",
+"..WBBBBGGBBW....",
+"...WBBBBBBW.....",
+".....WBBBW......",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  joystick:{
+    p:{K:'#222222', R:'#c0392b', G:'#888888'},
+    m:[
+"................",
+"......KK........",
+".....KRRK.......",
+".....KRRK.......",
+".....KGGK.......",
+"....KKGGKK......",
+"...KKKGGKKK.....",
+"..GGGGGGGGGG....",
+"..GGGGGGGGGG....",
+"..GKKKKKKKKG....",
+"...G..G..G......",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  palette:{
+    p:{K:'#5b3b1e', R:'#c0392b', B:'#2f6fbf', Y:'#f2c530', G:'#4caf50', W:'#f4e3c7'},
+    m:[
+"................",
+"....WWWWWW......",
+"...WRRWWBBW.....",
+"..WRRWWWWBBW....",
+"..WWWWKKWWWW....",
+"..WYYWWWWGGW....",
+"...WYYWWGGW.....",
+"....WWWWWW......",
+"......KK........",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  code:{
+    p:{K:'#1c1c1c', G:'#3fbf5f'},
+    m:[
+"................",
+"................",
+"...G......G.....",
+"..GG......GG....",
+".GG..GGGG..GG...",
+".GG.G....G.GG...",
+".GG..GGGG..GG...",
+"..GG......GG....",
+"...G......G.....",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  sun:{
+    p:{Y:'#ffd23f', O:'#ff9f1c'},
+    m:[
+"................",
+"......Y.Y.......",
+"...Y..YYY..Y....",
+"....YOOOOOY.....",
+"...YOOOOOOOY....",
+".Y.YOOOOOOOY.Y..",
+"...YOOOOOOOY....",
+"....YOOOOOY.....",
+"...Y..YYY..Y....",
+"......Y.Y.......",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  partlycloudy:{
+    p:{Y:'#ffd23f', O:'#ff9f1c', W:'#ffffff', G:'#c9d6e3'},
+    m:[
+"................",
+"....YY..........",
+"...YOOY.........",
+"..YOOOOY........",
+"...YOOY.WWWW....",
+"....Y.WWWWWWWW..",
+".....WWWWWWWWWW.",
+"....WWWWWWWWWW..",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  rain:{
+    p:{G:'#8fa3b8', W:'#e8eef4', B:'#4d9de0'},
+    m:[
+"................",
+"....GGGGGG......",
+"...GGGGGGGGG....",
+"..GGGGGGGGGGG...",
+"..GGGGGGGGGGG...",
+"...GGGGGGGGG....",
+"................",
+"..B..B..B..B....",
+".B..B..B..B.....",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  star:{
+    p:{Y:'#ffd23f', O:'#c98f00'},
+    m:[
+"................",
+".......Y........",
+"......YYY.......",
+".....YYYYY......",
+"...YYYYYYYYY....",
+"....YYYYYYY.....",
+"...YYY.O.YYY....",
+"..YYY.....YYY...",
+".YY.........YY..",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  },
+  chatpi:{
+    p:{K:'#000000', W:'#ffffff', D:'#1b5e20', B:'#2e7d32', C:'#616161', G:'#c9a227'},
+    m:[
+"................",
+"..........KKKK..",
+".........KWWWWK.",
+".........KW..WK.",
+"..........KKKK..",
+"................",
+"..DDDDDDDDDDDD..",
+".DBBBBBBBBBBBBD.",
+".DBBCCBBGGBBBBD.",
+".DBBCCBBGGBBBBD.",
+".DBBBBBBBBBBBBD.",
+".DBBBBBBBBBBBBD.",
+".DBBGGBBBBGGBBD.",
+".DDDDDDDDDDDDDD.",
+"................",
+"................",
+    ]
+  },
+  windowsflag:{
+    p:{R:'#ff5555', G:'#55ff55', B:'#5599ff', Y:'#ffdd55'},
+    m:[
+"................",
+"..RRRRR.GGGGG...",
+"..RRRRR.GGGGG...",
+"..RRRRR.GGGGG...",
+"................",
+"..BBBBB.YYYYY...",
+"..BBBBB.YYYYY...",
+"..BBBBB.YYYYY...",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+"................",
+    ]
+  }
+};
+
+function renderIcon(canvas, name){
+  const icon = ICONS[name] || ICONS.document;
+  drawIcon(canvas, icon.m, icon.p);
+}
+function iconCanvas(name, cls){
+  const c = document.createElement('canvas');
+  if(cls) c.className = cls;
+  renderIcon(c, name);
+  return c;
+}
+
+/* =========================================================================
+   2. STARTUP CHIME — synthesized (not a sampled recording) via WebAudio,
+      evokes the classic Win95 startup chord.
+   ========================================================================= */
+let chimeHasPlayed = false;
+function playChime(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const fire = ()=>{
+      const now = ctx.currentTime;
+      const notes = [
+        {f:261.63, t:0.00, d:1.6, g:0.10}, // C4
+        {f:329.63, t:0.05, d:1.5, g:0.09}, // E4
+        {f:392.00, t:0.10, d:1.4, g:0.09}, // G4
+        {f:523.25, t:0.15, d:1.3, g:0.11}, // C5
+        {f:659.25, t:0.22, d:1.1, g:0.08}, // E5
+      ];
+      notes.forEach(n=>{
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = n.f;
+        gain.gain.setValueAtTime(0, now+n.t);
+        gain.gain.linearRampToValueAtTime(n.g, now+n.t+0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now+n.t+n.d);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now+n.t);
+        osc.stop(now+n.t+n.d+0.1);
+      });
+      chimeHasPlayed = true;
+    };
+    // Browsers suspend new AudioContexts until a user gesture has occurred.
+    // Try to resume + fire immediately; if that's blocked, armChimeFallback()
+    // below will retry on the visitor's first click/tap/keypress.
+    if(ctx.state === 'suspended'){
+      ctx.resume().then(fire).catch(()=>{});
+    } else {
+      fire();
+    }
+  }catch(e){ /* audio unavailable, fail silently */ }
+}
+function armChimeFallback(){
+  const tryPlay = ()=>{
+    if(!chimeHasPlayed) playChime();
+    document.removeEventListener('click', tryPlay);
+    document.removeEventListener('keydown', tryPlay);
+    document.removeEventListener('touchstart', tryPlay);
+  };
+  document.addEventListener('click', tryPlay);
+  document.addEventListener('keydown', tryPlay);
+  document.addEventListener('touchstart', tryPlay);
+}
+function playClick(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type='square'; osc.frequency.value=900;
+    gain.gain.setValueAtTime(0.03, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.06);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime+0.07);
+  }catch(e){}
+}
+
+/* =========================================================================
+   3. BOOT SEQUENCE
+   ========================================================================= */
+const biosLines = [
+  "Award Modular BIOS v4.51PG, An Energy Star Ally",
+  "Copyright (C) 1984-96, Award Software, Inc.",
+  "",
+  "PORTFOLIO-PC (C) "+SITE.name,
+  "",
+  "Main Processor : Pentium(tm) 100MHz",
+  "Memory Testing : 65536K OK",
+  "",
+  "Detecting IDE drives ...",
+  "  Primary Master  : PORTFOLIO_C  (ready)",
+  "  Primary Slave   : PROJECTS_D   (ready)",
+  "",
+  "Press DEL to enter SETUP, ESC to skip memory test",
+  "",
+  "Loading personality.dll ...................... OK",
+  "Loading sense_of_humor.sys .................... OK",
+  "Loading coffee_dependency.drv ................. OK",
+  "",
+  "Starting Windows 95..."
+];
+
+function runBoot(){
+  const wrap = document.getElementById('bios-lines');
+  biosLines.forEach((line,i)=>{
+    const div = document.createElement('div');
+    div.className = 'bios-line';
+    div.textContent = line || '\u00A0';
+    wrap.appendChild(div);
+  });
+  const lines = wrap.querySelectorAll('.bios-line');
+  let i = 0;
+  const interval = setInterval(()=>{
+    if(i < lines.length){
+      lines[i].classList.add('show');
+      i++;
+    } else {
+      clearInterval(interval);
+      setTimeout(showLogoScreen, 400);
+    }
+  }, 90);
+}
+
+function showLogoScreen(){
+  document.getElementById('boot').classList.add('hide');
+  const logo = document.getElementById('boot-logo-screen');
+  logo.classList.add('show');
+  const bar = document.getElementById('boot-progress-bar');
+  let pct = 0;
+  const iv = setInterval(()=>{
+    pct += Math.random()*18+6;
+    if(pct >= 100){
+      pct = 100;
+      bar.style.width = pct+'%';
+      clearInterval(iv);
+      setTimeout(enterDesktop, 350);
+      return;
+    }
+    bar.style.width = pct+'%';
+  }, 220);
+}
+
+function enterDesktop(){
+  document.getElementById('boot-logo-screen').style.display='none';
+  document.getElementById('desktop').classList.add('show');
+  playChime();
+  buildDesktop();
+}
+
+/* Wait for a click/keypress on the power-on splash before doing anything else.
+   This click is the "user gesture" browsers require before audio can play,
+   so the chime at the end of boot() fires reliably. */
+function startPowerOn(){
+  const splash = document.getElementById('power-on');
+  const go = ()=>{
+    splash.removeEventListener('click', go);
+    document.removeEventListener('keydown', go);
+    splash.classList.add('hide');
+    // fire a silent oscillator immediately to fully unlock audio on this gesture
+    try{
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      if(ctx.state === 'suspended') ctx.resume();
+    }catch(e){}
+    setTimeout(runBoot, 250);
+  };
+  splash.addEventListener('click', go);
+  document.addEventListener('keydown', go);
+}
+armChimeFallback();
+startPowerOn();
+
+/* =========================================================================
+   4. WINDOW MANAGER
+   ========================================================================= */
+let zTop = 100;
+let openWindows = {}; // id -> {el, taskBtn}
+
+function bringToFront(id){
+  zTop += 1;
+  const w = openWindows[id];
+  if(!w) return;
+  w.el.style.zIndex = zTop;
+  document.querySelectorAll('.win95-window').forEach(el=>el.classList.add('inactive'));
+  w.el.classList.remove('inactive');
+  document.querySelectorAll('.task-btn').forEach(b=>b.classList.remove('pressed'));
+  w.taskBtn.classList.add('pressed');
+}
+
+function closeWindow(id){
+  const w = openWindows[id];
+  if(!w) return;
+  w.el.remove();
+  w.taskBtn.remove();
+  delete openWindows[id];
+}
+
+function toggleMinimize(id){
+  const w = openWindows[id];
+  if(!w) return;
+  const isHidden = w.el.style.display === 'none';
+  if(isHidden){
+    w.el.style.display='flex';
+    bringToFront(id);
+  } else {
+    w.el.style.display='none';
+  }
+}
+
+function makeDraggable(win, handle){
+  let dragging=false, sx=0, sy=0, ox=0, oy=0;
+  handle.addEventListener('mousedown', e=>{
+    if(e.target.closest('.win-ctrl-btn')) return;
+    dragging=true; sx=e.clientX; sy=e.clientY;
+    const r = win.getBoundingClientRect();
+    ox=r.left; oy=r.top;
+    win.style.right='auto';
+    document.body.style.userSelect='none';
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    const nx = ox + (e.clientX - sx);
+    const ny = Math.max(0, oy + (e.clientY - sy));
+    win.style.left = nx+'px';
+    win.style.top = ny+'px';
+  });
+  window.addEventListener('mouseup', ()=>{ dragging=false; document.body.style.userSelect=''; });
+}
+
+function openWindow({id, title, icon, width=420, height=320, x, y, bodyBuilder, noPad=false}){
+  if(openWindows[id]){
+    // already open: restore + focus
+    openWindows[id].el.style.display='flex';
+    bringToFront(id);
+    return openWindows[id].el;
+  }
+  const layer = document.getElementById('window-layer');
+  const win = document.createElement('div');
+  win.className = 'win95-window raised';
+  const deskRect = document.getElementById('desktop').getBoundingClientRect();
+  const px = x !== undefined ? x : 60 + (Object.keys(openWindows).length*24) % 200;
+  const py = y !== undefined ? y : 40 + (Object.keys(openWindows).length*24) % 160;
+  win.style.left = px+'px';
+  win.style.top = py+'px';
+  win.style.width = width+'px';
+  win.style.height = height+'px';
+  win.style.zIndex = ++zTop;
+
+  win.innerHTML = `
+    <div class="win-titlebar"></div>
+    <div class="win-body ${noPad?'no-pad':''}"></div>
+    <div class="win-resize"></div>
+  `;
+  const titlebar = win.querySelector('.win-titlebar');
+  titlebar.appendChild(iconCanvas(icon));
+  const titleText = document.createElement('div');
+  titleText.className='win-title-text';
+  titleText.textContent = title;
+  titlebar.appendChild(titleText);
+  const controls = document.createElement('div');
+  controls.className='win-controls';
+  controls.innerHTML = `
+    <div class="win-ctrl-btn raised" data-act="min">_</div>
+    <div class="win-ctrl-btn raised" data-act="max">\u25A1</div>
+    <div class="win-ctrl-btn raised" data-act="close">\u2715</div>
+  `;
+  titlebar.appendChild(controls);
+
+  const body = win.querySelector('.win-body');
+  bodyBuilder(body, ()=>closeWindow(id));
+
+  layer.appendChild(win);
+  makeDraggable(win, titlebar);
+
+  controls.querySelector('[data-act=close]').addEventListener('click', ()=>{ playClick(); closeWindow(id); });
+  controls.querySelector('[data-act=min]').addEventListener('click', ()=>{ playClick(); toggleMinimize(id); });
+  controls.querySelector('[data-act=max]').addEventListener('click', ()=>{
+    playClick();
+    if(win.dataset.max === '1'){
+      win.style.width = win.dataset.pw; win.style.height = win.dataset.ph;
+      win.style.left = win.dataset.px; win.style.top = win.dataset.py;
+      win.dataset.max = '0';
+    } else {
+      win.dataset.pw = win.style.width; win.dataset.ph = win.style.height;
+      win.dataset.px = win.style.left; win.dataset.py = win.style.top;
+      win.style.left='0'; win.style.top='0';
+      win.style.width='100%'; win.style.height = 'calc(100% - 38px)';
+      win.dataset.max = '1';
+    }
+  });
+
+  win.addEventListener('mousedown', ()=>bringToFront(id));
+
+  // resize
+  let resizing=false, rsx=0, rsy=0, rw=0, rh=0;
+  const resizer = win.querySelector('.win-resize');
+  resizer.addEventListener('mousedown', e=>{
+    resizing=true; rsx=e.clientX; rsy=e.clientY;
+    rw=win.offsetWidth; rh=win.offsetHeight;
+    e.stopPropagation();
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!resizing) return;
+    win.style.width = Math.max(240, rw + (e.clientX-rsx))+'px';
+    win.style.height = Math.max(160, rh + (e.clientY-rsy))+'px';
+  });
+  window.addEventListener('mouseup', ()=>resizing=false);
+
+  // taskbar button
+  const tbtn = document.createElement('div');
+  tbtn.className = 'task-btn raised';
+  tbtn.appendChild(iconCanvas(icon));
+  const tspan = document.createElement('span');
+  tspan.textContent = title;
+  tbtn.appendChild(tspan);
+  tbtn.addEventListener('click', ()=>{
+    playClick();
+    if(win.style.display==='none'){ win.style.display='flex'; bringToFront(id); }
+    else if(win.classList.contains('inactive') || win.style.zIndex != zTop) bringToFront(id);
+    else toggleMinimize(id);
+  });
+  document.getElementById('taskbar-buttons').appendChild(tbtn);
+
+  openWindows[id] = {el:win, taskBtn:tbtn};
+  bringToFront(id);
+  return win;
+}
+
+/* =========================================================================
+   5. CLOCK
+   ========================================================================= */
+function tickClock(){
+  const el = document.getElementById('clock');
+  const now = new Date();
+  let h = now.getHours(); const m = now.getMinutes();
+  const ampm = h>=12 ? 'PM':'AM';
+  h = h%12; if(h===0) h=12;
+  el.textContent = `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+setInterval(tickClock, 1000*10);
+
+/* =========================================================================
+   6. WINDOW CONTENT BUILDERS
+   ========================================================================= */
+function buildResumeWindow(body){
+  body.innerHTML = `
+    <div class="doc-paper">
+      <h1>${SITE.name}</h1>
+      <div class="meta">${SITE.location} \u00b7 ${SITE.phone} \u00b7 ${SITE.email}</div>
+
+      <h2>Summary</h2>
+      <p>${SITE.bio}</p>
+
+      <h2>Work Experience</h2>
+      <div class="role">IT Technician \u2014 Tecworks Pty Ltd.</div>
+      <div class="meta">2025 \u2014 Present</div>
+      <p>Deliver onsite IT support across schools throughout Brisbane, independently managing device repairs and troubleshooting with minimal disruption to staff and students. Diagnose, repair, and maintain ASUS laptops, desktop PCs, and monitors, including hardware replacement and fault isolation to manufacturer standards.</p>
+
+      <div class="role">Retail Team Member \u2014 Scooter Hut</div>
+      <div class="meta">2024 \u2014 2025</div>
+      <p>Used a ticketing system to manage e-scooter repairs and warranty claims, maintaining accurate logs and tracking the service lifecycle. Liaised with customers to diagnose hardware issues and coordinated with technicians for efficient resolution.</p>
+
+      <div class="role">IT Support Technician \u2014 Freelance &amp; Family Business</div>
+      <div class="meta">2018 \u2014 2022</div>
+      <p>Provided technical support for a small business, including workstation setup, troubleshooting, and hardware/software upgrades. Built and repaired custom PCs starting from age 14.</p>
+
+      <h2>Projects</h2>
+      <p><strong>Dementia Chatbot Web Platform</strong> (WordPress, PHP) \u2014 backend for a chatbot analysing user-uploaded media, built as part of a QUT capstone team for an industry client.</p>
+      <p><strong>Event Planning Web App</strong> (JavaScript, SQL) \u2014 event scheduling app with an interactive frontend and relational database backend.</p>
+      <p><strong>Portfolio Website</strong> (HTML, CSS, JavaScript) \u2014 this site, in progress.</p>
+
+      <h2>Skills</h2>
+      <p><strong>IT Support:</strong> Ticketing systems, POS systems, NetSuite, hardware troubleshooting<br>
+      <strong>Programming:</strong> Python, JavaScript, SQL, PHP, HTML/CSS, Java, C# (basic), Assembly (basic)<br>
+      <strong>Tools &amp; Platforms:</strong> WordPress, Shopify, Git, Visual Studio Code, MySQL<br>
+      <strong>Concepts:</strong> Networking basics, cybersecurity fundamentals, database design, REST APIs</p>
+
+      <h2>Education</h2>
+      <div class="role">Bachelor of Information Technology (Computer Science Major)</div>
+      <div class="meta">Queensland University of Technology \u2014 Feb 2023 to Expected Dec 2026</div>
+      <p>Units in Cyber Security, Software Development, and Database Management. Part of an industry-led capstone team developing a live application.</p>
+      <div class="role">Downlands College</div>
+      <div class="meta">Jan 2017 \u2014 Nov 2022</div>
+      <p>Graduated as School Vice-Captain.</p>
+
+      <h2>Qualifications</h2>
+      <p>Working with Children Check \u2013 Blue Card (Issued 07/07/2025, expires 07/07/2028)</p>
+
+      <h2>References</h2>
+      <p>Zack Kandis (Regional Manager) \u2014 available on request.</p>
+    </div>
+  `;
+  const footer = document.createElement('div');
+  footer.style.padding = '8px 14px';
+  footer.style.borderTop = '1px solid #808080';
+  footer.innerHTML = `<a class="btn95 raised" style="text-decoration:none;color:#000;display:inline-block;" href="${SITE.resumeUrl}" target="_blank" rel="noopener">Download PDF \u2197</a>`;
+  body.parentElement.insertBefore(footer, body.nextSibling);
+}
+
+function buildProfileWindow(body){
+  body.innerHTML = `
+    <div class="tabs">
+      <div class="tab active" data-tab="general">General</div>
+      <div class="tab" data-tab="contact">Contact</div>
+    </div>
+    <div class="sunken" style="padding:16px;background:#fff;">
+      <div id="tab-general">
+        <div class="profile-wrap">
+          <div class="profile-avatar"></div>
+          <div>
+            <div style="font-weight:bold;font-size:15px;">${SITE.name}</div>
+            <div style="color:#444;margin-bottom:8px;">${SITE.title}</div>
+            <p style="margin:0;">${SITE.bio}</p>
+          </div>
+        </div>
+      </div>
+      <div id="tab-contact" style="display:none;">
+        <div class="field-row"><label>Location:</label><span>${SITE.location}</span></div>
+        <div class="field-row"><label>Email:</label><span>${SITE.email}</span></div>
+        <div class="field-row"><label>Status:</label><span>Open to interesting projects</span></div>
+      </div>
+    </div>
+  `;
+  body.querySelector('.profile-avatar').appendChild(iconCanvas('profile'));
+  body.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      body.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      body.querySelector('#tab-general').style.display = tab.dataset.tab==='general' ? 'block':'none';
+      body.querySelector('#tab-contact').style.display = tab.dataset.tab==='contact' ? 'block':'none';
+    });
+  });
+}
+
+function weatherIconName(cond){
+  if(cond==='sunny') return 'sun';
+  if(cond==='rain') return 'rain';
+  return 'partlycloudy';
+}
+
+async function buildWeatherWindow(body){
+  body.innerHTML = `<p>Loading weather\u2026</p>`;
+  try{
+    const w = await fetchWeather();
+    body.innerHTML = `
+      <div style="font-weight:bold;margin-bottom:10px;">${w.city}</div>
+      <div class="weather-widget">
+        <div class="wicon"></div>
+        <div>
+          <div class="weather-temp">${w.tempC}\u00b0${OWM_UNITS==='metric'?'C':'F'}</div>
+          <div style="text-transform:capitalize;">${w.condition.replace('-', ' ')}</div>
+        </div>
+      </div>
+      <div class="forecast-row"></div>
+    `;
+    body.querySelector('.wicon').appendChild(iconCanvas(weatherIconName(w.condition)));
+    const frow = body.querySelector('.forecast-row');
+    w.forecast.forEach(f=>{
+      const cell = document.createElement('div');
+      cell.className='forecast-day';
+      cell.innerHTML = `<div>${f.day}</div><div class="ficon"></div><div>${f.tempC}\u00b0</div>`;
+      cell.querySelector('.ficon').appendChild(iconCanvas(weatherIconName(f.condition)));
+      frow.appendChild(cell);
+    });
+  }catch(e){
+    body.innerHTML = `<p>Couldn't load weather right now. Double-check the API key and city in the code (new OpenWeatherMap keys can take up to an hour to activate).</p>`;
+  }
+}
+
+function buildProjectsWindow(body){
+  const grid = document.createElement('div');
+  grid.className = 'proj-grid';
+  SITE.projects.forEach((p, idx)=>{
+    const cell = document.createElement('div');
+    cell.className = 'proj-icon-cell';
+    cell.appendChild(iconCanvas(p.icon));
+    const span = document.createElement('span');
+    span.textContent = p.title;
+    cell.appendChild(span);
+    cell.addEventListener('dblclick', ()=>openProjectDetail(p, idx));
+    cell.addEventListener('click', ()=>{
+      grid.querySelectorAll('.proj-icon-cell').forEach(c=>c.style.background='');
+    });
+    grid.appendChild(cell);
+  });
+  body.appendChild(grid);
+  const hint = document.createElement('div');
+  hint.style.marginTop='12px';
+  hint.style.color='#444';
+  hint.style.fontSize='11px';
+  hint.textContent = 'Double-click a project to open it.';
+  body.appendChild(hint);
+}
+
+function openProjectDetail(p, idx){
+  openWindow({
+    id:'project-'+idx,
+    title:p.title,
+    icon:p.icon,
+    width:380, height:260,
+    bodyBuilder:(body)=>{
+      body.innerHTML = `
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div class="proj-detail-icon" style="flex-shrink:0;"></div>
+          <div>
+            <div style="font-weight:bold;font-size:14px;">${p.title}</div>
+            <div style="color:#000080;font-size:11px;margin-bottom:8px;">${p.tag}</div>
+            <p style="margin:0 0 12px;">${p.desc}</p>
+            <a class="btn95 raised" style="text-decoration:none;color:#000;display:inline-block;" href="${p.link}" target="_blank" rel="noopener">View Project \u2197</a>
+          </div>
+        </div>
+      `;
+      const ic = iconCanvas(p.icon);
+      ic.style.width='48px'; ic.style.height='48px';
+      body.querySelector('.proj-detail-icon').appendChild(ic);
+    }
+  });
+}
+
+
+function buildAlbumWindow(body){
+  body.innerHTML = `<div class="album-panel"></div>`;
+  const panel = body.querySelector('.album-panel');
+  renderAlbumGate(panel);
+}
+
+function renderAlbumGate(panel){
+  panel.innerHTML = `
+    <div style="max-width:280px;">
+      <p style="margin-top:0;">This album is private. Enter the password to view or add photos.</p>
+      <input type="password" id="album-pass" placeholder="Password" />
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <div class="btn95 raised" id="album-unlock-btn">Unlock</div>
+      </div>
+      <div id="album-error" style="color:#a00;font-size:11px;margin-top:6px;"></div>
+    </div>
+  `;
+  const input = panel.querySelector('#album-pass');
+  const tryUnlock = ()=>{
+    if(input.value === SITE.albumPassword){
+      renderAlbumContent(panel);
+    } else {
+      panel.querySelector('#album-error').textContent = 'Incorrect password.';
+    }
+  };
+  panel.querySelector('#album-unlock-btn').addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+}
+
+async function loadAlbum(){
+  try{
+    const res = await window.storage.get('album', false);
+    return res ? JSON.parse(res.value) : [];
+  }catch(e){
+    return [];
+  }
+}
+async function saveAlbum(photos){
+  try{
+    await window.storage.set('album', JSON.stringify(photos), false);
+  }catch(e){
+    console.error('Could not save album', e);
+  }
+}
+
+async function renderAlbumContent(panel){
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong>My Photos</strong>
+      <label class="btn95 raised" style="cursor:pointer;">Upload<input type="file" id="album-upload" accept="image/*" multiple style="display:none;"></label>
+    </div>
+    <div id="album-status" style="font-size:11px;color:#444;"></div>
+    <div class="album-grid" id="album-grid"></div>
+  `;
+  const grid = panel.querySelector('#album-grid');
+  const status = panel.querySelector('#album-status');
+
+  let photos = await loadAlbum();
+  renderGrid();
+
+  function renderGrid(){
+    grid.innerHTML='';
+    if(photos.length===0){
+      grid.innerHTML = '<div style="grid-column:1/-1;color:#666;font-size:12px;">No photos yet \u2014 upload one above.</div>';
+      return;
+    }
+    photos.forEach((p, i)=>{
+      const cell = document.createElement('div');
+      cell.className='album-thumb';
+      cell.innerHTML = `<img src="${p.dataUrl}" alt="${p.caption||''}"><div class="del" title="Delete">\u2715</div>`;
+      cell.querySelector('.del').addEventListener('click', async ()=>{
+        photos.splice(i,1);
+        await saveAlbum(photos);
+        renderGrid();
+      });
+      grid.appendChild(cell);
+    });
+  }
+
+  panel.querySelector('#album-upload').addEventListener('change', async (e)=>{
+    const files = Array.from(e.target.files || []);
+    if(files.length===0) return;
+    status.textContent = 'Uploading...';
+    for(const file of files){
+      const dataUrl = await new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=>resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      photos.push({dataUrl, caption:file.name, ts:Date.now()});
+    }
+    await saveAlbum(photos);
+    status.textContent = '';
+    renderGrid();
+    e.target.value = '';
+  });
+}
+
+/* =========================================================================
+   7. DESKTOP + START MENU + TASKBAR SETUP
+   ========================================================================= */
+async function buildDesktop(){
+  const icons = document.getElementById('icons');
+
+  const deskItems = [
+    { id:'mycomputer', icon:'computer', label:'My Computer', action:()=>openWindow({
+        id:'mycomputer', title:'My Computer', icon:'computer', width:360, height:220,
+        bodyBuilder:(body)=>{ body.innerHTML = `<p>Welcome \u2014 this machine hosts the portfolio of <strong>${SITE.name}</strong>.</p><p>Double-click the icons on the desktop to explore projects, or use the taskbar shortcuts below for the resume, profile, weather, and photo album.</p>`; }
+      })
+    },
+    ...SITE.projects.map((p, idx)=>({
+      id:'proj-desk-'+idx, icon:p.icon, label:p.title,
+      action:()=>openProjectDetail(p, idx)
+    })),
+    { id:'recyclebin', icon:'bin', label:'Recycle Bin', action:()=>openWindow({
+        id:'recyclebin', title:'Recycle Bin', icon:'bin', width:300, height:180,
+        bodyBuilder:(body)=>{ body.innerHTML = `<p style="text-align:center;color:#666;">The Recycle Bin is empty.</p>`; }
+      })
+    },
+  ];
+
+  const GRID = 84; // px spacing between icon slots
+  const iconsRect = icons.getBoundingClientRect();
+  const rowsPerCol = Math.max(3, Math.floor(iconsRect.height / GRID));
+
+  let savedPositions = {};
+  try{
+    const res = await window.storage.get('desktop-icon-positions', false);
+    if(res) savedPositions = JSON.parse(res.value);
+  }catch(e){ /* no saved positions yet */ }
+
+  function savePositions(){
+    window.storage.set('desktop-icon-positions', JSON.stringify(savedPositions), false).catch(()=>{});
+  }
+
+  deskItems.forEach((item, i)=>{
+    const el = document.createElement('div');
+    el.className = 'desk-icon';
+    el.tabIndex = 0;
+    el.appendChild(iconCanvas(item.icon));
+    const span = document.createElement('span');
+    span.textContent = item.label;
+    el.appendChild(span);
+
+    const col = Math.floor(i / rowsPerCol);
+    const row = i % rowsPerCol;
+    const defaultPos = { left: 12 + col*GRID, top: 12 + row*GRID };
+    const pos = savedPositions[item.id] || defaultPos;
+    el.style.left = pos.left+'px';
+    el.style.top = pos.top+'px';
+
+    // ---- drag handling ----
+    let dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+    el.addEventListener('mousedown', e=>{
+      dragging = true; moved = false;
+      sx = e.clientX; sy = e.clientY;
+      ox = el.offsetLeft; oy = el.offsetTop;
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', e=>{
+      if(!dragging) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if(Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+      if(!moved) return;
+      el.classList.add('dragging');
+      const bounds = icons.getBoundingClientRect();
+      let nl = Math.max(0, Math.min(bounds.width - el.offsetWidth, ox + dx));
+      let nt = Math.max(0, Math.min(bounds.height - el.offsetHeight, oy + dy));
+      el.style.left = nl+'px';
+      el.style.top = nt+'px';
+    });
+    window.addEventListener('mouseup', ()=>{
+      if(!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      if(moved){
+        savedPositions[item.id] = { left: el.offsetLeft, top: el.offsetTop };
+        savePositions();
+      } else {
+        icons.querySelectorAll('.desk-icon').forEach(i2=>i2.classList.remove('selected'));
+        el.classList.add('selected');
+      }
+    });
+    el.addEventListener('dblclick', ()=>{ playClick(); item.action(); });
+    icons.appendChild(el);
+  });
+
+  // click empty desktop deselects
+  document.getElementById('desktop').addEventListener('click', (e)=>{
+    if(e.target.id==='desktop'){
+      icons.querySelectorAll('.desk-icon').forEach(i=>i.classList.remove('selected'));
+    }
+  });
+
+  // ---- taskbar quicklaunch: Resume / Profile / Weather / Photos ----
+  const quickItems = [
+    { id:'resume', label:'Resume', icon:'document', build:buildResumeWindow, w:460, h:420 },
+    { id:'profile', label:'Profile', icon:'profile', build:buildProfileWindow, w:420, h:280 },
+    { id:'weather', label:'Weather', icon:'sun', build:buildWeatherWindow, w:360, h:280 },
+    { id:'photos', label:'Photos', icon:'camera', build:buildAlbumWindow, w:420, h:360 },
+  ];
+  const ql = document.getElementById('quicklaunch');
+  quickItems.forEach(q=>{
+    const btn = document.createElement('div');
+    btn.className='ql-btn raised';
+    btn.title = q.label;
+    btn.appendChild(iconCanvas(q.icon));
+    btn.addEventListener('click', ()=>{
+      playClick();
+      openWindow({ id:q.id, title:q.label, icon:q.icon, width:q.w, height:q.h, bodyBuilder:q.build });
+    });
+    ql.appendChild(btn);
+  });
+
+
+  // ---- start icon ----
+  renderIcon(document.getElementById('start-icon'), 'windowsflag');
+
+  // ---- start menu ----
+  const smItems = document.getElementById('start-menu-items');
+  const menuEntries = [
+    { icon:'folder', label:'My Projects', action:()=>openWindow({id:'projects', title:'My Projects', icon:'folder', width:420, height:320, bodyBuilder:buildProjectsWindow}) },
+    { icon:'document', label:'Resume', action:()=>openWindow({ id:'resume', title:'Resume', icon:'document', width:460, height:420, bodyBuilder:buildResumeWindow}) },
+    { icon:'profile', label:'Profile', action:()=>openWindow({ id:'profile', title:'Profile', icon:'profile', width:420, height:280, bodyBuilder:buildProfileWindow}) },
+    { icon:'sun', label:'Weather', action:()=>openWindow({ id:'weather', title:'Weather', icon:'sun', width:360, height:280, bodyBuilder:buildWeatherWindow}) },
+    { icon:'camera', label:'Photos', action:()=>openWindow({ id:'photos', title:'Photos', icon:'camera', width:420, height:360, bodyBuilder:buildAlbumWindow}) },
+    { sep:true },
+    { icon:'computer', label:'My Computer', action:()=>document.getElementById('mycomputer') },
+    { sep:true },
+    { icon:'bin', label:'Shut Down...', action:()=>shutDown() },
+  ];
+  menuEntries.forEach(entry=>{
+    if(entry.sep){
+      const sep = document.createElement('div'); sep.className='sm-sep'; smItems.appendChild(sep); return;
+    }
+    const item = document.createElement('div');
+    item.className='sm-item';
+    item.appendChild(iconCanvas(entry.icon));
+    const span = document.createElement('span'); span.textContent = entry.label;
+    item.appendChild(span);
+    item.addEventListener('click', ()=>{
+      playClick();
+      document.getElementById('start-menu').classList.remove('show');
+      document.getElementById('start-btn').classList.remove('active');
+      entry.action();
+    });
+    smItems.appendChild(item);
+  });
+
+  const startBtn = document.getElementById('start-btn');
+  startBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    playClick();
+    const menu = document.getElementById('start-menu');
+    menu.classList.toggle('show');
+    startBtn.classList.toggle('active');
+  });
+  document.addEventListener('click', ()=>{
+    document.getElementById('start-menu').classList.remove('show');
+    startBtn.classList.remove('active');
+  });
+
+  tickClock();
+
+  setTimeout(()=>{
+    openWindow({id:'projects', title:'My Projects', icon:'folder', width:440, height:340, x:70, y:40, bodyBuilder:buildProjectsWindow});
+  }, 300);
+}
+
+function shutDown(){
+  const desktop = document.getElementById('desktop');
+  desktop.innerHTML = `<div style="position:fixed;inset:0;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'MS Sans Serif',Tahoma,sans-serif;font-size:16px;">It's now safe to close this tab.</div>`;
+}
+</script>
+</body>
+</html>

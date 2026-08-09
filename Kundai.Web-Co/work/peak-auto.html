@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Peak Auto Repairs — Mechanic &amp; roadworthy inspections, Ipswich</title>
+<meta name="description" content="Logbook servicing, roadworthy certificates and diagnostics in Raceview, Ipswich. Upfront pricing, courtesy car available, all makes and models.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--black:#121417;--panel:#1B1E23;--panel-2:#23272D;--amber:#F0A227;--amber-d:#D88E19;--steel:#8C959E;--line:#2E333A;--paper:#F4F5F6}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Barlow,system-ui,sans-serif;background:var(--black);color:var(--paper);line-height:1.6;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3{font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;line-height:.98}
+svg{display:block}
+.wrap{max-width:1140px;margin:0 auto;padding:0 22px}
+.sec{padding:clamp(56px,7vw,96px) 0}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--amber)}
+.hz{height:5px;background:repeating-linear-gradient(135deg,var(--amber) 0 15px,#121417 15px 30px)}
+
+nav{position:sticky;top:0;z-index:40;background:rgba(18,20,23,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nv{display:flex;align-items:center;gap:24px;height:76px}
+.brandm{display:flex;align-items:center;gap:12px}
+.brandm .bm{width:40px;height:40px;flex:0 0 auto}
+.mark{font-family:"Barlow Condensed";font-weight:700;font-size:26px;text-transform:uppercase;letter-spacing:.02em;line-height:1}
+.mark span{color:var(--amber)}
+.mark em{display:block;font-family:Barlow;font-style:normal;font-size:9px;font-weight:600;letter-spacing:.24em;color:var(--steel);margin-top:3px}
+.nl{margin-left:auto;display:flex;gap:26px;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.nl a{text-decoration:none;color:var(--steel);position:relative;padding:4px 0}
+.nl a::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:2px;background:var(--amber);transition:right .22s ease}
+.nl a:hover{color:#fff}.nl a:hover::after{right:0}
+.bk{background:var(--amber);color:var(--black);text-decoration:none;font-family:"Barlow Condensed";font-weight:700;font-size:17px;letter-spacing:.06em;text-transform:uppercase;padding:13px 22px;white-space:nowrap;transition:.15s}
+.bk:hover{background:var(--amber-d)}
+@media(max-width:980px){.nl{display:none}.bk{margin-left:auto}}
+@media(max-width:520px){.nv{gap:12px}.bk{padding:11px 14px;font-size:15px}.bk .full{display:none}.mark{font-size:22px}.brandm .bm{width:34px;height:34px}}
+
+.hero{position:relative;overflow:hidden;
+  background:radial-gradient(110% 90% at 22% 10%,#22262C 0%,#171A1E 45%,#0E1013 100%)}
+.gridbg{position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(rgba(240,162,39,.07) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(240,162,39,.07) 1px,transparent 1px);
+  background-size:44px 44px}
+.hero .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1.08fr .92fr;gap:44px;align-items:center;
+  padding-top:clamp(52px,6vw,80px);padding-bottom:clamp(20px,3vw,34px)}
+.hero h1{font-size:clamp(46px,7.6vw,82px)}
+.hero h1 span{color:var(--amber);display:block}
+.hero p.lead{color:var(--steel);font-size:18px;margin-top:20px;max-width:42ch}
+.hb{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.b1,.b2{text-decoration:none;font-family:"Barlow Condensed";font-weight:700;font-size:19px;letter-spacing:.06em;text-transform:uppercase;padding:15px 30px;transition:.15s}
+.b1{background:var(--amber);color:var(--black);box-shadow:0 14px 30px -16px rgba(240,162,39,1)}
+.b1:hover{background:var(--amber-d);transform:translateY(-2px)}
+.b2{border:2px solid var(--line);color:#fff}.b2:hover{border-color:var(--amber);color:var(--amber)}
+.quote{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--amber);padding:28px}
+.quote h3{font-size:26px;margin-bottom:4px}
+.quote .sm{font-size:14px;color:var(--steel)}
+.quote ul{list-style:none;margin-top:18px}
+.quote li{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
+.quote li:last-child{border-bottom:0}
+.quote li b{font-family:"Barlow Condensed";font-size:21px;color:var(--amber);font-weight:700;white-space:nowrap}
+.quote .fine{font-size:13px;color:var(--steel);margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.carwrap{position:relative;z-index:2;max-width:1000px;margin:0 auto;padding:0 22px clamp(28px,4vw,44px)}
+.carwrap svg{width:100%;height:auto}
+@media(max-width:980px){.hero .wrap{grid-template-columns:1fr;gap:36px}}
+
+.head{max-width:54ch;margin-bottom:44px}
+.head h2{font-size:clamp(34px,5vw,58px);margin-top:10px}
+.head p{color:var(--steel);margin-top:14px}
+
+.svcs{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.s{background:var(--panel);padding:30px 26px;transition:.15s}
+.s:hover{background:var(--panel-2)}
+.s .ic{width:44px;height:44px;border:1px solid var(--line);display:grid;place-items:center;margin-bottom:16px;background:#181B1F}
+.s .ic svg{width:24px;height:24px;stroke:var(--amber);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.s .num{font-family:"Barlow Condensed";font-size:13px;font-weight:700;letter-spacing:.2em;color:var(--amber)}
+.s h3{font-size:24px;margin:8px 0 8px}
+.s p{font-size:15px;color:var(--steel)}
+@media(max-width:900px){.svcs{grid-template-columns:1fr}}
+
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.gcard{border:1px solid var(--line);background:var(--panel);overflow:hidden;transition:.18s}
+.gcard:hover{transform:translateY(-4px);border-color:#3E444C}
+.gcard .art{aspect-ratio:4/3;background:#15181C;border-bottom:1px solid var(--line)}
+.gcard .art svg{width:100%;height:100%}
+.gcard .cap{padding:18px 20px}
+.gcard h4{font-size:20px;margin-bottom:6px}
+.gcard p{font-size:14px;color:var(--steel)}
+@media(max-width:900px){.gal{grid-template-columns:1fr}}
+
+.rwc{background:var(--amber);color:var(--black)}
+.rwc .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:28px;justify-content:space-between;padding-top:46px;padding-bottom:46px}
+.rwc h2{font-size:clamp(30px,4.4vw,48px);max-width:20ch}
+.rwc p{font-weight:500;margin-top:8px;max-width:44ch}
+.rwc a{background:var(--black);color:var(--amber);text-decoration:none;font-family:"Barlow Condensed";font-weight:700;font-size:20px;letter-spacing:.06em;text-transform:uppercase;padding:17px 32px;white-space:nowrap;transition:.15s}
+.rwc a:hover{transform:translateY(-2px)}
+
+.brands{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+.brands .wrap{display:flex;flex-wrap:wrap;gap:12px 36px;padding:24px 22px;align-items:center;
+  font-family:"Barlow Condensed";font-size:20px;font-weight:700;letter-spacing:.08em;color:#4C535B;text-transform:uppercase}
+.brands .wrap b{color:var(--steel);font-family:Barlow;font-size:11px;letter-spacing:.2em;font-weight:600}
+
+.info .wrap{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,5vw,64px)}
+.hrs{list-style:none}
+.hrs li{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:16px}
+.hrs li b{font-family:"Barlow Condensed";font-size:19px;font-weight:700}
+.hrs li.closed b{color:var(--steel)}
+.addr{font-size:18px;line-height:1.9;margin-top:18px}
+.addr a{color:var(--amber);font-weight:600;text-decoration:none}
+@media(max-width:880px){.info .wrap{grid-template-columns:1fr}}
+
+footer{background:#0B0D0F;color:#6B747D;font-size:14px;padding:48px 0 30px}
+.fg{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:32px}
+footer h5{color:#fff;font-family:"Barlow Condensed";font-size:15px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px}
+footer a{text-decoration:none}footer a:hover{color:#fff}
+footer p{margin-bottom:4px}
+.fbot{border-top:1px solid #1D2126;margin-top:32px;padding-top:20px;font-size:12px;color:#565E66}
+@media(max-width:820px){.fg{grid-template-columns:1fr}}
+
+.rise{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.rise.in{opacity:1;transform:none}
+a:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rise{opacity:1;transform:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="a-wrench" viewBox="0 0 24 24"><path d="M15.5 3.5a5 5 0 0 0-5.9 6.3L3 16.4 6.6 20l6.6-6.6a5 5 0 0 0 6.3-5.9l-3 3-2.6-.7-.7-2.6z"/></symbol>
+  <symbol id="a-cert" viewBox="0 0 24 24"><path d="M12 2.5 20 6v6c0 4.5-3.4 8-8 9.5C7.4 20 4 16.5 4 12V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="a-brake" viewBox="0 0 24 24"><circle cx="11" cy="12" r="8"/><circle cx="11" cy="12" r="3"/><path d="M11 4v3M11 17v3M3 12h3M16 12h3M5.5 6.5 7.6 8.6M14.4 15.4l2.1 2.1"/></symbol>
+  <symbol id="a-scan" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M9 21h6M12 17v4"/><path d="m6 12 2.5-3 2 2.5L13.5 8 17 13"/></symbol>
+  <symbol id="a-snow" viewBox="0 0 24 24"><path d="M12 2v20M3.5 7l17 10M20.5 7l-17 10"/><path d="M9 4.5 12 7l3-2.5M9 19.5 12 17l3 2.5"/></symbol>
+  <symbol id="a-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/><path d="M7.5 11h6M8.5 11l1-2.2h4l1 2.2"/></symbol>
+</svg>
+
+<nav><div class="wrap nv">
+  <div class="brandm">
+    <svg class="bm" viewBox="0 0 40 40" aria-hidden="true">
+      <rect width="40" height="40" rx="5" fill="#F0A227"/>
+      <path d="M8 27 18 10l4.5 7.6L26 12l6 15z" fill="#121417"/>
+      <circle cx="30" cy="12" r="3" fill="#121417"/>
+    </svg>
+    <div class="mark">PEAK<span>·</span>AUTO<em>Repairs &amp; Roadworthy</em></div>
+  </div>
+  <div class="nl"><a href="#services">Services</a><a href="#workshop">Workshop</a><a href="#roadworthy">Roadworthy</a><a href="#visit">Find us</a></div>
+  <a class="bk" href="tel:0468000000"><span class="full">Book: </span>0468 000 000</a>
+</div></nav>
+<div class="hz"></div>
+
+<header class="hero">
+  <div class="gridbg"></div>
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Raceview · Ipswich · All makes &amp; models</p>
+      <h1 style="margin-top:16px">Fixed right.<span>Priced straight.</span></h1>
+      <p class="lead">Logbook servicing that keeps your new-car warranty intact, roadworthy certificates while you wait, and a phone call before we do anything you haven't approved.</p>
+      <div class="hb">
+        <a class="b1" href="tel:0468000000">Book a service</a>
+        <a class="b2" href="#services">What we do</a>
+      </div>
+    </div>
+    <div class="quote">
+      <h3>Standard pricing</h3>
+      <p class="sm">Quoted up front. We ring before anything extra.</p>
+      <ul>
+        <li><span>Logbook service, 4-cylinder</span><b>$249</b></li>
+        <li><span>Logbook service, 6-cyl / diesel</span><b>$329</b></li>
+        <li><span>Safety certificate (roadworthy)</span><b>$95</b></li>
+        <li><span>Brake pads &amp; rotors, front axle</span><b>from $420</b></li>
+        <li><span>Diagnostic scan &amp; report</span><b>$120</b></li>
+      </ul>
+      <p class="fine">Includes GST. Courtesy car available on request — ask when you book.</p>
+    </div>
+  </div>
+
+  <div class="carwrap">
+    <svg viewBox="0 0 820 340" role="img" aria-label="Technical line drawing of a dual-cab ute">
+      <g stroke="#F0A227" fill="none" stroke-linejoin="round">
+        <!-- body -->
+        <path d="M52 250 L52 206 C52 194 60 187 74 185 L166 180 L228 112 C234 105 242 102 252 102 L392 102 C402 102 410 106 415 114 L455 179 L742 175 C754 175 762 183 762 195 L762 250 Z"
+              stroke-width="3"/>
+        <!-- tray -->
+        <path d="M455 179 L455 250 M470 196 L748 193" stroke-width="2"/>
+        <!-- glass -->
+        <path d="M186 176 L240 118 L316 118 L316 176 Z" stroke-width="2"/>
+        <path d="M330 118 L392 118 L434 176 L330 176 Z" stroke-width="2"/>
+        <!-- doors + handles -->
+        <path d="M322 176 L322 244 M410 178 L410 244" stroke-width="1.6" opacity=".8"/>
+        <path d="M296 196h22M384 197h22" stroke-width="3" stroke-linecap="round"/>
+        <!-- lights + grille -->
+        <path d="M54 196h34v18H54z" stroke-width="2"/>
+        <path d="M736 196h22v16h-22z" stroke-width="2"/>
+        <path d="M60 226h44" stroke-width="2"/>
+        <!-- mirror + snorkel-ish detail -->
+        <path d="M184 168l-18-6" stroke-width="2.4" stroke-linecap="round"/>
+        <!-- ground -->
+        <path d="M20 300h780" stroke-width="1.4" opacity=".45"/>
+      </g>
+
+      <!-- wheels -->
+      <g stroke="#F0A227" fill="#121417" stroke-width="3">
+        <circle cx="176" cy="250" r="50"/><circle cx="620" cy="250" r="50"/>
+      </g>
+      <g stroke="#F0A227" fill="none" stroke-width="2">
+        <circle cx="176" cy="250" r="26"/><circle cx="620" cy="250" r="26"/>
+        <circle cx="176" cy="250" r="8"/><circle cx="620" cy="250" r="8"/>
+      </g>
+      <g stroke="#8C959E" stroke-width="1.6" opacity=".75">
+        <path d="M176 224v-8M176 284v8M150 250h-8M202 250h8"/>
+        <path d="M620 224v-8M620 284v8M594 250h-8M646 250h8"/>
+      </g>
+
+      <!-- blueprint annotations -->
+      <g stroke="#8C959E" stroke-width="1.2" fill="none" opacity=".7" stroke-dasharray="4 5">
+        <path d="M52 84v-22M762 84v-22M52 70h710"/>
+      </g>
+      <g fill="#8C959E" font-family="Barlow,sans-serif" font-size="11" letter-spacing="2">
+        <text x="407" y="62" text-anchor="middle">DUAL CAB · 5,320 MM</text>
+      </g>
+      <g stroke="#F0A227" stroke-width="1.4" fill="none" opacity=".85">
+        <circle cx="276" cy="147" r="13"/><circle cx="500" cy="212" r="13"/><circle cx="126" cy="212" r="13"/>
+      </g>
+      <g fill="#F0A227" font-family="Barlow Condensed,sans-serif" font-size="14" font-weight="700" text-anchor="middle">
+        <text x="276" y="152">1</text><text x="500" y="217">2</text><text x="126" y="217">3</text>
+      </g>
+      <g fill="#8C959E" font-family="Barlow,sans-serif" font-size="11.5">
+        <text x="30" y="326">1 — Cabin &amp; safety check</text>
+        <text x="300" y="326">2 — Chassis &amp; underbody</text>
+        <text x="580" y="326">3 — Engine bay &amp; fluids</text>
+      </g>
+    </svg>
+  </div>
+</header>
+
+<section class="sec" id="services"><div class="wrap">
+  <div class="head rise">
+    <p class="eyebrow">Workshop</p>
+    <h2>Six bays. No job too ordinary.</h2>
+    <p>Servicing, repairs and inspections for petrol, diesel and hybrid. Same workshop since 2011.</p>
+  </div>
+  <div class="svcs rise">
+    <div class="s"><div class="ic"><svg><use href="#a-wrench"/></svg></div><div class="num">01</div><h3>Logbook servicing</h3><p>Stamped to manufacturer schedule using approved parts and oils. Your new-car warranty stays intact.</p></div>
+    <div class="s"><div class="ic"><svg><use href="#a-cert"/></svg></div><div class="num">02</div><h3>Safety certificates</h3><p>Queensland roadworthy inspections, usually done while you wait. Minor fails fixed same day.</p></div>
+    <div class="s"><div class="ic"><svg><use href="#a-brake"/></svg></div><div class="num">03</div><h3>Brakes &amp; suspension</h3><p>Pads, rotors, shocks and bushes. We show you the worn part before it goes in the bin.</p></div>
+    <div class="s"><div class="ic"><svg><use href="#a-scan"/></svg></div><div class="num">04</div><h3>Diagnostics</h3><p>Engine light on? Full scan and a written report in plain English, not a code number.</p></div>
+    <div class="s"><div class="ic"><svg><use href="#a-snow"/></svg></div><div class="num">05</div><h3>Air conditioning</h3><p>Regas, leak testing and compressor work. Worth doing before the first 38-degree day.</p></div>
+    <div class="s"><div class="ic"><svg><use href="#a-search"/></svg></div><div class="num">06</div><h3>Pre-purchase checks</h3><p>Thinking of buying second-hand? We'll go over it and tell you what it's really worth fixing.</p></div>
+  </div>
+</div></section>
+
+<section class="sec" id="workshop" style="background:var(--panel-2)"><div class="wrap">
+  <div class="head rise">
+    <p class="eyebrow">On the hoist</p>
+    <h2>You'll see what we saw.</h2>
+    <p>Every job gets photos of the worn parts, sent through with the invoice. No mystery line items.</p>
+  </div>
+  <div class="gal rise">
+
+    <article class="gcard">
+      <div class="art">
+        <svg viewBox="0 0 400 300" role="img" aria-label="Illustration of a brake disc and caliper">
+          <rect width="400" height="300" fill="#15181C"/>
+          <g opacity=".3" stroke="#F0A227" stroke-width="1"><path d="M0 60h400M0 120h400M0 180h400M0 240h400M80 0v300M160 0v300M240 0v300M320 0v300"/></g>
+          <circle cx="188" cy="150" r="92" fill="#1D2126" stroke="#F0A227" stroke-width="3"/>
+          <circle cx="188" cy="150" r="60" fill="none" stroke="#F0A227" stroke-width="1.6" opacity=".7"/>
+          <circle cx="188" cy="150" r="34" fill="#15181C" stroke="#F0A227" stroke-width="2.4"/>
+          <circle cx="188" cy="150" r="10" fill="none" stroke="#F0A227" stroke-width="2"/>
+          <g fill="#F0A227" opacity=".55">
+            <circle cx="188" cy="126" r="4"/><circle cx="211" cy="141" r="4"/><circle cx="202" cy="169" r="4"/>
+            <circle cx="174" cy="169" r="4"/><circle cx="165" cy="141" r="4"/>
+          </g>
+          <g stroke="#5E666E" stroke-width="1.4" opacity=".8">
+            <circle cx="188" cy="150" r="76" fill="none" stroke-dasharray="3 9"/>
+            <circle cx="188" cy="150" r="47" fill="none" stroke-dasharray="3 9"/>
+          </g>
+          <path d="M262 108h44a12 12 0 0 1 12 12v60a12 12 0 0 1-12 12h-44z" fill="#1D2126" stroke="#F0A227" stroke-width="3"/>
+          <path d="M262 122h26v56h-26z" fill="#F0A227" opacity=".85"/>
+          <path d="M318 138h22v24h-22z" fill="none" stroke="#F0A227" stroke-width="2.4"/>
+          <path d="M340 150h26" stroke="#F0A227" stroke-width="3" stroke-linecap="round"/>
+          <text x="300" y="228" font-family="Barlow,sans-serif" font-size="11" letter-spacing="2" fill="#8C959E" text-anchor="middle">CALIPER</text>
+          <text x="120" y="266" font-family="Barlow,sans-serif" font-size="11" letter-spacing="2" fill="#8C959E" text-anchor="middle">ROTOR · 296MM</text>
+        </svg>
+      </div>
+      <div class="cap"><h4>Front brake replacement</h4><p>Pads down to the backing plate on a Ranger. New rotors and pads, bedded in before it left.</p></div>
+    </article>
+
+    <article class="gcard">
+      <div class="art">
+        <svg viewBox="0 0 400 300" role="img" aria-label="Illustration of a diagnostic scan tool">
+          <rect width="400" height="300" fill="#15181C"/>
+          <g opacity=".3" stroke="#F0A227" stroke-width="1"><path d="M0 60h400M0 120h400M0 180h400M0 240h400M80 0v300M160 0v300M240 0v300M320 0v300"/></g>
+          <rect x="98" y="42" width="204" height="176" rx="14" fill="#1D2126" stroke="#F0A227" stroke-width="3"/>
+          <rect x="118" y="62" width="164" height="104" rx="6" fill="#0E1013" stroke="#F0A227" stroke-width="2"/>
+          <path d="M128 132l20-26 16 20 20-38 18 30 14-18 18 32" fill="none" stroke="#F0A227" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <g stroke="#3E444C" stroke-width="1"><path d="M118 88h164M118 114h164M118 140h164"/></g>
+          <text x="130" y="80" font-family="Barlow,sans-serif" font-size="10" letter-spacing="1.6" fill="#8C959E">LIVE DATA · O2 SENSOR</text>
+          <g fill="none" stroke="#F0A227" stroke-width="2.2">
+            <rect x="124" y="180" width="40" height="22" rx="4"/>
+            <rect x="180" y="180" width="40" height="22" rx="4"/>
+            <rect x="236" y="180" width="40" height="22" rx="4"/>
+          </g>
+          <path d="M200 218v22a16 16 0 0 0 16 16h44a16 16 0 0 1 16 16v14" fill="none" stroke="#F0A227" stroke-width="4" stroke-linecap="round"/>
+          <path d="M258 286h36v-16h-36z" fill="#1D2126" stroke="#F0A227" stroke-width="2.6"/>
+          <g fill="#F0A227"><circle cx="266" cy="278" r="2"/><circle cx="276" cy="278" r="2"/><circle cx="286" cy="278" r="2"/></g>
+          <text x="150" y="286" font-family="Barlow,sans-serif" font-size="11" letter-spacing="2" fill="#8C959E">OBD-II PORT</text>
+        </svg>
+      </div>
+      <div class="cap"><h4>Engine light diagnosis</h4><p>Intermittent misfire on a Hilux. Traced to one coil pack rather than replacing all four.</p></div>
+    </article>
+
+    <article class="gcard">
+      <div class="art">
+        <svg viewBox="0 0 400 300" role="img" aria-label="Illustration of an oil and filter service">
+          <rect width="400" height="300" fill="#15181C"/>
+          <g opacity=".3" stroke="#F0A227" stroke-width="1"><path d="M0 60h400M0 120h400M0 180h400M0 240h400M80 0v300M160 0v300M240 0v300M320 0v300"/></g>
+          <path d="M84 54h96l-30 46v58a10 10 0 0 1-10 10h-16a10 10 0 0 1-10-10v-58z" fill="#1D2126" stroke="#F0A227" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M92 62h80l-8 12H100z" fill="#F0A227" opacity=".5"/>
+          <g fill="#F0A227" opacity=".85">
+            <path d="M132 178c0 8 8 12 8 20a8 8 0 0 1-16 0c0-8 8-12 8-20z"/>
+            <path d="M132 216c0 6 6 9 6 15a6 6 0 0 1-12 0c0-6 6-9 6-15z"/>
+          </g>
+          <rect x="230" y="120" width="92" height="120" rx="14" fill="#1D2126" stroke="#F0A227" stroke-width="3"/>
+          <path d="M230 148h92M230 212h92" stroke="#F0A227" stroke-width="1.8" opacity=".7"/>
+          <g stroke="#F0A227" stroke-width="1.6" opacity=".55">
+            <path d="M246 120v120M262 120v120M278 120v120M294 120v120M310 120v120"/>
+          </g>
+          <rect x="252" y="98" width="48" height="24" rx="5" fill="#15181C" stroke="#F0A227" stroke-width="2.6"/>
+          <path d="M276 98V78" stroke="#F0A227" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="276" cy="72" r="8" fill="none" stroke="#F0A227" stroke-width="2.6"/>
+          <text x="276" y="268" font-family="Barlow,sans-serif" font-size="11" letter-spacing="2" fill="#8C959E" text-anchor="middle">FILTER · OEM SPEC</text>
+          <text x="132" y="268" font-family="Barlow,sans-serif" font-size="11" letter-spacing="2" fill="#8C959E" text-anchor="middle">5W-30 FULL SYN</text>
+        </svg>
+      </div>
+      <div class="cap"><h4>Logbook service</h4><p>60,000km service on a Mazda 3. Book stamped, filters and fluids to manufacturer spec.</p></div>
+    </article>
+
+  </div>
+</div></section>
+
+<section class="rwc" id="roadworthy"><div class="wrap">
+  <div><h2>Selling the car? Safety certificate in about an hour.</h2>
+    <p>$95, booked same week most of the time. If it fails on something small, we'll usually sort it on the spot rather than send you away.</p></div>
+  <a href="tel:0468000000">Book an inspection</a>
+</div></section>
+
+<section class="brands"><div class="wrap">
+  <b>We service</b><span>Toyota</span><span>Ford</span><span>Mazda</span><span>Holden</span><span>Hyundai</span><span>Isuzu</span><span>Mitsubishi</span><span>Nissan</span><span>Kia</span><span>Subaru</span>
+</div></section>
+
+<section class="sec info" id="visit"><div class="wrap">
+  <div class="rise">
+    <p class="eyebrow">Opening hours</p>
+    <ul class="hrs" style="margin-top:16px">
+      <li><span>Monday – Thursday</span><b>7:00 – 17:30</b></li>
+      <li><span>Friday</span><b>7:00 – 16:30</b></li>
+      <li><span>Saturday</span><b>8:00 – 12:00</b></li>
+      <li class="closed"><span>Sunday</span><b>Closed</b></li>
+    </ul>
+  </div>
+  <div class="rise">
+    <p class="eyebrow">Find the workshop</p>
+    <p class="addr">
+      57 Briggs Road<br>Raceview QLD 4305<br>
+      <a href="tel:0468000000">0468 000 000</a><br>
+      <a href="mailto:bookings@peakautorepairs.com.au">bookings@peakautorepairs.com.au</a>
+    </p>
+    <p style="color:var(--steel);margin-top:16px">Off-street parking, waiting room with coffee, and we'll drop you home if you're local.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="fg">
+    <div>
+      <div class="brandm">
+        <svg class="bm" viewBox="0 0 40 40" aria-hidden="true">
+          <rect width="40" height="40" rx="5" fill="#F0A227"/>
+          <path d="M8 27 18 10l4.5 7.6L26 12l6 15z" fill="#121417"/>
+          <circle cx="30" cy="12" r="3" fill="#121417"/>
+        </svg>
+        <div class="mark" style="color:#fff">PEAK<span>·</span>AUTO<em>Repairs &amp; Roadworthy</em></div>
+      </div>
+      <p style="margin-top:16px;max-width:34ch">Independent workshop in Raceview since 2011. Approved Inspection Station AIS 00000.</p>
+    </div>
+    <div><h5>Contact</h5><p><a href="tel:0468000000">0468 000 000</a></p>
+      <p><a href="mailto:bookings@peakautorepairs.com.au">bookings@peakautorepairs.com.au</a></p><p>57 Briggs Rd, Raceview QLD</p></div>
+    <div><h5>Services</h5><p><a href="#services">Logbook servicing</a></p><p><a href="#roadworthy">Safety certificates</a></p><p><a href="#services">Diagnostics</a></p></div>
+  </div>
+  <div class="fbot">© 2026 Peak Auto Repairs · ABN 00 000 000 000 — Sample site built by Kundai Web Co.</div>
+</div></footer>
+
+<script>
+const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}}),{threshold:.1,rootMargin:'0px 0px -40px'});
+document.querySelectorAll('.rise').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

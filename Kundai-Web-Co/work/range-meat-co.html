@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Range Meat Co. — Butcher &amp; smokehouse, Toowoomba</title>
+<meta name="description" content="Dry-aged beef, house-made sausages and a wood-fired smokehouse. Family butcher on the Range, Toowoomba. Whole-beast butchery from Darling Downs graziers.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--char:#1B1917;--char-2:#232019;--cream:#F6F1E7;--cream-2:#EBE2D2;--red:#8C2B24;--brass:#B98B34;--brass-l:#D8A951;--mute:#7A716A;--hair:rgba(27,25,23,.15)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:Karla,system-ui,sans-serif;background:var(--cream);color:var(--char);line-height:1.65;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3{font-family:"Bodoni Moda",Georgia,serif;font-weight:700;line-height:1.05}
+svg{display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+.sec{padding:clamp(58px,7vw,100px) 0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--brass)}
+
+nav{position:sticky;top:0;z-index:40;background:rgba(246,241,231,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--hair)}
+.nv{display:flex;align-items:center;height:78px;gap:26px}
+.brandm{display:flex;align-items:center;gap:12px}
+.brandm .bm{width:40px;height:40px;flex:0 0 auto}
+.mark{font-family:"Bodoni Moda",serif;font-weight:700;font-size:23px;line-height:1}
+.mark em{display:block;font-family:Karla;font-style:normal;font-size:9px;font-weight:700;letter-spacing:.3em;color:var(--brass);margin-top:5px}
+.nl{margin-left:auto;display:flex;gap:28px;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.nl a{text-decoration:none;position:relative;padding:3px 0}
+.nl a::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1.5px;background:var(--red);transition:right .22s ease}
+.nl a:hover::after{right:0}
+.ord{background:var(--red);color:var(--cream);text-decoration:none;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:13px 21px;white-space:nowrap;transition:.15s}
+.ord:hover{background:#A5342A}
+@media(max-width:980px){.nl{display:none}.ord{margin-left:auto}}
+@media(max-width:520px){.nv{gap:12px;height:70px}.ord{padding:11px 14px;font-size:11.5px}.mark{font-size:20px}.brandm .bm{width:34px;height:34px}}
+
+/* hero */
+.hero{background:var(--char);color:var(--cream);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;opacity:.5;
+  background:radial-gradient(80% 70% at 50% 0%,rgba(185,139,52,.22),transparent 70%)}
+.hero::after{content:"";position:absolute;inset:0;opacity:.06;pointer-events:none;
+  background:repeating-linear-gradient(90deg,transparent 0 3px,#fff 3px 4px)}
+.hero .wrap{position:relative;z-index:2;padding-top:clamp(46px,5.6vw,72px);padding-bottom:clamp(20px,2.4vw,30px);text-align:center}
+.hero h1{font-size:clamp(42px,7.4vw,84px);letter-spacing:-.012em}
+.hero h1 em{font-style:italic;color:var(--brass-l);font-weight:500}
+.hero p.lead{max-width:56ch;margin:22px auto 0;color:#C6BBAB;font-size:18px}
+.hbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.bp,.bs{text-decoration:none;font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:16px 30px;transition:.15s}
+.bp{background:var(--brass);color:var(--char)}.bp:hover{background:var(--brass-l);transform:translateY(-2px)}
+.bs{border:1px solid rgba(246,241,231,.38);color:var(--cream)}.bs:hover{background:rgba(246,241,231,.1)}
+.chart{max-width:790px;margin:clamp(18px,2.4vw,28px) auto 0;position:relative;z-index:2}
+.chart svg{width:100%;height:auto}
+.chartcap{text-align:center;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#8B8075;padding-bottom:clamp(34px,4vw,52px);margin-top:-2px;position:relative;z-index:2}
+
+.head{text-align:center;max-width:56ch;margin:0 auto clamp(36px,4vw,56px)}
+.head h2{font-size:clamp(30px,4.6vw,52px);margin-top:12px}
+.head p{color:var(--mute);margin-top:16px}
+
+/* cuts */
+.cuts{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.cut{background:#FCF9F3;border:1px solid var(--hair);transition:.18s}
+.cut:hover{transform:translateY(-4px);box-shadow:0 26px 46px -32px rgba(27,25,23,.8)}
+.cut .art{aspect-ratio:5/3;background:var(--cream-2);border-bottom:1px solid var(--hair)}
+.cut .art svg{width:100%;height:100%}
+.cut .body{padding:26px}
+.cut h3{font-size:22px;margin-bottom:8px}
+.cut p{font-size:15px;color:var(--mute)}
+.cut .pr{font-family:"Bodoni Moda",serif;font-weight:700;font-size:20px;margin-top:18px;padding-top:16px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;align-items:baseline}
+.cut .pr small{font-family:Karla;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brass)}
+@media(max-width:900px){.cuts{grid-template-columns:1fr}}
+
+/* smokehouse */
+.smoke{background:var(--char-2);color:var(--cream)}
+.smoke .wrap{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,72px);align-items:center}
+.smoke h2{font-size:clamp(30px,4.4vw,50px)}
+.smoke p{color:#C0B5A6;margin-top:18px}
+.panel{border:1px solid #3D342A;background:linear-gradient(160deg,#2E251C,#151110);overflow:hidden}
+.panel svg{width:100%;height:auto}
+@media(max-width:900px){.smoke .wrap{grid-template-columns:1fr}}
+
+/* board */
+.board{background:var(--cream-2)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 56px}
+.spec{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:baseline;padding:16px 0;border-bottom:1px dotted rgba(27,25,23,.32)}
+.spec b{font-family:"Bodoni Moda",serif;font-size:19px;font-weight:700}
+.spec small{display:block;font-size:14px;color:var(--mute);font-weight:400;font-family:Karla}
+.spec .p{font-family:"Bodoni Moda",serif;font-size:19px;font-weight:700;white-space:nowrap;color:var(--red)}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+
+/* graziers */
+.grz{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:8px}
+.gz{text-align:center;padding:26px 16px;border:1px solid var(--hair);background:#FCF9F3}
+.gz svg{width:38px;height:38px;margin:0 auto 12px;stroke:var(--brass);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gz h4{font-family:"Bodoni Moda",serif;font-size:18px;margin-bottom:4px}
+.gz p{font-size:13.5px;color:var(--mute)}
+@media(max-width:860px){.grz{grid-template-columns:1fr 1fr}}
+
+/* visit */
+.visit .wrap{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,5vw,64px)}
+.hrs{list-style:none}
+.hrs li{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--hair);font-size:16px}
+.hrs li b{font-weight:700}
+.addr{font-size:18px;line-height:1.9;margin-top:20px}
+.addr a{color:var(--red);font-weight:700}
+@media(max-width:860px){.visit .wrap{grid-template-columns:1fr}}
+
+footer{background:var(--char);color:#8E837A;font-size:14px;padding:50px 0 32px}
+footer .mark{color:var(--cream)}
+.fg{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:32px}
+footer h5{color:var(--cream);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px}
+footer a{text-decoration:none}footer a:hover{color:var(--cream)}
+footer p{margin-bottom:4px}
+.fbot{border-top:1px solid #332C27;margin-top:34px;padding-top:20px;font-size:12px;color:#6C625B}
+@media(max-width:820px){.fg{grid-template-columns:1fr}}
+
+.rise{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.rise.in{opacity:1;transform:none}
+a:focus-visible{outline:3px solid var(--brass);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rise{opacity:1;transform:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap nv">
+  <div class="brandm">
+    <svg class="bm" viewBox="0 0 44 44" aria-hidden="true">
+      <circle cx="22" cy="22" r="21" fill="none" stroke="#B98B34" stroke-width="1.4"/>
+      <circle cx="22" cy="22" r="17.5" fill="none" stroke="#B98B34" stroke-width="0.7"/>
+      <path d="M13 15h9c4 0 6 2 6 5s-2 5-6 5h-9z" fill="none" stroke="#1B1917" stroke-width="1.9" stroke-linejoin="round"/>
+      <path d="M20 25l8 9" stroke="#1B1917" stroke-width="1.9" stroke-linecap="round"/>
+    </svg>
+    <div class="mark">Range Meat Co.<em>Est. 1994 · Toowoomba</em></div>
+  </div>
+  <div class="nl"><a href="#cuts">Cuts</a><a href="#smokehouse">Smokehouse</a><a href="#specials">Specials</a><a href="#graziers">Graziers</a><a href="#visit">Visit</a></div>
+  <a class="ord" href="tel:0468000000">Order ahead</a>
+</div></nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Whole-beast butchery · Darling Downs graziers</p>
+    <h1 style="margin-top:18px">Dry-aged.<br><em>Never rushed.</em></h1>
+    <p class="lead">Thirty-five days on the bone in our own ageing room, broken down by hand every morning. We buy whole animals from four families on the Downs and use every part of them.</p>
+    <div class="hbtns">
+      <a class="bp" href="#cuts">See this week's cuts</a>
+      <a class="bs" href="#visit">Find the shop</a>
+    </div>
+  </div>
+
+  <div class="chart">
+    <svg viewBox="24 48 612 286" role="img" aria-label="Diagram of beef primal cuts">
+      <defs>
+        <style>
+          .lbl{font-family:Karla,sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;fill:#E4D9C6}
+          .lbs{font-family:Karla,sans-serif;font-size:8.5px;letter-spacing:.14em;fill:#9C907F}
+          .ln{stroke:#B98B34;fill:none}
+        </style>
+      </defs>
+
+      <!-- body -->
+      <path d="M148 120 C176 84 250 74 330 78 C412 82 486 82 516 100 C536 112 534 146 528 178
+               C520 216 494 232 442 236 L228 236 C176 234 146 208 144 172 Z"
+            fill="#241F1A" stroke="#B98B34" stroke-width="2.2"/>
+      <!-- head -->
+      <path d="M148 128 C132 112 104 106 78 112 C56 117 44 132 44 148 C44 166 58 180 82 184
+               C110 189 136 178 148 160 Z" fill="#241F1A" stroke="#B98B34" stroke-width="2.2"/>
+      <!-- ear + horn -->
+      <path d="M116 108 C110 92 118 84 130 88 C138 91 140 100 136 110" fill="#241F1A" stroke="#B98B34" stroke-width="2"/>
+      <path d="M92 110 C88 96 96 88 106 90" fill="none" stroke="#B98B34" stroke-width="2" stroke-linecap="round"/>
+      <!-- muzzle + eye -->
+      <path d="M44 148c-8 2-12 8-12 14" stroke="#B98B34" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <circle cx="86" cy="140" r="3.2" fill="#B98B34"/>
+      <!-- legs -->
+      <path d="M196 234 L188 300 L206 300 L216 234" fill="#241F1A" stroke="#B98B34" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M242 234 L238 300 L256 300 L262 234" fill="#241F1A" stroke="#B98B34" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M416 234 L406 300 L424 300 L436 234" fill="#241F1A" stroke="#B98B34" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M460 234 L456 300 L474 300 L480 234" fill="#241F1A" stroke="#B98B34" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M182 300h32M232 300h32M400 300h32M450 300h32" stroke="#B98B34" stroke-width="3.4" stroke-linecap="round"/>
+      <!-- tail -->
+      <path d="M528 118 C548 132 552 168 540 200" fill="none" stroke="#B98B34" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M540 200c-6 8-4 16 2 20 6-6 8-14 4-20z" fill="#B98B34"/>
+
+      <!-- primal divisions -->
+      <g class="ln" stroke-width="1.3" stroke-dasharray="5 5">
+        <path d="M228 82v154"/>
+        <path d="M300 78v100"/>
+        <path d="M368 78v100"/>
+        <path d="M432 80v156"/>
+        <path d="M228 178h204"/>
+        <path d="M148 168h80"/>
+      </g>
+
+      <!-- labels -->
+      <g class="lbl" text-anchor="middle">
+        <text x="188" y="130">CHUCK</text>
+        <text x="264" y="126">RIB</text>
+        <text x="334" y="122">LOIN</text>
+        <text x="400" y="124">RUMP</text>
+        <text x="482" y="140">ROUND</text>
+        <text x="200" y="202">BRISKET</text>
+        <text x="330" y="212">FLANK</text>
+      </g>
+      <g class="lbs" text-anchor="middle">
+        <text x="188" y="145">Braise · slow</text>
+        <text x="264" y="140">Roast · grill</text>
+        <text x="334" y="136">Steak</text>
+        <text x="400" y="138">Steak</text>
+        <text x="482" y="154">Corned · mince</text>
+        <text x="200" y="216">Smoke</text>
+        <text x="330" y="226">Skirt · mince</text>
+      </g>
+
+      <!-- callout rule -->
+      <g stroke="#5A4E3E" stroke-width="1">
+        <path d="M40 316h580"/>
+      </g>
+      <text x="330" y="326" text-anchor="middle" class="lbs" style="letter-spacing:.3em">EVERY ANIMAL · EVERY CUT · NOTHING WASTED</text>
+    </svg>
+  </div>
+  <p class="chartcap">Est. 1994 &nbsp;·&nbsp; Whole-beast butchery</p>
+</header>
+
+<section class="sec" id="cuts"><div class="wrap">
+  <div class="head rise"><p class="eyebrow">The counter</p><h2>What's in the case.</h2>
+  <p>Cut to order. Tell us the thickness and how many you're feeding — we'll sort the rest.</p></div>
+  <div class="cuts rise">
+
+    <article class="cut">
+      <div class="art">
+        <svg viewBox="0 0 400 240" role="img" aria-label="Illustration of a dry-aged rib fillet steak">
+          <rect width="400" height="240" fill="#EBE2D2"/>
+          <g opacity=".5" stroke="#D6C9B2" stroke-width="1"><path d="M0 40h400M0 80h400M0 120h400M0 160h400M0 200h400"/></g>
+          <ellipse cx="200" cy="126" rx="128" ry="76" fill="#C9B99C" opacity=".35"/>
+          <path d="M96 120c0-40 44-64 106-64s102 24 102 62c0 40-42 66-104 66s-104-24-104-64z" fill="#8C2B24"/>
+          <path d="M96 120c0-40 44-64 106-64s102 24 102 62c0 40-42 66-104 66s-104-24-104-64z" fill="none" stroke="#5E1A16" stroke-width="3"/>
+          <path d="M110 84c34-22 96-30 152-16 22 6 34 16 38 28-16-14-46-22-84-24-42-2-82 4-106 12z" fill="#EFE3CE"/>
+          <path d="M112 82c36-22 98-28 154-14" fill="none" stroke="#D8C9AE" stroke-width="3" stroke-linecap="round"/>
+          <g stroke="#C4746A" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85">
+            <path d="M138 122c14-8 22 6 36-2M186 108c16-6 20 10 38 4M232 132c14-10 24 4 38-4"/>
+            <path d="M144 152c18-6 26 6 42 0M198 148c14-8 24 4 40-2M164 96c12-6 20 4 30 0"/>
+          </g>
+          <circle cx="200" cy="126" r="86" fill="none" stroke="#B98B34" stroke-width="1.2" stroke-dasharray="4 6" opacity=".55"/>
+        </svg>
+      </div>
+      <div class="body">
+        <h3>Dry-aged rib fillet</h3>
+        <p>Thirty-five days, Angus, from the Cattanach family at Pittsworth. Marbling score 3+.</p>
+        <div class="pr"><span>$62.00</span><small>per kg</small></div>
+      </div>
+    </article>
+
+    <article class="cut">
+      <div class="art">
+        <svg viewBox="0 0 400 240" role="img" aria-label="Illustration of house-made sausage links">
+          <rect width="400" height="240" fill="#EBE2D2"/>
+          <g opacity=".5" stroke="#D6C9B2" stroke-width="1"><path d="M0 40h400M0 80h400M0 120h400M0 160h400M0 200h400"/></g>
+          <g fill="#A8552F" stroke="#6E3018" stroke-width="3">
+            <path d="M58 96c0-16 16-26 34-26s34 10 34 26v52c0 16-16 26-34 26s-34-10-34-26z"/>
+            <path d="M140 84c0-16 16-26 34-26s34 10 34 26v76c0 16-16 26-34 26s-34-10-34-26z"/>
+            <path d="M222 96c0-16 16-26 34-26s34 10 34 26v52c0 16-16 26-34 26s-34-10-34-26z"/>
+            <path d="M304 110c0-16 16-26 32-26s32 10 32 26v30c0 16-16 26-32 26s-32-10-32-26z"/>
+          </g>
+          <g stroke="#C77A4C" stroke-width="2.4" fill="none" opacity=".8" stroke-linecap="round">
+            <path d="M74 100c10 6 22 6 34 0M74 130c10 6 22 6 34 0M74 160c10 6 22 6 34 0"/>
+            <path d="M156 88c10 6 22 6 34 0M156 124c10 6 22 6 34 0M156 160c10 6 22 6 34 0"/>
+            <path d="M238 100c10 6 22 6 34 0M238 130c10 6 22 6 34 0M238 160c10 6 22 6 34 0"/>
+          </g>
+          <g stroke="#5A4A3C" stroke-width="3.6" fill="none" stroke-linecap="round">
+            <path d="M126 118c8-6 8-10 14-12M208 118c8-6 8-10 14-12M290 122c6-4 8-8 14-10"/>
+          </g>
+          <g fill="#6E3018" opacity=".55">
+            <circle cx="92" cy="112" r="3"/><circle cx="104" cy="144" r="2.6"/>
+            <circle cx="174" cy="104" r="3"/><circle cx="184" cy="142" r="2.6"/>
+            <circle cx="256" cy="118" r="3"/><circle cx="268" cy="146" r="2.6"/>
+          </g>
+        </svg>
+      </div>
+      <div class="body">
+        <h3>House sausages</h3>
+        <p>Ground and linked daily. Beef &amp; red wine, pork &amp; fennel, or jalapeño &amp; cheddar.</p>
+        <div class="pr"><span>$19.50</span><small>per kg</small></div>
+      </div>
+    </article>
+
+    <article class="cut">
+      <div class="art">
+        <svg viewBox="0 0 400 240" role="img" aria-label="Illustration of a rack of smoked pork ribs">
+          <rect width="400" height="240" fill="#EBE2D2"/>
+          <g opacity=".5" stroke="#D6C9B2" stroke-width="1"><path d="M0 40h400M0 80h400M0 120h400M0 160h400M0 200h400"/></g>
+          <path d="M56 74c16-8 250-14 288 2 14 6 16 78 2 88-40 16-258 12-290 2-12-4-14-86 0-92z" fill="#5E2E1C" stroke="#38180E" stroke-width="3"/>
+          <path d="M56 74c16-8 250-14 288 2 6 3 10 18 11 34-46-16-256-18-300-8-1-14 1-26 1-28z" fill="#7A3D23"/>
+          <g stroke="#E6D6BC" stroke-width="9" stroke-linecap="round">
+            <path d="M92 92v56M136 90v58M180 89v60M224 89v60M268 90v58M312 92v56"/>
+          </g>
+          <g stroke="#3A1A0E" stroke-width="2" fill="none" opacity=".55">
+            <path d="M92 92v56M136 90v58M180 89v60M224 89v60M268 90v58M312 92v56"/>
+          </g>
+          <g stroke="#2A120A" stroke-width="2.6" fill="none" opacity=".45" stroke-linecap="round">
+            <path d="M70 108c6 6 6 20 0 28M340 110c-6 6-6 18 0 26"/>
+          </g>
+          <g stroke="#C08A4C" stroke-width="2.2" fill="none" opacity=".7" stroke-linecap="round">
+            <path d="M114 76c0 6-2 8-2 14M158 74c0 6-2 8-2 14M246 74c0 6-2 8-2 14M290 76c0 6-2 8-2 14"/>
+          </g>
+          <g stroke="#9C8F80" stroke-width="2.4" fill="none" opacity=".6" stroke-linecap="round">
+            <path d="M150 46c-8-8 4-14-4-22M200 40c-8-8 4-14-4-22M250 46c-8-8 4-14-4-22"/>
+          </g>
+        </svg>
+      </div>
+      <div class="body">
+        <h3>Smoked pork ribs</h3>
+        <p>Eight hours over ironbark in the smokehouse out the back. Sold by the rack, ready to reheat.</p>
+        <div class="pr"><span>$34.00</span><small>per rack</small></div>
+      </div>
+    </article>
+
+  </div>
+</div></section>
+
+<section class="sec smoke" id="smokehouse"><div class="wrap">
+  <div class="rise">
+    <p class="eyebrow">Out the back</p>
+    <h2 style="margin-top:14px">The smokehouse runs Thursday to Sunday.</h2>
+    <p>Ironbark and a bit of patience. Brisket, pork shoulder, ribs and a leg ham that we start curing in October and don't sell until December. When it's gone for the day, it's gone — we don't hold stock over.</p>
+    <p>Order by Wednesday if you want something set aside for the weekend.</p>
+  </div>
+  <div class="panel rise">
+    <svg viewBox="0 0 480 380" role="img" aria-label="Illustration of the wood-fired smokehouse">
+      <rect width="480" height="380" fill="none"/>
+      <g stroke="#4A3E30" stroke-width="1" opacity=".5"><path d="M0 60h480M0 140h480M0 220h480M0 300h480M80 0v380M160 0v380M240 0v380M320 0v380M400 0v380"/></g>
+      <g stroke="#8E7A5A" stroke-width="3" fill="none" opacity=".55" stroke-linecap="round">
+        <path d="M196 118c-14-18 12-28-2-46M240 108c-14-20 12-30-2-48M284 118c-14-18 12-28-2-46"/>
+      </g>
+      <rect x="150" y="132" width="180" height="176" rx="8" fill="#332921" stroke="#B98B34" stroke-width="2.6"/>
+      <rect x="128" y="112" width="224" height="24" rx="5" fill="#3E3227" stroke="#B98B34" stroke-width="2.6"/>
+      <rect x="222" y="60" width="36" height="54" rx="4" fill="#3E3227" stroke="#B98B34" stroke-width="2.6"/>
+      <rect x="216" y="52" width="48" height="12" rx="3" fill="#B98B34"/>
+      <rect x="170" y="156" width="140" height="86" rx="5" fill="#1B1512" stroke="#B98B34" stroke-width="2.2"/>
+      <g stroke="#D8A951" stroke-width="2.4" fill="none" opacity=".8">
+        <path d="M182 176h116M182 200h116M182 224h116"/>
+      </g>
+      <g fill="#8C2B24" opacity=".9">
+        <rect x="196" y="166" width="30" height="12" rx="4"/><rect x="252" y="166" width="34" height="12" rx="4"/>
+        <rect x="188" y="190" width="36" height="12" rx="4"/><rect x="244" y="190" width="30" height="12" rx="4"/>
+        <rect x="204" y="214" width="34" height="12" rx="4"/><rect x="256" y="214" width="28" height="12" rx="4"/>
+      </g>
+      <circle cx="240" cy="272" r="22" fill="#1B1512" stroke="#B98B34" stroke-width="2.4"/>
+      <path d="M240 258c7 9 11 12 11 18a11 11 0 0 1-22 0c0-4 2-7 5-11 1.5 2.2 2.8 3 4 3.6-.6-3.8 0-7.6 2-10.6z" fill="#D8A951"/>
+      <path d="M182 272h34M264 272h34" stroke="#B98B34" stroke-width="2.2" stroke-linecap="round"/>
+      <rect x="132" y="308" width="216" height="12" rx="4" fill="#B98B34"/>
+      <g stroke="#6E5B42" stroke-width="4" stroke-linecap="round">
+        <path d="M74 330h48M84 344h44M366 330h48M356 344h44"/>
+      </g>
+      <text x="240" y="358" text-anchor="middle" font-family="Karla,sans-serif" font-size="11" letter-spacing="4" fill="#8E8074">IRONBARK · 8 HOURS</text>
+    </svg>
+  </div>
+</div></section>
+
+<section class="sec board" id="specials"><div class="wrap">
+  <div class="head rise"><p class="eyebrow">Week of 10 August</p><h2>This week's board.</h2>
+  <p>Changes every Monday morning. Ring ahead and we'll hold it under your name.</p></div>
+  <div class="two rise">
+    <div>
+      <div class="spec"><b>Family pack<small>2kg mince, 1kg sausages, 1kg chops, 6 rissoles</small></b><span class="p">$89</span></div>
+      <div class="spec"><b>Lamb shanks<small>Frenched, four to a tray</small></b><span class="p">$26 / tray</span></div>
+      <div class="spec"><b>Chicken thigh fillets<small>Free range, skin on</small></b><span class="p">$16.90 / kg</span></div>
+    </div>
+    <div>
+      <div class="spec"><b>Smoked brisket<small>Sliced, sold by the half kilo</small></b><span class="p">$28 / 500g</span></div>
+      <div class="spec"><b>Rump steak<small>Cut to your thickness</small></b><span class="p">$27.50 / kg</span></div>
+      <div class="spec"><b>Bone broth bones<small>Roasted marrow bones, bagged</small></b><span class="p">$8 / kg</span></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec" id="graziers"><div class="wrap">
+  <div class="head rise"><p class="eyebrow">Where it comes from</p><h2>Four families, all within two hours.</h2>
+  <p>We buy whole animals direct. No saleyard, no middleman, and we can tell you the property every cut came off.</p></div>
+  <div class="grz rise">
+    <div class="gz">
+      <svg viewBox="0 0 24 24"><path d="M3 20V9l9-6 9 6v11"/><path d="M3 20h18M9 20v-6h6v6"/></svg>
+      <h4>Cattanach</h4><p>Pittsworth · Angus</p>
+    </div>
+    <div class="gz">
+      <svg viewBox="0 0 24 24"><path d="M4 19c2-6 6-9 8-9s6 3 8 9"/><path d="M12 10V4M9 6l3-2 3 2"/></svg>
+      <h4>Barrett Downs</h4><p>Millmerran · Wagyu cross</p>
+    </div>
+    <div class="gz">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg>
+      <h4>Kelvin Grange</h4><p>Clifton · Free-range pork</p>
+    </div>
+    <div class="gz">
+      <svg viewBox="0 0 24 24"><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-7h6v7M2 10l10-7 10 7"/></svg>
+      <h4>Yarranvale</h4><p>Cambooya · Dorper lamb</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec visit" id="visit" style="background:var(--cream-2)"><div class="wrap">
+  <div class="rise">
+    <p class="eyebrow">Find us</p>
+    <h2 style="font-size:clamp(28px,4vw,44px);margin-top:12px">Come in and have a look.</h2>
+    <p class="addr">
+      1B Burke Street<br>East Toowoomba QLD 4350<br>
+      <a href="tel:0468000000">0468 000 000</a>
+    </p>
+    <p style="color:var(--mute);margin-top:18px">Parking out front. We'll cryovac anything you're taking further than an hour.</p>
+  </div>
+  <div class="rise">
+    <p class="eyebrow">Hours</p>
+    <ul class="hrs" style="margin-top:16px">
+      <li><span>Monday – Friday</span><b>6:00am – 6:00pm</b></li>
+      <li><span>Saturday</span><b>7:00am – 2:00pm</b></li>
+      <li><span>Sunday</span><b>7:00am – 1:00pm</b></li>
+      <li><span>Public holidays</span><b>Closed</b></li>
+    </ul>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="fg">
+    <div>
+      <div class="brandm">
+        <svg class="bm" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="21" fill="none" stroke="#B98B34" stroke-width="1.4"/>
+          <path d="M13 15h9c4 0 6 2 6 5s-2 5-6 5h-9z" fill="none" stroke="#F6F1E7" stroke-width="1.9" stroke-linejoin="round"/>
+          <path d="M20 25l8 9" stroke="#F6F1E7" stroke-width="1.9" stroke-linecap="round"/>
+        </svg>
+        <div class="mark">Range Meat Co.<em>Est. 1994 · Toowoomba</em></div>
+      </div>
+      <p style="margin-top:16px;max-width:34ch">A family butcher on the Range. Whole animals, bought direct, broken down by hand.</p>
+    </div>
+    <div><h5>Contact</h5><p><a href="tel:0468000000">0468 000 000</a></p>
+      <p><a href="mailto:shop@rangemeatco.com.au">shop@rangemeatco.com.au</a></p><p>1B Burke St, East Toowoomba</p></div>
+    <div><h5>Follow</h5><p><a href="#">Instagram</a></p><p><a href="#">Facebook</a></p></div>
+  </div>
+  <div class="fbot">© 2026 Range Meat Co. · ABN 00 000 000 000 — Sample site built by Kundai Web Co.</div>
+</div></footer>
+
+<script>
+const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}}),{threshold:.1,rootMargin:'0px 0px -40px'});
+document.querySelectorAll('.rise').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 A personal finance tracker: log income, expenses, and debts, split extra
 cash into repayments (avalanche or snowball), set payoff-by-date goals,
 and get repayment reminders — with optional Telegram alerts and Supabase
-sync. Runs entirely client-side.
+sync. Runs entirely client-side. 
 
 ## Deploy to GitHub Pages
 

@@ -1138,7 +1138,11 @@ async function pollRemote(){
         }
       }
     }
-  }catch(e){}
+    setSync('', RESTING);
+  }catch(e){
+    console.error('pollRemote failed:', e);
+    setSync('error', 'sync error: ' + (e.message || e.code || 'unknown'));
+  }
   polling = false;
 }
 const saveTimers = {};
@@ -1882,10 +1886,14 @@ function startRealtime(){
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'homehub_data', filter: 'household=eq.'+HOUSEHOLD },
       () => pollRemote())
-    .subscribe();
+    .subscribe((status, err) => {
+      console.log('realtime status:', status, err || '');
+      if(err) setSync('error', 'realtime: ' + status);
+    });
 }
 function startSync(){
   if(!CLOUD) return;
+  pollRemote();
   setInterval(pollRemote, 5000);
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRemote(); });
   window.addEventListener('focus', pollRemote);

@@ -1,5 +1,5 @@
 /* Bump CACHE when you change index.html, otherwise phones keep the old copy. */
-const CACHE = 'homehelper-v7';
+const CACHE = 'homehelper-v8';
 const FILES = ['./', './index.html', './manifest.webmanifest',
                './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 

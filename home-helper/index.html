@@ -1159,7 +1159,11 @@ function save(key){
         await store.set('homehub:pulse', JSON.stringify({by:ME, ts:pulseTs}));
       }
       setSync('', RESTING);
-    }catch(e){ setSync('error','offline — retrying'); setTimeout(()=>save(key),4000); }
+    }catch(e){
+      console.error('save failed for', key, ':', e);
+      setSync('error', 'save error: ' + (e.message || e.code || 'unknown'));
+      setTimeout(()=>save(key),4000);
+    }
   },350);
 }
 

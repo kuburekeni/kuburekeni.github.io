@@ -1,0 +1,19 @@
+{
+  "name": "Ledger Line",
+  "short_name": "Ledger Line",
+  "description": "Personal finance tracker — income, expenses, debts, payoff plans.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12151B",
+  "theme_color": "#12151B",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2312151B%22/><path d=%22M25 65 L45 45 L60 58 L78 32%22 stroke=%22%233EB489%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

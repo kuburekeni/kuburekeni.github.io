@@ -909,6 +909,7 @@ nav button:active{opacity:.55;transform:scale(.94)}
   <div id="sheet"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* =================== state =================== */
 const S = {
@@ -1025,9 +1026,17 @@ function play(kind){
 const dot = document.getElementById('syncDot');
 function setSync(state,msg){ dot.className=state||''; dot.textContent=msg; }
 
-/* Two homes: inside Claude we get shared cloud storage (both phones see the
-   same data). Hosted anywhere else we fall back to this device only. */
-const CLOUD = !!(window.storage && window.storage.get);
+/* Shared cloud storage via Supabase. If the project URL/key below aren't
+   filled in, or the client fails to load, we fall back to this device only. */
+const SUPABASE_URL = 'https://zjsppdoqzxmzrotoxrie.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_WSqJEk0RT0xz_eGOvRkBuA_OhVzoVMa';
+const HOUSEHOLD = 'kanda';
+
+const sb = (window.supabase && !SUPABASE_URL.includes('YOUR-PROJECT'))
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+const CLOUD = !!sb;
 const RESTING = CLOUD ? 'synced' : 'on this phone';
 
 /* Everything is written encrypted. KEY is derived from the PIN at unlock and
@@ -1049,14 +1058,25 @@ async function decrypt(blob){
 const store = {
   async get(k){
     let raw;
-    if(CLOUD){ const r = await window.storage.get(k, true); raw = r && r.value; }
+    if(CLOUD){
+      const { data, error } = await sb.from('homehub_data')
+        .select('value').eq('household', HOUSEHOLD).eq('key', k).maybeSingle();
+      if(error) throw error;
+      raw = data && data.value;
+    }
     else raw = localStorage.getItem(k);
     if(raw === null || raw === undefined) return null;
     return {key:k, value: await decrypt(raw)};
   },
   async set(k,v){
     const blob = await encrypt(v);
-    if(CLOUD) return window.storage.set(k, blob, true);
+    if(CLOUD){
+      const { error } = await sb.from('homehub_data')
+        .upsert({household:HOUSEHOLD, key:k, value:blob, updated_at:new Date().toISOString()},
+                {onConflict:'household,key'});
+      if(error) throw error;
+      return {key:k, value:v};
+    }
     localStorage.setItem(k, blob);
     return {key:k, value:v};
   }
@@ -1213,6 +1233,7 @@ async function checkPin(){
     unlock(true);
     await loadAll();
     startSync();
+    startRealtime();
   }catch(e){
     lock.classList.remove('busy');
     pinFail('Wrong PIN — try again');
@@ -1855,6 +1876,14 @@ renderAll();
   else window.addEventListener('load', dismiss);
 })();
 
+function startRealtime(){
+  if(!CLOUD) return;
+  sb.channel('homehub-'+HOUSEHOLD)
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'homehub_data', filter: 'household=eq.'+HOUSEHOLD },
+      () => pollRemote())
+    .subscribe();
+}
 function startSync(){
   if(!CLOUD) return;
   setInterval(pollRemote, 5000);

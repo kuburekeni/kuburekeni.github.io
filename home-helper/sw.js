@@ -1,5 +1,5 @@
 /* Bump CACHE when you change index.html, otherwise phones keep the old copy. */
-const CACHE = 'homehelper-v6';
+const CACHE = 'homehelper-v7';
 const FILES = ['./', './index.html', './manifest.webmanifest',
                './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
@@ -28,4 +28,3 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
   );
 });
-

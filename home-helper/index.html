@@ -269,7 +269,7 @@ header h1 span{display:block;font-family:var(--body);font-size:11px;font-weight:
 }
 .section-title{display:flex;align-items:center;justify-content:space-between;margin:16px 2px 8px}
 .section-title h2{font-size:19px}
-.section-title .hint{font-size:12px;color:var(--ink-soft)}
+.section-title .hint,.hint{font-size:12px;color:var(--ink-soft)}
 
 .row{
   display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line);
@@ -618,6 +618,40 @@ nav button:active{opacity:.55;transform:scale(.94)}
   transition:transform .16s cubic-bezier(.2,.8,.2,1), opacity .16s, background .16s;
 }
 .chip:active{opacity:.55;transform:scale(.95)}
+
+/* ---------- list bar (folders + lists for to-dos / groceries) ---------- */
+.listbar{margin-bottom:10px}
+.listbar .chip-row{
+  display:flex;gap:7px;overflow-x:auto;padding:1px 1px 3px;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.listbar .chip-row::-webkit-scrollbar{display:none}
+.list-chip{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:99px;
+  background:var(--fill);color:var(--ink);font-size:13px;font-weight:600;white-space:nowrap;
+  transition:transform .16s cubic-bezier(.2,.8,.2,1), opacity .16s, background .16s;
+}
+.list-chip:active{opacity:.6;transform:scale(.95)}
+.list-chip.on{background:var(--p1);color:#fff}
+.list-chip.folder{background:transparent;border:1.5px dashed var(--ctrl-line);color:var(--ink-soft)}
+.list-chip.folder.on{border-color:var(--p1);color:var(--p1)}
+.list-chip.add{background:transparent;border:1.5px dashed var(--ctrl-line);color:var(--p1)}
+.list-chip.manage{background:transparent;color:var(--ink-soft)}
+.folder-lists{
+  display:flex;gap:7px;overflow-x:auto;padding:8px 2px 2px 12px;margin:0 0 3px 6px;
+  border-left:2px solid var(--line);-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.folder-lists::-webkit-scrollbar{display:none}
+
+/* ---------- colour picker (events) ---------- */
+.color-picker{display:flex;flex-wrap:wrap;gap:9px;padding:2px 0}
+.swatch{width:30px;height:30px;border-radius:50%;flex:none;border:2.5px solid transparent;position:relative}
+.swatch.on{border-color:var(--ink)}
+.swatch.on::after{
+  content:'';position:absolute;inset:0;margin:auto;width:9px;height:9px;border-radius:50%;
+  background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);
+}
+.repeat-badge{font-size:11px;color:var(--ink-soft);font-weight:600}
 .turn{font-size:11.5px;padding:2px 8px;border-radius:99px;font-weight:600;background:var(--p1-soft);color:var(--p1)}
 .turn.t1{background:var(--p2-soft);color:var(--p2-ink)}
 .turn.tboth{background:var(--fill);color:var(--ink-soft)}
@@ -841,12 +875,13 @@ nav button:active{opacity:.55;transform:scale(.94)}
 <!-- ============ GROCERIES ============ -->
 <div class="page" id="page-groc">
   <div class="section-title"><h2>Grocery list</h2><span class="hint" id="grocCount"></span></div>
+  <div class="listbar" id="grocListBar"></div>
   <div class="addbar">
     <input id="grocInput" placeholder="Add an item…" enterkeyhint="done">
     <button class="btn" onclick="addGrocery()">Add</button>
   </div>
   <div class="card" id="grocList"></div>
-  <button class="btn ghost" style="width:100%" onclick="clearChecked()">Clear ticked items</button>
+  <button class="btn ghost" style="width:100%" onclick="clearChecked()">Clear ticked items on this list</button>
 </div>
 
 <!-- ============ BILLS ============ -->
@@ -865,6 +900,7 @@ nav button:active{opacity:.55;transform:scale(.94)}
 <!-- ============ TASKS & NOTES ============ -->
 <div class="page" id="page-tasks">
   <div class="section-title"><h2>To-dos</h2><span class="hint" id="taskCount"></span></div>
+  <div class="listbar" id="taskListBar"></div>
   <div class="addbar">
     <input id="taskInput" placeholder="Add a to-do…" enterkeyhint="done">
     <button class="btn" onclick="addTask()">Add</button>
@@ -915,11 +951,25 @@ nav button:active{opacity:.55;transform:scale(.94)}
 const S = {
   events:[], grocery:[], bills:[], tasks:[], notes:[], chores:[],
   people:['K','A'],
+  taskLists:[], taskFolders:[], grocLists:[], grocFolders:[],
 };
 let calCursor = new Date();          // month being viewed
 let selDate = isoDate(new Date());   // selected day
 let ME = Number(localStorage.getItem('homehub:me')) || 0;   // which person is using this device (0 or 1)
-const KEYS = ['events','grocery','bills','tasks','notes','chores','people'];
+let SOUND = localStorage.getItem('homehub:sound') !== 'off';
+const THEMES = ['auto','light','dark'];
+let THEME = THEMES.includes(localStorage.getItem('homehub:theme')) ? localStorage.getItem('homehub:theme') : 'auto';
+function applyTheme(){
+  if(THEME === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', THEME);
+}
+const KEYS = ['events','grocery','bills','tasks','notes','chores','people','taskLists','taskFolders','grocLists','grocFolders'];
+
+/* Which list is currently showing, per kind ('task' / 'groc') — device-local,
+   not synced, same way ME (whose phone) stays device-local. */
+const activeList = {task:null, groc:null};
+/* Which folders are expanded in the chip bar, per kind. */
+const expandedFolders = {task:new Set(), groc:new Set()};
 const AV_K = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="4" y="1" width="8" height="1" fill="#1a1511"/><rect x="3" y="2" width="1" height="1" fill="#1a1511"/><rect x="4" y="2" width="8" height="1" fill="#28211b"/><rect x="12" y="2" width="1" height="1" fill="#1a1511"/><rect x="3" y="3" width="1" height="1" fill="#1a1511"/><rect x="4" y="3" width="8" height="1" fill="#28211b"/><rect x="12" y="3" width="1" height="1" fill="#1a1511"/><rect x="3" y="4" width="1" height="1" fill="#50301d"/><rect x="4" y="4" width="1" height="1" fill="#28211b"/><rect x="5" y="4" width="6" height="1" fill="#805031"/><rect x="11" y="4" width="1" height="1" fill="#28211b"/><rect x="12" y="4" width="1" height="1" fill="#50301d"/><rect x="3" y="5" width="1" height="1" fill="#50301d"/><rect x="4" y="5" width="8" height="1" fill="#805031"/><rect x="12" y="5" width="1" height="1" fill="#50301d"/><rect x="3" y="6" width="1" height="1" fill="#50301d"/><rect x="4" y="6" width="1" height="1" fill="#805031"/><rect x="5" y="6" width="1" height="1" fill="#18120e"/><rect x="6" y="6" width="4" height="1" fill="#805031"/><rect x="10" y="6" width="1" height="1" fill="#18120e"/><rect x="11" y="6" width="1" height="1" fill="#805031"/><rect x="12" y="6" width="1" height="1" fill="#50301d"/><rect x="3" y="7" width="1" height="1" fill="#50301d"/><rect x="4" y="7" width="8" height="1" fill="#805031"/><rect x="12" y="7" width="1" height="1" fill="#50301d"/><rect x="3" y="8" width="1" height="1" fill="#50301d"/><rect x="4" y="8" width="2" height="1" fill="#805031"/><rect x="6" y="8" width="4" height="1" fill="#9e654f"/><rect x="10" y="8" width="2" height="1" fill="#805031"/><rect x="12" y="8" width="1" height="1" fill="#50301d"/><rect x="4" y="9" width="1" height="1" fill="#50301d"/><rect x="5" y="9" width="6" height="1" fill="#805031"/><rect x="11" y="9" width="1" height="1" fill="#50301d"/><rect x="5" y="10" width="1" height="1" fill="#1a1511"/><rect x="6" y="10" width="4" height="1" fill="#653e25"/><rect x="10" y="10" width="1" height="1" fill="#1a1511"/><rect x="4" y="11" width="1" height="1" fill="#1a1511"/><rect x="5" y="11" width="6" height="1" fill="#007aff"/><rect x="11" y="11" width="1" height="1" fill="#1a1511"/><rect x="2" y="12" width="1" height="1" fill="#1a1511"/><rect x="3" y="12" width="10" height="1" fill="#007aff"/><rect x="13" y="12" width="1" height="1" fill="#1a1511"/><rect x="1" y="13" width="1" height="1" fill="#1a1511"/><rect x="2" y="13" width="12" height="1" fill="#007aff"/><rect x="14" y="13" width="1" height="1" fill="#1a1511"/><rect x="0" y="14" width="1" height="1" fill="#1a1511"/><rect x="1" y="14" width="14" height="1" fill="#007aff"/><rect x="15" y="14" width="1" height="1" fill="#1a1511"/><rect x="0" y="15" width="1" height="1" fill="#1a1511"/><rect x="1" y="15" width="14" height="1" fill="#007aff"/><rect x="15" y="15" width="1" height="1" fill="#1a1511"/></svg>';
 const AV_A = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="4" y="1" width="8" height="1" fill="#3a1c50"/><rect x="3" y="2" width="1" height="1" fill="#3a1c50"/><rect x="4" y="2" width="1" height="1" fill="#af52de"/><rect x="5" y="2" width="2" height="1" fill="#cb8cee"/><rect x="7" y="2" width="5" height="1" fill="#af52de"/><rect x="12" y="2" width="1" height="1" fill="#3a1c50"/><rect x="2" y="3" width="1" height="1" fill="#3a1c50"/><rect x="3" y="3" width="1" height="1" fill="#af52de"/><rect x="4" y="3" width="1" height="1" fill="#cb8cee"/><rect x="5" y="3" width="8" height="1" fill="#af52de"/><rect x="13" y="3" width="1" height="1" fill="#3a1c50"/><rect x="2" y="4" width="1" height="1" fill="#3a1c50"/><rect x="3" y="4" width="2" height="1" fill="#af52de"/><rect x="5" y="4" width="6" height="1" fill="#f1c9ad"/><rect x="11" y="4" width="2" height="1" fill="#af52de"/><rect x="13" y="4" width="1" height="1" fill="#3a1c50"/><rect x="2" y="5" width="1" height="1" fill="#3a1c50"/><rect x="3" y="5" width="1" height="1" fill="#af52de"/><rect x="4" y="5" width="8" height="1" fill="#f1c9ad"/><rect x="12" y="5" width="1" height="1" fill="#af52de"/><rect x="13" y="5" width="1" height="1" fill="#3a1c50"/><rect x="2" y="6" width="1" height="1" fill="#3a1c50"/><rect x="3" y="6" width="1" height="1" fill="#af52de"/><rect x="4" y="6" width="1" height="1" fill="#f1c9ad"/><rect x="5" y="6" width="1" height="1" fill="#34223c"/><rect x="6" y="6" width="4" height="1" fill="#f1c9ad"/><rect x="10" y="6" width="1" height="1" fill="#34223c"/><rect x="11" y="6" width="1" height="1" fill="#f1c9ad"/><rect x="12" y="6" width="1" height="1" fill="#af52de"/><rect x="13" y="6" width="1" height="1" fill="#3a1c50"/><rect x="2" y="7" width="1" height="1" fill="#3a1c50"/><rect x="3" y="7" width="1" height="1" fill="#af52de"/><rect x="4" y="7" width="8" height="1" fill="#f1c9ad"/><rect x="12" y="7" width="1" height="1" fill="#af52de"/><rect x="13" y="7" width="1" height="1" fill="#3a1c50"/><rect x="2" y="8" width="1" height="1" fill="#3a1c50"/><rect x="3" y="8" width="1" height="1" fill="#af52de"/><rect x="4" y="8" width="2" height="1" fill="#f1c9ad"/><rect x="6" y="8" width="4" height="1" fill="#ce8484"/><rect x="10" y="8" width="2" height="1" fill="#f1c9ad"/><rect x="12" y="8" width="1" height="1" fill="#af52de"/><rect x="13" y="8" width="1" height="1" fill="#3a1c50"/><rect x="2" y="9" width="1" height="1" fill="#3a1c50"/><rect x="3" y="9" width="1" height="1" fill="#af52de"/><rect x="4" y="9" width="1" height="1" fill="#ce9e82"/><rect x="5" y="9" width="6" height="1" fill="#f1c9ad"/><rect x="11" y="9" width="1" height="1" fill="#ce9e82"/><rect x="12" y="9" width="1" height="1" fill="#af52de"/><rect x="13" y="9" width="1" height="1" fill="#3a1c50"/><rect x="2" y="10" width="1" height="1" fill="#3a1c50"/><rect x="3" y="10" width="2" height="1" fill="#af52de"/><rect x="5" y="10" width="1" height="1" fill="#3a1c50"/><rect x="6" y="10" width="4" height="1" fill="#d9ab8f"/><rect x="10" y="10" width="1" height="1" fill="#3a1c50"/><rect x="11" y="10" width="2" height="1" fill="#af52de"/><rect x="13" y="10" width="1" height="1" fill="#3a1c50"/><rect x="2" y="11" width="1" height="1" fill="#3a1c50"/><rect x="3" y="11" width="2" height="1" fill="#af52de"/><rect x="5" y="11" width="6" height="1" fill="#ff2d55"/><rect x="11" y="11" width="2" height="1" fill="#af52de"/><rect x="13" y="11" width="1" height="1" fill="#3a1c50"/><rect x="1" y="12" width="1" height="1" fill="#3a1c50"/><rect x="2" y="12" width="2" height="1" fill="#af52de"/><rect x="4" y="12" width="8" height="1" fill="#ff2d55"/><rect x="12" y="12" width="2" height="1" fill="#af52de"/><rect x="14" y="12" width="1" height="1" fill="#3a1c50"/><rect x="0" y="13" width="1" height="1" fill="#3a1c50"/><rect x="1" y="13" width="2" height="1" fill="#af52de"/><rect x="3" y="13" width="10" height="1" fill="#ff2d55"/><rect x="13" y="13" width="2" height="1" fill="#af52de"/><rect x="15" y="13" width="1" height="1" fill="#3a1c50"/><rect x="0" y="14" width="1" height="1" fill="#3a1c50"/><rect x="1" y="14" width="2" height="1" fill="#af52de"/><rect x="3" y="14" width="10" height="1" fill="#ff2d55"/><rect x="13" y="14" width="2" height="1" fill="#af52de"/><rect x="15" y="14" width="1" height="1" fill="#3a1c50"/><rect x="0" y="15" width="1" height="1" fill="#3a1c50"/><rect x="1" y="15" width="14" height="1" fill="#ff2d55"/><rect x="15" y="15" width="1" height="1" fill="#3a1c50"/></svg>';
 function avatar(i){ return '<span class="pa '+(i?'a':'k')+'">'+(i?AV_A:AV_K)+'</span>'; }
@@ -961,6 +1011,7 @@ function _tone(c, freq, type, t0, dur, vol, slideTo){
   o.start(t0); o.stop(t0 + dur + 0.02);
 }
 function play(kind){
+  if(!SOUND) return;
   const c = _ctx(); if(!c) return;
   const t = c.currentTime;
   switch(kind){
@@ -1327,11 +1378,65 @@ function personOptions(){ return [S.people[0], S.people[1], 'Both']; }
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOWS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
+/* ---------- colour + recurrence (TimeTree-style) ---------- */
+const EVENT_COLORS = [
+  {k:'blue',   v:'var(--p1)'},
+  {k:'pink',   v:'var(--p2)'},
+  {k:'purple', v:'var(--purple)'},
+  {k:'indigo', v:'var(--indigo)'},
+  {k:'green',  v:'var(--green)'},
+  {k:'orange', v:'var(--orange)'},
+  {k:'red',    v:'var(--red)'},
+];
+const REPEATS = [['none','Does not repeat'],['daily','Every day'],['weekly','Every week'],
+                  ['monthly','Every month'],['yearly','Every year']];
+
+function eventColorVal(e){
+  const found = EVENT_COLORS.find(c=>c.k===e.color);
+  if(found) return found.v;
+  return e.person===1 ? 'var(--p2)' : e.person===2 ? 'linear-gradient(90deg,var(--p1) 50%,var(--p2) 50%)' : 'var(--p1)';
+}
+function colorPicker(id, selectedKey){
+  return '<div class="color-picker" id="'+id+'">' + EVENT_COLORS.map(c=>
+    '<button type="button" class="swatch'+(c.k===selectedKey?' on':'')+'" data-k="'+c.k+'" style="background:'+c.v+'" onclick="colorPick(\''+id+'\',\''+c.k+'\')" aria-label="'+c.k+'"></button>'
+  ).join('') + '</div>';
+}
+function colorPick(id,k){
+  document.querySelectorAll('#'+id+' .swatch').forEach(b=>b.classList.toggle('on', b.dataset.k===k));
+}
+function colorVal(id){
+  const on = document.querySelector('#'+id+' .swatch.on');
+  return on ? on.dataset.k : '';
+}
+function lastDayOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0).getDate(); }
+
+/* Does event e (possibly recurring) fall on calendar day iso ('YYYY-MM-DD')? */
+function eventOccursOn(e, iso){
+  if(e.date === iso) return true;
+  if(!e.repeat || e.repeat==='none') return false;
+  if(iso < e.date) return false;
+  if(e.repeatUntil && iso > e.repeatUntil) return false;
+  const d0 = new Date(e.date+'T00:00'), d1 = new Date(iso+'T00:00');
+  const dayDiff = Math.round((d1-d0)/86400000);
+  if(e.repeat==='daily') return true;
+  if(e.repeat==='weekly') return dayDiff % 7 === 0;
+  if(e.repeat==='monthly'){
+    if(d0.getDate() === d1.getDate()) return true;
+    // handle months shorter than the anchor day (e.g. 31st -> Feb 28th)
+    return d1.getDate() === lastDayOfMonth(d1) && d0.getDate() > d1.getDate();
+  }
+  if(e.repeat==='yearly') return d0.getDate()===d1.getDate() && d0.getMonth()===d1.getMonth();
+  return false;
+}
+function eventsOnDate(iso){
+  return S.events.filter(e=>eventOccursOn(e,iso));
+}
+
 function renderToday(){
   const now = new Date();
   document.getElementById('todayDate').textContent =
     now.toLocaleDateString('en-AU',{weekday:'long', day:'numeric', month:'long'});
-  const todays = S.events.filter(e=>e.date===isoDate(now));
+  const todays = eventsOnDate(isoDate(now));
   const bills = billsDueSoon();
   let sub = todays.length ? (todays.length+' event'+(todays.length>1?'s':'')+' today') : 'Nothing on today';
   if(bills.length) sub += ' · '+bills.length+' bill'+(bills.length>1?'s':'')+' due this week';
@@ -1356,13 +1461,9 @@ function renderCal(){
   for(let i=0;i<startOffset;i++) html += '<div class="day out"></div>';
   for(let d=1; d<=daysIn; d++){
     const iso = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const evs = S.events.filter(e=>e.date===iso);
+    const evs = eventsOnDate(iso);
     const cls = ['day', iso===todayIso?'today':'', iso===selDate?'sel':''].join(' ');
-    const dots = evs.slice(0,3).map(e=>{
-      const col = e.person===2 ? 'background:linear-gradient(90deg,var(--p1) 50%,var(--p2) 50%)'
-                : e.person===1 ? 'background:var(--p2)' : 'background:var(--p1)';
-      return '<span style="'+col+'"></span>';
-    }).join('');
+    const dots = evs.slice(0,3).map(e=>'<span style="background:'+eventColorVal(e)+'"></span>').join('');
     html += '<button class="'+cls+'" onclick="pickDay(\''+iso+'\')">'+d+'<span class="dots">'+dots+'</span></button>';
   }
   document.getElementById('calGrid').innerHTML = html;
@@ -1378,7 +1479,7 @@ function renderDayEvents(){
   const d = new Date(selDate+'T00:00');
   document.getElementById('dayTitle').textContent =
     d.toLocaleDateString('en-AU',{weekday:'long', day:'numeric', month:'short'});
-  const evs = S.events.filter(e=>e.date===selDate).sort((a,b)=>(a.time||'99')<(b.time||'99')?-1:1);
+  const evs = eventsOnDate(selDate).sort((a,b)=>(a.time||'99')<(b.time||'99')?-1:1);
   const box = document.getElementById('dayEvents');
   if(!evs.length){
     box.innerHTML = '<div class="empty"><b>Nothing planned</b>Tap “Add event” to put something on this day.</div>';
@@ -1386,11 +1487,12 @@ function renderDayEvents(){
   }
   box.innerHTML = evs.map(e=>
     '<div class="row">'+
-      '<span class="dot '+(e.person===2?'both':'p'+e.person)+'"></span>'+
-      '<div class="grow"><div class="title">'+esc(e.title)+'</div>'+
+      '<span class="dot" style="background:'+eventColorVal(e)+'"></span>'+
+      '<div class="grow" onclick="openEventSheet(\''+e.id+'\')"><div class="title">'+esc(e.title)+
+        (e.repeat && e.repeat!=='none' ? ' <span class="repeat-badge">↻</span>' : '')+'</div>'+
       '<div class="meta">'+(e.time?fmtTime(e.time)+' · ':'')+esc(e.person===2?'Both':S.people[e.person]||'')+(e.notes?' · '+esc(e.notes):'')+'</div></div>'+
-      '<button class="icon-btn" style="color:var(--p1)" onclick="downloadIcs(\''+e.id+'\')" aria-label="Add to iPhone Calendar">'+CALPLUS_SVG+'</button>'+
-      '<button class="icon-btn" onclick="delEvent(\''+e.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>'+
+      '<button class="icon-btn" style="color:var(--p1)" onclick="event.stopPropagation();downloadIcs(\''+e.id+'\')" aria-label="Add to iPhone Calendar">'+CALPLUS_SVG+'</button>'+
+      '<button class="icon-btn" onclick="event.stopPropagation();delEvent(\''+e.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>'+
     '</div>'
   ).join('');
 }
@@ -1401,32 +1503,54 @@ function fmtTime(t){
   return ((h%12)||12)+(m?':'+String(m).padStart(2,'0'):'')+ap;
 }
 
-function openEventSheet(){
+function openEventSheet(editId){
+  const e = editId ? S.events.find(x=>x.id===editId) : null;
+  const defaultColor = e ? (e.color || 'blue') : 'blue';
+  const rep = e && e.repeat ? e.repeat : 'none';
   openSheet(
-    '<h3>New event</h3>'+
-    '<div class="field"><label>What is it?</label><input id="evTitle" placeholder="Dinner with friends"></div>'+
+    '<h3>'+(e?'Edit event':'New event')+'</h3>'+
+    '<div class="field"><label>What is it?</label><input id="evTitle" placeholder="Dinner with friends" value="'+(e?esc(e.title):'')+'"></div>'+
     '<div class="field-row">'+
-      '<div class="field"><label>Date</label><input id="evDate" type="date" value="'+selDate+'"></div>'+
-      '<div class="field"><label>Time (optional)</label><input id="evTime" type="time"></div>'+
+      '<div class="field"><label>Date</label><input id="evDate" type="date" value="'+(e?e.date:selDate)+'"></div>'+
+      '<div class="field"><label>Time (optional)</label><input id="evTime" type="time" value="'+(e&&e.time?e.time:'')+'"></div>'+
     '</div>'+
-    '<div class="field"><label>Whose event?</label>'+segControl('evPerson', personOptions(), 2)+'</div>'+
-    '<div class="field"><label>Notes (optional)</label><input id="evNotes" placeholder="Bring dessert"></div>'+
+    '<div class="field"><label>Whose event?</label>'+segControl('evPerson', personOptions(), e?e.person:2)+'</div>'+
+    '<div class="field"><label>Colour</label>'+colorPicker('evColor', defaultColor)+'</div>'+
+    '<div class="field"><label>Repeats</label><select id="evRepeat">'+
+      REPEATS.map(r=>'<option value="'+r[0]+'"'+(rep===r[0]?' selected':'')+'>'+r[1]+'</option>').join('')+
+    '</select></div>'+
+    '<div class="field" id="evUntilWrap" style="'+(rep!=='none'?'':'display:none')+'">'+
+      '<label>Repeat until (optional)</label><input id="evUntil" type="date" value="'+(e&&e.repeatUntil?e.repeatUntil:'')+'"></div>'+
+    '<div class="field"><label>Notes (optional)</label><input id="evNotes" placeholder="Bring dessert" value="'+(e&&e.notes?esc(e.notes):'')+'"></div>'+
     '<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Cancel</button>'+
-    '<button class="btn" onclick="saveEvent()">Save event</button></div>'
+    '<button class="btn" onclick="saveEvent(\''+(editId||'')+'\')">'+(e?'Save changes':'Save event')+'</button></div>'+
+    (e?'<button class="danger-link" onclick="delEvent(\''+editId+'\');closeSheet()">Delete this event'+(rep!=='none'?' series':'')+'</button>':'')
   );
-  setTimeout(()=>document.getElementById('evTitle').focus(),250);
+  setTimeout(()=>document.getElementById('evTitle')?.focus(),250);
+  const repSel = document.getElementById('evRepeat');
+  repSel.addEventListener('change', ()=>{
+    document.getElementById('evUntilWrap').style.display = repSel.value==='none' ? 'none' : 'block';
+  });
 }
 
-function saveEvent(){
+function saveEvent(editId){
   const title = document.getElementById('evTitle').value.trim();
   const date = document.getElementById('evDate').value;
   if(!title || !date) return;
-  S.events.push({
-    id:uid(), title, date,
+  const data = {
+    title, date,
     time: document.getElementById('evTime').value || '',
     person: segVal('evPerson'),
+    color: colorVal('evColor') || 'blue',
+    repeat: document.getElementById('evRepeat').value || 'none',
+    repeatUntil: document.getElementById('evUntil').value || '',
     notes: document.getElementById('evNotes').value.trim(),
-  });
+  };
+  if(editId){
+    Object.assign(S.events.find(x=>x.id===editId), data);
+  }else{
+    S.events.push(Object.assign({id:uid()}, data));
+  }
   play('add'); save('events'); closeSheet();
   selDate = date;
   calCursor = new Date(date+'T00:00');
@@ -1442,6 +1566,15 @@ function delEvent(id){
 function icsStamp(date, time){
   const d = date.replace(/-/g,'');
   return time ? d+'T'+time.replace(':','')+'00' : d;
+}
+function repeatToRRule(e){
+  if(!e.repeat || e.repeat==='none') return '';
+  const freqMap = {daily:'DAILY', weekly:'WEEKLY', monthly:'MONTHLY', yearly:'YEARLY'};
+  const freq = freqMap[e.repeat];
+  if(!freq) return '';
+  let r = 'RRULE:FREQ='+freq;
+  if(e.repeatUntil) r += ';UNTIL='+icsStamp(e.repeatUntil)+'T235959Z';
+  return r;
 }
 function eventToVevent(e){
   const hasTime = !!e.time;
@@ -1459,6 +1592,7 @@ function eventToVevent(e){
   return ['BEGIN:VEVENT','UID:'+e.id+'@homehub',
     'DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',
     start, end,
+    repeatToRRule(e),
     'SUMMARY:'+e.title.replace(/([,;])/g,'\\$1'),
     e.notes?'DESCRIPTION:'+e.notes.replace(/([,;])/g,'\\$1'):'',
     'END:VEVENT'].filter(Boolean).join('\r\n');
@@ -1481,9 +1615,211 @@ function downloadIcs(id){
 }
 function exportAllIcs(){
   const y=calCursor.getFullYear(), m=calCursor.getMonth();
-  const evs = S.events.filter(e=>{ const d=new Date(e.date+'T00:00'); return d.getFullYear()===y && d.getMonth()===m; });
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  const evs = S.events.filter(e=>{
+    if(!e.repeat || e.repeat==='none'){
+      const d=new Date(e.date+'T00:00'); return d.getFullYear()===y && d.getMonth()===m;
+    }
+    for(let day=1; day<=daysInMonth; day++){
+      const iso = y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      if(eventOccursOn(e,iso)) return true;
+    }
+    return false;
+  });
   if(!evs.length){ alert('No events in '+MONTHS[m]+' yet.'); return; }
   downloadIcsFile(makeIcs(evs), 'homehub-'+MONTHS[m].toLowerCase()+'.ics');
+}
+
+/* =================== lists & folders (shared by to-dos + groceries) ===================
+   kind is 'task' or 'groc'. Each has: S[kind+'Lists'] = [{id,name,folderId}],
+   S[kind+'Folders'] = [{id,name}], and the item array itself (S.tasks / S.grocery)
+   where every item carries a listId. */
+function itemsFor(kind){ return kind==='task' ? S.tasks : S.grocery; }
+
+function ensureDefaultList(kind){
+  const lists = S[kind+'Lists'];
+  const items = itemsFor(kind);
+  let listsChanged = false, itemsChanged = false;
+  if(!lists.length){
+    const def = {id:uid(), name: kind==='task' ? 'To-dos' : 'Groceries', folderId:''};
+    lists.push(def);
+    listsChanged = true;
+    items.forEach(it=>{ if(!it.listId){ it.listId = def.id; itemsChanged = true; } });
+  }else{
+    const validIds = new Set(lists.map(l=>l.id));
+    const fallback = lists[0].id;
+    items.forEach(it=>{ if(!it.listId || !validIds.has(it.listId)){ it.listId = fallback; itemsChanged = true; } });
+  }
+  if(!activeList[kind] || !lists.some(l=>l.id===activeList[kind])) activeList[kind] = lists[0].id;
+  // Persist any migration/repair so it doesn't regenerate on next load.
+  if(listsChanged && KEY) save(kind+'Lists');
+  if(itemsChanged && KEY) save(kind==='task'?'tasks':'grocery');
+}
+
+function renderListBar(kind){
+  ensureDefaultList(kind);
+  const lists = S[kind+'Lists'], folders = S[kind+'Folders'];
+  const top = lists.filter(l=>!l.folderId);
+  let html = '<div class="chip-row">';
+  top.forEach(l=>{
+    html += '<button class="list-chip'+(activeList[kind]===l.id?' on':'')+'" onclick="pickList(\''+kind+'\',\''+l.id+'\')">'+esc(l.name)+'</button>';
+  });
+  folders.forEach(f=>{
+    const open = expandedFolders[kind].has(f.id);
+    html += '<button class="list-chip folder'+(open?' on':'')+'" onclick="toggleFolder(\''+kind+'\',\''+f.id+'\')">📁 '+esc(f.name)+' '+(open?'▾':'▸')+'</button>';
+  });
+  html += '<button class="list-chip add" onclick="openListEditSheet(\''+kind+'\',\'list\')">+ List</button>';
+  html += '<button class="list-chip add" onclick="openListEditSheet(\''+kind+'\',\'folder\')">+ Folder</button>';
+  if(lists.length>1 || folders.length){
+    html += '<button class="list-chip manage" onclick="openManageListsSheet(\''+kind+'\')">Manage</button>';
+  }
+  html += '</div>';
+  folders.forEach(f=>{
+    if(!expandedFolders[kind].has(f.id)) return;
+    const inside = lists.filter(l=>l.folderId===f.id);
+    html += '<div class="folder-lists">';
+    if(!inside.length) html += '<span class="hint" style="align-self:center">Empty folder</span>';
+    inside.forEach(l=>{
+      html += '<button class="list-chip'+(activeList[kind]===l.id?' on':'')+'" onclick="pickList(\''+kind+'\',\''+l.id+'\')">'+esc(l.name)+'</button>';
+    });
+    html += '<button class="list-chip add" onclick="openListEditSheet(\''+kind+'\',\'list\',\'\',\''+f.id+'\')">+ List</button>';
+    html += '</div>';
+  });
+  document.getElementById(kind+'ListBar').innerHTML = html;
+}
+
+function pickList(kind,id){
+  activeList[kind] = id; play('nav');
+  renderListBar(kind);
+  if(kind==='task') renderTasks(); else renderGrocery();
+}
+function toggleFolder(kind,id){
+  const set = expandedFolders[kind];
+  set.has(id) ? set.delete(id) : set.add(id);
+  renderListBar(kind);
+}
+
+function openListEditSheet(kind, type, editId, presetFolderId){
+  const isFolder = type==='folder';
+  const obj = editId ? (isFolder ? S[kind+'Folders'] : S[kind+'Lists']).find(x=>x.id===editId) : null;
+  let folderOptions = '';
+  if(!isFolder){
+    const folders = S[kind+'Folders'];
+    const current = obj ? (obj.folderId||'') : (presetFolderId||'');
+    folderOptions = '<div class="field"><label>Folder (optional)</label><select id="lstFolder">'
+      + '<option value=""'+(current===''?' selected':'')+'>No folder</option>'
+      + folders.map(f=>'<option value="'+f.id+'"'+(current===f.id?' selected':'')+'>'+esc(f.name)+'</option>').join('')
+      + '</select></div>';
+  }
+  const kindLabel = kind==='task' ? 'list' : 'shop';
+  openSheet(
+    '<h3>'+(obj?('Rename '+(isFolder?'folder':kindLabel)):(isFolder?'New folder':'New '+kindLabel))+'</h3>'+
+    '<div class="field"><label>Name</label><input id="lstName" placeholder="'+(isFolder?'Shops':(kind==='task'?'Weekend jobs':'Bunnings'))+'" value="'+(obj?esc(obj.name):'')+'"></div>'+
+    folderOptions+
+    '<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Cancel</button>'+
+    '<button class="btn" onclick="saveListEdit(\''+kind+'\',\''+type+'\',\''+(editId||'')+'\')">'+(obj?'Save':'Create')+'</button></div>'+
+    (obj ? '<button class="danger-link" onclick="'+(isFolder?'deleteFolder':'deleteList')+'(\''+kind+'\',\''+editId+'\')">Delete this '+(isFolder?'folder':kindLabel)+'</button>' : '')
+  );
+  setTimeout(()=>document.getElementById('lstName')?.focus(),250);
+}
+
+function saveListEdit(kind, type, editId){
+  const name = document.getElementById('lstName').value.trim();
+  if(!name) return;
+  const isFolder = type==='folder';
+  if(isFolder){
+    if(editId){ S[kind+'Folders'].find(x=>x.id===editId).name = name; }
+    else S[kind+'Folders'].push({id:uid(), name});
+    play('add'); save(kind+'Folders'); closeSheet(); renderListBar(kind);
+    return;
+  }
+  const folderId = document.getElementById('lstFolder').value;
+  if(editId){
+    const l = S[kind+'Lists'].find(x=>x.id===editId);
+    l.name = name; l.folderId = folderId;
+  }else{
+    const l = {id:uid(), name, folderId};
+    S[kind+'Lists'].push(l);
+    activeList[kind] = l.id;
+    if(folderId) expandedFolders[kind].add(folderId);
+  }
+  play('add'); save(kind+'Lists'); closeSheet(); renderListBar(kind);
+  if(kind==='task') renderTasks(); else renderGrocery();
+}
+
+function deleteList(kind, id){
+  const lists = S[kind+'Lists'];
+  if(lists.length<=1){ toast('You need at least one list'); return; }
+  const items = itemsFor(kind);
+  S[kind+'Lists'] = lists.filter(l=>l.id!==id);
+  const fallback = S[kind+'Lists'][0].id;
+  items.forEach(it=>{ if(it.listId===id) it.listId = fallback; });
+  if(activeList[kind]===id) activeList[kind] = fallback;
+  play('del'); save(kind+'Lists'); save(kind==='task'?'tasks':'grocery');
+  closeSheet(); renderListBar(kind);
+  if(kind==='task') renderTasks(); else renderGrocery();
+}
+function deleteFolder(kind, id){
+  S[kind+'Lists'].forEach(l=>{ if(l.folderId===id) l.folderId=''; });
+  S[kind+'Folders'] = S[kind+'Folders'].filter(f=>f.id!==id);
+  expandedFolders[kind].delete(id);
+  play('del'); save(kind+'Folders'); save(kind+'Lists');
+  closeSheet(); renderListBar(kind);
+}
+
+function openManageListsSheet(kind){
+  const lists = S[kind+'Lists'], folders = S[kind+'Folders'];
+  const kindLabel = kind==='task' ? 'lists' : 'shops';
+  let html = '<h3>Manage '+kindLabel+'</h3>';
+  if(folders.length){
+    html += '<div class="field"><label>Folders</label></div>';
+    folders.forEach(f=>{
+      html += '<div class="row"><div class="grow"><div class="title">📁 '+esc(f.name)+'</div></div>'+
+        '<button class="icon-btn" onclick="openListEditSheet(\''+kind+'\',\'folder\',\''+f.id+'\')" aria-label="Rename">✎</button>'+
+        '<button class="icon-btn" onclick="deleteFolder(\''+kind+'\',\''+f.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button></div>';
+    });
+  }
+  html += '<div class="field" style="margin-top:'+(folders.length?'14px':'0')+'"><label>'+(kind==='task'?'Lists':'Shops')+'</label></div>';
+  lists.forEach(l=>{
+    const folderName = l.folderId ? (folders.find(f=>f.id===l.folderId)||{}).name : '';
+    html += '<div class="row"><div class="grow"><div class="title">'+esc(l.name)+'</div>'+
+      (folderName?'<div class="meta">In '+esc(folderName)+'</div>':'')+'</div>'+
+      '<button class="icon-btn" onclick="openListEditSheet(\''+kind+'\',\'list\',\''+l.id+'\')" aria-label="Rename">✎</button>'+
+      (lists.length>1?'<button class="icon-btn" onclick="deleteList(\''+kind+'\',\''+l.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>':'')+
+      '</div>';
+  });
+  html += '<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Close</button></div>';
+  openSheet(html);
+}
+
+function openItemEditSheet(kind, id){
+  const items = itemsFor(kind);
+  const it = items.find(x=>x.id===id);
+  if(!it) return;
+  const lists = S[kind+'Lists'];
+  openSheet(
+    '<h3>Edit item</h3>'+
+    '<div class="field"><label>Name</label><input id="itName" value="'+esc(it.name)+'"></div>'+
+    (lists.length>1?'<div class="field"><label>List</label><select id="itList">'+
+      lists.map(l=>'<option value="'+l.id+'"'+(it.listId===l.id?' selected':'')+'>'+esc(l.name)+'</option>').join('')+
+      '</select></div>':'')+
+    '<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Cancel</button>'+
+    '<button class="btn" onclick="saveItemEdit(\''+kind+'\',\''+id+'\')">Save changes</button></div>'+
+    '<button class="danger-link" onclick="'+(kind==='task'?'delTask':'delGrocery')+'(\''+id+'\');closeSheet()">Delete this item</button>'
+  );
+  setTimeout(()=>document.getElementById('itName')?.focus(),250);
+}
+function saveItemEdit(kind, id){
+  const items = itemsFor(kind);
+  const it = items.find(x=>x.id===id);
+  if(!it) return;
+  const name = document.getElementById('itName').value.trim();
+  if(!name) return;
+  it.name = name;
+  const listSel = document.getElementById('itList');
+  if(listSel) it.listId = listSel.value;
+  play('add'); save(kind==='task'?'tasks':'grocery'); closeSheet();
+  if(kind==='task') renderTasks(); else renderGrocery();
 }
 
 /* =================== groceries =================== */
@@ -1491,7 +1827,8 @@ function addGrocery(){
   const inp = document.getElementById('grocInput');
   const v = inp.value.trim();
   if(!v) return;
-  S.grocery.push({id:uid(), name:v, done:false});
+  ensureDefaultList('groc');
+  S.grocery.push({id:uid(), listId:activeList.groc, name:v, done:false});
   inp.value=''; inp.focus(); play('add');
   save('grocery'); renderGrocery();
 }
@@ -1504,22 +1841,24 @@ function delGrocery(id){
   play('del'); save('grocery'); renderGrocery();
 }
 function clearChecked(){
-  S.grocery = S.grocery.filter(x=>!x.done);
+  S.grocery = S.grocery.filter(g=>!(g.done && g.listId===activeList.groc));
   play('del'); save('grocery'); renderGrocery();
 }
 function renderGrocery(){
+  ensureDefaultList('groc');
   const list = document.getElementById('grocList');
-  const left = S.grocery.filter(g=>!g.done).length;
-  document.getElementById('grocCount').textContent = S.grocery.length ? left+' to get' : '';
-  if(!S.grocery.length){
+  const onList = S.grocery.filter(g=>g.listId===activeList.groc);
+  const left = onList.filter(g=>!g.done).length;
+  document.getElementById('grocCount').textContent = onList.length ? left+' to get' : '';
+  if(!onList.length){
     list.innerHTML = '<div class="empty"><b>List is empty</b>Add what you need — it shows up on both your phones.</div>';
     return;
   }
-  const sorted = [...S.grocery].sort((a,b)=>a.done-b.done);
+  const sorted = [...onList].sort((a,b)=>a.done-b.done);
   list.innerHTML = sorted.map(g=>
     '<div class="row'+(g.done?' done':'')+'">'+
       '<button class="check'+(g.done?' on':'')+'" onclick="toggleGrocery(\''+g.id+'\')" aria-label="Tick off">'+(g.done?CHECK_SVG:'')+'</button>'+
-      '<div class="grow"><div class="title">'+esc(g.name)+'</div></div>'+
+      '<div class="grow" onclick="openItemEditSheet(\'groc\',\''+g.id+'\')"><div class="title">'+esc(g.name)+'</div></div>'+
       '<button class="icon-btn" onclick="delGrocery(\''+g.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>'+
     '</div>'
   ).join('');
@@ -1618,7 +1957,8 @@ function addTask(){
   const inp = document.getElementById('taskInput');
   const v = inp.value.trim();
   if(!v) return;
-  S.tasks.push({id:uid(), name:v, done:false});
+  ensureDefaultList('task');
+  S.tasks.push({id:uid(), listId:activeList.task, name:v, done:false});
   inp.value=''; inp.focus(); play('add');
   save('tasks'); renderTasks();
 }
@@ -1631,38 +1971,47 @@ function delTask(id){
   play('del'); save('tasks'); renderTasks();
 }
 function renderTasks(){
-  const left = S.tasks.filter(t=>!t.done).length;
-  document.getElementById('taskCount').textContent = S.tasks.length ? left+' open' : '';
+  ensureDefaultList('task');
+  const onList = S.tasks.filter(t=>t.listId===activeList.task);
+  const left = onList.filter(t=>!t.done).length;
+  document.getElementById('taskCount').textContent = onList.length ? left+' open' : '';
   const list = document.getElementById('taskList');
-  if(!S.tasks.length){
+  if(!onList.length){
     list.innerHTML = '<div class="empty"><b>All clear</b>Chores, errands, life admin — chuck it all in here.</div>';
     return;
   }
-  const sorted=[...S.tasks].sort((a,b)=>a.done-b.done);
+  const sorted=[...onList].sort((a,b)=>a.done-b.done);
   list.innerHTML = sorted.map(t=>
     '<div class="row'+(t.done?' done':'')+'">'+
       '<button class="check'+(t.done?' on':'')+'" onclick="toggleTask(\''+t.id+'\')" aria-label="Done">'+(t.done?CHECK_SVG:'')+'</button>'+
-      '<div class="grow"><div class="title">'+esc(t.name)+'</div></div>'+
+      '<div class="grow" onclick="openItemEditSheet(\'task\',\''+t.id+'\')"><div class="title">'+esc(t.name)+'</div></div>'+
       '<button class="icon-btn" onclick="delTask(\''+t.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>'+
     '</div>'
   ).join('');
 }
 
-function openNoteSheet(){
+function openNoteSheet(editId){
+  const n = editId ? S.notes.find(x=>x.id===editId) : null;
   openSheet(
-    '<h3>New note</h3>'+
-    '<div class="field"><label>Title</label><input id="ntTitle" placeholder="Holiday ideas"></div>'+
-    '<div class="field"><label>Note</label><textarea id="ntBody" placeholder="Write anything…"></textarea></div>'+
-    '<div class="field"><label>From</label>'+segControl('ntPerson', personOptions(), 0)+'</div>'+
+    '<h3>'+(n?'Edit note':'New note')+'</h3>'+
+    '<div class="field"><label>Title</label><input id="ntTitle" placeholder="Holiday ideas" value="'+(n?esc(n.title):'')+'"></div>'+
+    '<div class="field"><label>Note</label><textarea id="ntBody" placeholder="Write anything…">'+(n?esc(n.body):'')+'</textarea></div>'+
+    '<div class="field"><label>From</label>'+segControl('ntPerson', personOptions(), n?n.person:0)+'</div>'+
     '<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Cancel</button>'+
-    '<button class="btn" onclick="saveNote()">Save note</button></div>'
+    '<button class="btn" onclick="saveNote(\''+(editId||'')+'\')">'+(n?'Save changes':'Save note')+'</button></div>'+
+    (n?'<button class="danger-link" onclick="delNote(\''+editId+'\');closeSheet()">Delete this note</button>':'')
   );
 }
-function saveNote(){
+function saveNote(editId){
   const title = document.getElementById('ntTitle').value.trim();
   const body = document.getElementById('ntBody').value.trim();
   if(!title && !body) return;
-  S.notes.unshift({id:uid(), title, body, person:segVal('ntPerson'), ts:Date.now()});
+  if(editId){
+    const n = S.notes.find(x=>x.id===editId);
+    n.title = title; n.body = body; n.person = segVal('ntPerson');
+  }else{
+    S.notes.unshift({id:uid(), title, body, person:segVal('ntPerson'), ts:Date.now()});
+  }
   play('add'); save('notes'); closeSheet(); renderNotes();
 }
 function delNote(id){
@@ -1676,10 +2025,10 @@ function renderNotes(){
     return;
   }
   list.innerHTML = S.notes.map(n=>
-    '<div class="card note">'+
+    '<div class="card note" style="cursor:pointer" onclick="openNoteSheet(\''+n.id+'\')">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
         '<strong>'+esc(n.title||'Note')+'</strong>'+
-        '<button class="icon-btn" onclick="delNote(\''+n.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>'+
+        '<button class="icon-btn" onclick="event.stopPropagation();delNote(\''+n.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>'+
       '</div>'+
       (n.body?'<div class="body">'+esc(n.body)+'</div>':'')+
       '<div class="who">'+personTag(n.person)+' · '+new Date(n.ts).toLocaleDateString('en-AU',{day:'numeric',month:'short'})+'</div>'+
@@ -1754,7 +2103,7 @@ function openChoreSheet(editId, presetName, presetDays){
     document.getElementById('chCustomWrap').style.display = sel.value === '0' ? 'block' : 'none';
   });
   if(sel.value === '0') document.getElementById('chCustomWrap').style.display = 'block';
-  if(!presetName && !c) setTimeout(()=>document.getElementById('chName').focus(), 250);
+  if(!presetName && !c) setTimeout(()=>document.getElementById('chName')?.focus(), 250);
 }
 
 function saveChore(editId){
@@ -1849,7 +2198,10 @@ document.getElementById('taskInput').addEventListener('keydown', e=>{ if(e.key==
 
 function renderAll(){
   document.getElementById('avatarPair').innerHTML = avatar(0)+avatar(1);
-  renderToday(); renderCal(); renderGrocery(); renderBills(); renderChores(); renderTasks(); renderNotes();
+  renderToday(); renderCal();
+  renderListBar('task'); renderTasks();
+  renderListBar('groc'); renderGrocery();
+  renderBills(); renderChores(); renderNotes();
 }
 /* Register the service worker when self-hosted. Inside Claude's sandbox there
    is no sw.js and no permission to register one, so this quietly does nothing. */
@@ -1859,6 +2211,7 @@ if('serviceWorker' in navigator && location.protocol === 'https:'){
   });
 }
 
+applyTheme();
 buildKeypad();
 renderAll();
 

@@ -314,6 +314,7 @@ header h1 span{display:block;font-family:var(--body);font-size:11px;font-weight:
 .addbar input{
   flex:1;border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:var(--surface);outline:none;
 }
+.addbar input.price{flex:0 0 76px;padding:11px 10px;text-align:right}
 .addbar input:focus{border-color:var(--p1)}
 .btn{
   background:
@@ -652,6 +653,16 @@ nav button:active{opacity:.55;transform:scale(.94)}
   background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);
 }
 .repeat-badge{font-size:11px;color:var(--ink-soft);font-weight:600}
+
+/* ---------- grocery prices + running total ---------- */
+.item-price{font-weight:500;color:var(--ink-soft);font-size:13px;margin-left:5px}
+.groc-total{
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:11px 15px;margin:-2px 0 12px;
+}
+.groc-total .total-row{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+.groc-total .total-row strong{font-size:17px;font-weight:700}
+.groc-total .total-row.sub{margin-top:3px;font-size:12.5px;color:var(--ink-soft)}
 .turn{font-size:11.5px;padding:2px 8px;border-radius:99px;font-weight:600;background:var(--p1-soft);color:var(--p1)}
 .turn.t1{background:var(--p2-soft);color:var(--p2-ink)}
 .turn.tboth{background:var(--fill);color:var(--ink-soft)}
@@ -878,9 +889,11 @@ nav button:active{opacity:.55;transform:scale(.94)}
   <div class="listbar" id="grocListBar"></div>
   <div class="addbar">
     <input id="grocInput" placeholder="Add an item…" enterkeyhint="done">
+    <input id="grocPrice" class="price" type="number" inputmode="decimal" step="0.01" min="0" placeholder="$" enterkeyhint="done">
     <button class="btn" onclick="addGrocery()">Add</button>
   </div>
   <div class="card" id="grocList"></div>
+  <div id="grocTotal"></div>
   <button class="btn ghost" style="width:100%" onclick="clearChecked()">Clear ticked items on this list</button>
 </div>
 
@@ -1800,6 +1813,7 @@ function openItemEditSheet(kind, id){
   openSheet(
     '<h3>Edit item</h3>'+
     '<div class="field"><label>Name</label><input id="itName" value="'+esc(it.name)+'"></div>'+
+    (kind==='groc' ? '<div class="field"><label>Price (optional)</label><input id="itPrice" type="number" inputmode="decimal" step="0.01" min="0" placeholder="$" value="'+(it.price!=null?it.price:'')+'"></div>' : '')+
     (lists.length>1?'<div class="field"><label>List</label><select id="itList">'+
       lists.map(l=>'<option value="'+l.id+'"'+(it.listId===l.id?' selected':'')+'>'+esc(l.name)+'</option>').join('')+
       '</select></div>':'')+
@@ -1816,6 +1830,12 @@ function saveItemEdit(kind, id){
   const name = document.getElementById('itName').value.trim();
   if(!name) return;
   it.name = name;
+  if(kind==='groc'){
+    const priceEl = document.getElementById('itPrice');
+    const v = priceEl ? parseFloat(priceEl.value) : NaN;
+    if(!isNaN(v) && v>=0) it.price = Math.round(v*100)/100;
+    else delete it.price;
+  }
   const listSel = document.getElementById('itList');
   if(listSel) it.listId = listSel.value;
   play('add'); save(kind==='task'?'tasks':'grocery'); closeSheet();
@@ -1825,11 +1845,15 @@ function saveItemEdit(kind, id){
 /* =================== groceries =================== */
 function addGrocery(){
   const inp = document.getElementById('grocInput');
+  const priceInp = document.getElementById('grocPrice');
   const v = inp.value.trim();
   if(!v) return;
   ensureDefaultList('groc');
-  S.grocery.push({id:uid(), listId:activeList.groc, name:v, done:false});
-  inp.value=''; inp.focus(); play('add');
+  const item = {id:uid(), listId:activeList.groc, name:v, done:false};
+  const priceVal = parseFloat(priceInp.value);
+  if(!isNaN(priceVal) && priceVal>=0) item.price = Math.round(priceVal*100)/100;
+  S.grocery.push(item);
+  inp.value=''; priceInp.value=''; inp.focus(); play('add');
   save('grocery'); renderGrocery();
 }
 function toggleGrocery(id){
@@ -1844,6 +1868,7 @@ function clearChecked(){
   S.grocery = S.grocery.filter(g=>!(g.done && g.listId===activeList.groc));
   play('del'); save('grocery'); renderGrocery();
 }
+function fmtMoney(n){ return '$'+Number(n).toFixed(2); }
 function renderGrocery(){
   ensureDefaultList('groc');
   const list = document.getElementById('grocList');
@@ -1852,16 +1877,30 @@ function renderGrocery(){
   document.getElementById('grocCount').textContent = onList.length ? left+' to get' : '';
   if(!onList.length){
     list.innerHTML = '<div class="empty"><b>List is empty</b>Add what you need — it shows up on both your phones.</div>';
+    document.getElementById('grocTotal').innerHTML = '';
     return;
   }
   const sorted = [...onList].sort((a,b)=>a.done-b.done);
   list.innerHTML = sorted.map(g=>
     '<div class="row'+(g.done?' done':'')+'">'+
       '<button class="check'+(g.done?' on':'')+'" onclick="toggleGrocery(\''+g.id+'\')" aria-label="Tick off">'+(g.done?CHECK_SVG:'')+'</button>'+
-      '<div class="grow" onclick="openItemEditSheet(\'groc\',\''+g.id+'\')"><div class="title">'+esc(g.name)+'</div></div>'+
+      '<div class="grow" onclick="openItemEditSheet(\'groc\',\''+g.id+'\')"><div class="title">'+esc(g.name)+
+        (g.price!=null?' <span class="item-price">'+fmtMoney(g.price)+'</span>':'')+'</div></div>'+
       '<button class="icon-btn" onclick="delGrocery(\''+g.id+'\')" aria-label="Delete">'+TRASH_SVG+'</button>'+
     '</div>'
   ).join('');
+
+  const total = onList.reduce((sum,g)=>sum+(g.price||0), 0);
+  const inTrolley = onList.filter(g=>g.done).reduce((sum,g)=>sum+(g.price||0), 0);
+  const totalBox = document.getElementById('grocTotal');
+  if(total > 0){
+    totalBox.innerHTML =
+      '<div class="total-row"><span>Total</span><strong>'+fmtMoney(total)+'</strong></div>'+
+      (inTrolley > 0 ? '<div class="total-row sub"><span>In trolley so far</span><span>'+fmtMoney(inTrolley)+'</span></div>' : '');
+    totalBox.className = 'groc-total';
+  }else{
+    totalBox.innerHTML = ''; totalBox.className = '';
+  }
 }
 
 /* =================== bills =================== */
@@ -2194,6 +2233,7 @@ function saveSettings(){
 
 /* =================== init =================== */
 document.getElementById('grocInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addGrocery(); });
+document.getElementById('grocPrice').addEventListener('keydown', e=>{ if(e.key==='Enter') addGrocery(); });
 document.getElementById('taskInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addTask(); });
 
 function renderAll(){

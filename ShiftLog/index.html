@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shift Log</title>
+<meta name="description" content="Clock in, clock out, and keep a running record of your shifts.">
+
+<!-- PWA / install -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E2228" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EAE5D6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shift Log">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#1E2228;
+    --bg-raised:#262B33;
+    --bg-raised-2:#2E3440;
+    --paper:#EFE9DC;
+    --paper-dim:#E3DCC9;
+    --ink:#EFE9DC;
+    --ink-dim:#9AA0A8;
+    --ink-on-paper:#2A2620;
+    --ink-on-paper-dim:#6B6456;
+    --amber:#E8A33D;
+    --amber-dim:#C98A2E;
+    --danger:#D9614F;
+    --green:#7FA66B;
+    --line:#3A4048;
+    --line-soft:#333A44;
+    --radius:14px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#EAE5D6;
+      --bg-raised:#DDD6C2;
+      --bg-raised-2:#D2CAB2;
+      --paper:#FBF9F2;
+      --paper-dim:#F2EEE0;
+      --ink:#2A2620;
+      --ink-dim:#6B6456;
+      --amber:#C98A2E;
+      --amber-dim:#A8721F;
+      --line:#C9C0A8;
+      --line-soft:#D3CBB2;
+      color-scheme: light;
+    }
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', system-ui, -apple-system, sans-serif;
+    min-height:100vh;
+    padding-top:calc(var(--safe-top) + 18px);
+    padding-bottom:calc(var(--safe-bottom) + 40px);
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--amber); color:var(--ink-on-paper); }
+
+  .wrap{ max-width:480px; margin:0 auto; padding:0 18px; }
+
+  /* ---------- Header ---------- */
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:30px;
+    letter-spacing:.01em;
+    margin:0 0 18px 0;
+    text-transform:uppercase;
+  }
+
+  /* ---------- Punch card (today) ---------- */
+  .card{
+    background:var(--paper);
+    color:var(--ink-on-paper);
+    border-radius:var(--radius);
+    position:relative;
+    padding:20px;
+  }
+  .card + .card{ margin-top:14px; }
+
+  /* perforated top edge */
+  .punch{
+    padding-top:26px;
+    background-image: radial-gradient(circle at 8px 0, var(--bg) 6px, transparent 6.5px);
+    background-size: 24px 100%;
+    background-repeat: repeat-x;
+    background-position: 0 -6px;
+  }
+
+  .punch-top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .punch-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-on-paper-dim);
+  }
+  .punch-date{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    text-transform:uppercase;
+  }
+  .status-pill{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    padding:4px 9px;
+    border-radius:20px;
+    background:var(--ink-on-paper);
+    color:var(--paper);
+  }
+  .status-pill.on{ background:var(--green); color:#132015; }
+
+  .clock-display{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:46px;
+    letter-spacing:.01em;
+    margin:14px 0 4px 0;
+    line-height:1;
+    font-variant-numeric: tabular-nums;
+  }
+  .clock-sub{ font-size:13px; color:var(--ink-on-paper-dim); margin-bottom:16px; }
+
+  .punch-btn{
+    width:100%;
+    border:none;
+    border-radius:10px;
+    padding:16px;
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    font-size:17px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition: transform .08s ease;
+  }
+  .punch-btn:active{ transform:scale(.97); }
+  .punch-btn.in{ background:var(--ink-on-paper); color:var(--paper); }
+  .punch-btn.out{ background:var(--danger); color:#2A0E09; }
+
+  .role-row{ display:flex; gap:8px; margin-top:12px; }
+  .role-row input{
+    flex:1;
+    background:var(--paper-dim);
+    border:1px solid #d9d0b8;
+    border-radius:8px;
+    padding:10px 12px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink-on-paper);
+  }
+  .role-row input::placeholder{ color:var(--ink-on-paper-dim); }
+
+  /* ---------- Stats ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin-top:16px;
+  }
+  .stat{
+    background:var(--bg-raised);
+    border-radius:10px;
+    padding:10px 6px;
+    text-align:center;
+  }
+  .stat .n{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:17px;
+    color:var(--amber);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .l{
+    font-size:9.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-top:3px;
+  }
+
+  /* ---------- Section header / actions ---------- */
+  .section-row{
+    display:flex; align-items:center; justify-content:space-between;
+    margin:26px 0 12px 0;
+  }
+  .section-title{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+  }
+  .ghost-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:500;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .ghost-btn:active{ background:var(--bg-raised); }
+
+  /* ---------- Week groups ---------- */
+  .week-header{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin:18px 0 8px 0;
+    padding-bottom:6px;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .week-header .w-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+  }
+  .week-header .w-total{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--amber);
+  }
+
+  /* ---------- Shift entry ("ticket") ---------- */
+  .entry{
+    background:var(--paper);
+    color:var(--ink-on-paper);
+    border-radius:10px;
+    padding:13px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:9px;
+    background-image: radial-gradient(circle at 100% 50%, var(--bg) 5px, transparent 5.5px);
+    background-size: 100% 24px;
+    background-position: right center;
+    background-repeat: no-repeat;
+  }
+  .entry-main{ flex:1; min-width:0; }
+  .entry-day{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    text-transform:uppercase;
+  }
+  .entry-time{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--ink-on-paper-dim);
+    margin-top:2px;
+  }
+  .entry-note{
+    font-size:12px;
+    color:var(--ink-on-paper-dim);
+    margin-top:3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .entry-dur{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:18px;
+    font-variant-numeric: tabular-nums;
+    padding-right:14px;
+    text-align:right;
+    flex-shrink:0;
+  }
+
+  .empty{
+    text-align:center;
+    color:var(--ink-dim);
+    font-size:13.5px;
+    padding:40px 10px;
+    line-height:1.6;
+  }
+
+  footer{
+    display:flex; gap:10px; margin-top:30px;
+  }
+  footer .ghost-btn{ flex:1; text-align:center; }
+  footer .danger{ border-color:#5a2e28; color:var(--danger); }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(10,12,15,.6);
+    display:none;
+    align-items:flex-end;
+    z-index:50;
+  }
+  .overlay.open{ display:flex; }
+  .sheet{
+    background:var(--bg-raised-2);
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    border-radius:18px 18px 0 0;
+    padding:20px 20px calc(24px + var(--safe-bottom));
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .sheet h2{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    font-size:19px;
+    margin:0 0 16px 0;
+  }
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:11.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-bottom:6px;
+  }
+  .field input, .field textarea{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:8px;
+    padding:11px 12px;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+  }
+  .field textarea{ resize:vertical; min-height:56px; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row .field{ flex:1; }
+
+  .sheet-actions{ display:flex; gap:10px; margin-top:6px; }
+  .btn{
+    flex:1;
+    border:none;
+    border-radius:9px;
+    padding:13px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+  }
+  .btn.primary{ background:var(--amber); color:#2A1B04; }
+  .btn.secondary{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+  .btn.delete{ background:transparent; border:1px solid #5a2e28; color:var(--danger); }
+
+  .toast{
+    position:fixed; left:50%; bottom:calc(24px + var(--safe-bottom));
+    transform:translateX(-50%);
+    background:var(--ink); color:var(--bg);
+    padding:10px 18px; border-radius:20px;
+    font-size:13px; font-weight:500;
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:60;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Shift Log</h1>
+
+  <!-- Punch card -->
+  <div class="card punch" id="punchCard">
+    <div class="punch-top">
+      <div>
+        <div class="punch-label">Status</div>
+        <div class="punch-date" id="todayDate">—</div>
+      </div>
+      <div class="status-pill" id="statusPill">Off shift</div>
+    </div>
+
+    <div class="clock-display" id="clockDisplay">00:00:00</div>
+    <div class="clock-sub" id="clockSub">Not clocked in</div>
+
+    <button class="punch-btn in" id="punchBtn">Clock in</button>
+
+    <div class="role-row" id="roleRow">
+      <input type="text" id="roleInput" placeholder="Role / job (optional)" maxlength="40">
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat"><div class="n" id="statToday">0h</div><div class="l">Today</div></div>
+    <div class="stat"><div class="n" id="statWeek">0h</div><div class="l">Week</div></div>
+    <div class="stat"><div class="n" id="statMonth">0h</div><div class="l">Month</div></div>
+    <div class="stat"><div class="n" id="statAll">0h</div><div class="l">All time</div></div>
+  </div>
+
+  <div class="section-row">
+    <div class="section-title">Shift history</div>
+    <button class="ghost-btn" id="addBtn">+ Add manually</button>
+  </div>
+
+  <div id="listContainer">
+    <!-- populated by JS -->
+  </div>
+
+  <footer>
+    <button class="ghost-btn" id="exportBtn">Export CSV</button>
+    <button class="ghost-btn danger" id="clearBtn">Clear all</button>
+  </footer>
+</div>
+
+<!-- Add/Edit sheet -->
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2 id="sheetTitle">Add shift</h2>
+    <form id="shiftForm">
+      <div class="field">
+        <label for="f-date">Date</label>
+        <input type="date" id="f-date" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="f-start">Start</label>
+          <input type="time" id="f-start" required>
+        </div>
+        <div class="field">
+          <label for="f-end">End</label>
+          <input type="time" id="f-end" required>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-role">Role / job (optional)</label>
+        <input type="text" id="f-role" maxlength="40" placeholder="e.g. Bar shift">
+      </div>
+      <div class="field">
+        <label for="f-note">Note (optional)</label>
+        <textarea id="f-note" maxlength="200" placeholder="Anything worth remembering about this shift"></textarea>
+      </div>
+      <input type="hidden" id="f-id">
+      <div class="sheet-actions">
+        <button type="button" class="btn secondary" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn primary">Save shift</button>
+      </div>
+      <div class="sheet-actions" id="deleteRow" style="display:none; margin-top:10px;">
+        <button type="button" class="btn delete" id="deleteBtn">Delete this shift</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORE_KEY = "shiftlog.shifts.v1";
+  var ACTIVE_KEY = "shiftlog.active.v1";
+
+  var DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  var MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  // ---------- storage ----------
+  function loadShifts(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      console.error("Could not read shifts from local storage", e);
+      return [];
+    }
+  }
+  function saveShifts(shifts){
+    try{
+      localStorage.setItem(STORE_KEY, JSON.stringify(shifts));
+      return true;
+    }catch(e){
+      console.error("Could not save shifts to local storage", e);
+      showToast("Couldn't save — storage may be full");
+      return false;
+    }
+  }
+  function loadActive(){
+    try{
+      var raw = localStorage.getItem(ACTIVE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveActive(active){
+    try{
+      if(active){ localStorage.setItem(ACTIVE_KEY, JSON.stringify(active)); }
+      else{ localStorage.removeItem(ACTIVE_KEY); }
+    }catch(e){ console.error("Could not save active shift", e); }
+  }
+
+  var shifts = loadShifts();
+  var active = loadActive();
+
+  // ---------- helpers ----------
+  function pad2(n){ return n < 10 ? "0"+n : ""+n; }
+  function todayISO(){
+    var d = new Date();
+    return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+  }
+  function nowHM(){
+    var d = new Date();
+    return pad2(d.getHours())+":"+pad2(d.getMinutes());
+  }
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+  function parseDate(iso){
+    var parts = iso.split("-");
+    return new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+  }
+  // duration in hours (decimal), handling overnight shifts where end < start
+  function durationHours(dateISO, start, end){
+    var d = parseDate(dateISO);
+    var sParts = start.split(":"), eParts = end.split(":");
+    var s = new Date(d); s.setHours(parseInt(sParts[0],10), parseInt(sParts[1],10), 0, 0);
+    var e = new Date(d); e.setHours(parseInt(eParts[0],10), parseInt(eParts[1],10), 0, 0);
+    if(e <= s){ e.setDate(e.getDate()+1); }
+    return (e - s) / 3600000;
+  }
+  function fmtHours(h){
+    if(h === 0) return "0h";
+    var hrs = Math.floor(h);
+    var mins = Math.round((h - hrs) * 60);
+    if(mins === 60){ hrs += 1; mins = 0; }
+    if(hrs === 0) return mins + "m";
+    if(mins === 0) return hrs + "h";
+    return hrs + "h " + mins + "m";
+  }
+  function fmtDateLong(iso){
+    var d = parseDate(iso);
+    return DAY_NAMES[d.getDay()] + " " + d.getDate() + " " + MONTH_NAMES[d.getMonth()];
+  }
+  // Monday-start week key + range label
+  function weekInfo(iso){
+    var d = parseDate(iso);
+    var day = d.getDay(); // 0 Sun .. 6 Sat
+    var diffToMonday = (day === 0 ? -6 : 1 - day);
+    var monday = new Date(d); monday.setDate(d.getDate() + diffToMonday);
+    var sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+    var key = monday.getFullYear()+"-"+pad2(monday.getMonth()+1)+"-"+pad2(monday.getDate());
+    var label;
+    if(monday.getMonth() === sunday.getMonth()){
+      label = MONTH_NAMES[monday.getMonth()]+" "+monday.getDate()+"–"+sunday.getDate();
+    } else {
+      label = MONTH_NAMES[monday.getMonth()]+" "+monday.getDate()+" – "+MONTH_NAMES[sunday.getMonth()]+" "+sunday.getDate();
+    }
+    return { key: key, label: label, mondayTime: monday.getTime() };
+  }
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  // ---------- rendering ----------
+  function render(){
+    renderPunchCard();
+    renderStats();
+    renderList();
+  }
+
+  function renderPunchCard(){
+    document.getElementById("todayDate").textContent = fmtDateLong(todayISO());
+    var pill = document.getElementById("statusPill");
+    var btn = document.getElementById("punchBtn");
+    var sub = document.getElementById("clockSub");
+    var roleRow = document.getElementById("roleRow");
+
+    if(active){
+      pill.textContent = "On shift";
+      pill.classList.add("on");
+      btn.textContent = "Clock out";
+      btn.classList.remove("in"); btn.classList.add("out");
+      sub.textContent = "Since " + active.start + (active.role ? " · " + active.role : "");
+      roleRow.style.display = "none";
+    } else {
+      pill.textContent = "Off shift";
+      pill.classList.remove("on");
+      btn.textContent = "Clock in";
+      btn.classList.remove("out"); btn.classList.add("in");
+      sub.textContent = "Not clocked in";
+      roleRow.style.display = "flex";
+      document.getElementById("clockDisplay").textContent = "00:00:00";
+    }
+  }
+
+  function tickClock(){
+    if(!active) return;
+    var start = new Date(active.startISO);
+    var diff = Math.max(0, Date.now() - start.getTime());
+    var totalSec = Math.floor(diff/1000);
+    var h = Math.floor(totalSec/3600);
+    var m = Math.floor((totalSec%3600)/60);
+    var s = totalSec%60;
+    document.getElementById("clockDisplay").textContent = pad2(h)+":"+pad2(m)+":"+pad2(s);
+  }
+
+  function renderStats(){
+    var t = todayISO();
+    var now = new Date();
+    var wInfo = weekInfo(t);
+    var todayTotal = 0, weekTotal = 0, monthTotal = 0, allTotal = 0;
+
+    shifts.forEach(function(sh){
+      var h = durationHours(sh.date, sh.start, sh.end);
+      allTotal += h;
+      if(sh.date === t) todayTotal += h;
+      var sw = weekInfo(sh.date);
+      if(sw.key === wInfo.key) weekTotal += h;
+      var d = parseDate(sh.date);
+      if(d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) monthTotal += h;
+    });
+
+    // include the running active shift in "today" and "week"
+    if(active){
+      var liveH = (Date.now() - new Date(active.startISO).getTime()) / 3600000;
+      if(active.date === t) todayTotal += liveH;
+      var aw = weekInfo(active.date);
+      if(aw.key === wInfo.key) weekTotal += liveH;
+      var ad = parseDate(active.date);
+      if(ad.getFullYear() === now.getFullYear() && ad.getMonth() === now.getMonth()) monthTotal += liveH;
+      allTotal += liveH;
+    }
+
+    document.getElementById("statToday").textContent = fmtHours(todayTotal);
+    document.getElementById("statWeek").textContent = fmtHours(weekTotal);
+    document.getElementById("statMonth").textContent = fmtHours(monthTotal);
+    document.getElementById("statAll").textContent = fmtHours(allTotal);
+  }
+
+  function renderList(){
+    var container = document.getElementById("listContainer");
+    container.innerHTML = "";
+
+    if(shifts.length === 0){
+      container.innerHTML = '<div class="empty">No shifts logged yet.<br>Clock in above, or add one manually.</div>';
+      return;
+    }
+
+    var sorted = shifts.slice().sort(function(a,b){
+      if(a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return a.start < b.start ? 1 : -1;
+    });
+
+    var groups = {}; // key -> {label, items, total, mondayTime}
+    sorted.forEach(function(sh){
+      var w = weekInfo(sh.date);
+      if(!groups[w.key]){ groups[w.key] = { label: w.label, items: [], total: 0, mondayTime: w.mondayTime }; }
+      groups[w.key].items.push(sh);
+      groups[w.key].total += durationHours(sh.date, sh.start, sh.end);
+    });
+
+    var groupKeys = Object.keys(groups).sort(function(a,b){
+      return groups[b].mondayTime - groups[a].mondayTime;
+    });
+
+    groupKeys.forEach(function(key){
+      var g = groups[key];
+      var wh = document.createElement("div");
+      wh.className = "week-header";
+      wh.innerHTML = '<span class="w-label">Week of '+g.label+'</span><span class="w-total">'+fmtHours(g.total)+'</span>';
+      container.appendChild(wh);
+
+      g.items.forEach(function(sh){
+        var h = durationHours(sh.date, sh.start, sh.end);
+        var d = parseDate(sh.date);
+        var el = document.createElement("div");
+        el.className = "entry";
+        el.setAttribute("data-id", sh.id);
+        var noteBits = [];
+        if(sh.role) noteBits.push(sh.role);
+        if(sh.note) noteBits.push(sh.note);
+        el.innerHTML =
+          '<div class="entry-main">'+
+            '<div class="entry-day">'+DAY_NAMES[d.getDay()]+' '+d.getDate()+' '+MONTH_NAMES[d.getMonth()]+'</div>'+
+            '<div class="entry-time">'+sh.start+' – '+sh.end+'</div>'+
+            (noteBits.length ? '<div class="entry-note">'+escapeHtml(noteBits.join(" · "))+'</div>' : '')+
+          '</div>'+
+          '<div class="entry-dur">'+fmtHours(h)+'</div>';
+        el.addEventListener("click", function(){ openEditSheet(sh.id); });
+        container.appendChild(el);
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---------- clock in/out ----------
+  document.getElementById("punchBtn").addEventListener("click", function(){
+    if(active){
+      // clock out -> save shift
+      var sh = {
+        id: uid(),
+        date: active.date,
+        start: active.start,
+        end: nowHM(),
+        role: active.role || "",
+        note: ""
+      };
+      // guard against a same-second clock-out; still save, duration handles overnight
+      shifts.push(sh);
+      saveShifts(shifts);
+      active = null;
+      saveActive(null);
+      render();
+      showToast("Shift saved — " + fmtHours(durationHours(sh.date, sh.start, sh.end)));
+    } else {
+      var role = document.getElementById("roleInput").value.trim();
+      active = {
+        date: todayISO(),
+        start: nowHM(),
+        startISO: new Date().toISOString(),
+        role: role
+      };
+      saveActive(active);
+      document.getElementById("roleInput").value = "";
+      render();
+      showToast("Clocked in");
+    }
+  });
+
+  setInterval(tickClock, 1000);
+
+  // ---------- add/edit sheet ----------
+  var overlay = document.getElementById("overlay");
+  var form = document.getElementById("shiftForm");
+
+  function openAddSheet(){
+    document.getElementById("sheetTitle").textContent = "Add shift";
+    form.reset();
+    document.getElementById("f-id").value = "";
+    document.getElementById("f-date").value = todayISO();
+    document.getElementById("deleteRow").style.display = "none";
+    overlay.classList.add("open");
+  }
+  function openEditSheet(id){
+    var sh = shifts.find(function(x){ return x.id === id; });
+    if(!sh) return;
+    document.getElementById("sheetTitle").textContent = "Edit shift";
+    document.getElementById("f-id").value = sh.id;
+    document.getElementById("f-date").value = sh.date;
+    document.getElementById("f-start").value = sh.start;
+    document.getElementById("f-end").value = sh.end;
+    document.getElementById("f-role").value = sh.role || "";
+    document.getElementById("f-note").value = sh.note || "";
+    document.getElementById("deleteRow").style.display = "flex";
+    overlay.classList.add("open");
+  }
+  function closeSheet(){ overlay.classList.remove("open"); }
+
+  document.getElementById("addBtn").addEventListener("click", openAddSheet);
+  document.getElementById("cancelBtn").addEventListener("click", closeSheet);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) closeSheet(); });
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var id = document.getElementById("f-id").value;
+    var date = document.getElementById("f-date").value;
+    var start = document.getElementById("f-start").value;
+    var end = document.getElementById("f-end").value;
+    var role = document.getElementById("f-role").value.trim();
+    var note = document.getElementById("f-note").value.trim();
+
+    if(!date || !start || !end){ return; }
+
+    if(id){
+      var sh = shifts.find(function(x){ return x.id === id; });
+      if(sh){ sh.date=date; sh.start=start; sh.end=end; sh.role=role; sh.note=note; }
+    } else {
+      shifts.push({ id: uid(), date: date, start: start, end: end, role: role, note: note });
+    }
+    saveShifts(shifts);
+    closeSheet();
+    render();
+    showToast(id ? "Shift updated" : "Shift added");
+  });
+
+  document.getElementById("deleteBtn").addEventListener("click", function(){
+    var id = document.getElementById("f-id").value;
+    if(!id) return;
+    if(!confirm("Delete this shift? This can't be undone.")) return;
+    shifts = shifts.filter(function(x){ return x.id !== id; });
+    saveShifts(shifts);
+    closeSheet();
+    render();
+    showToast("Shift deleted");
+  });
+
+  // ---------- export / clear ----------
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    if(shifts.length === 0){ showToast("Nothing to export yet"); return; }
+    var rows = [["Date","Start","End","Hours","Role","Note"]];
+    shifts.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; }).forEach(function(sh){
+      var h = durationHours(sh.date, sh.start, sh.end);
+      rows.push([sh.date, sh.start, sh.end, h.toFixed(2), sh.role||"", sh.note||""]);
+    });
+    var csv = rows.map(function(r){
+      return r.map(function(cell){
+        var c = String(cell).replace(/"/g,'""');
+        return /[",\n]/.test(c) ? '"'+c+'"' : c;
+      }).join(",");
+    }).join("\n");
+    var blob = new Blob([csv], { type: "text/csv" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "shift-log-" + todayISO() + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("CSV exported");
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    if(shifts.length === 0 && !active){ showToast("Nothing to clear"); return; }
+    if(!confirm("Delete ALL logged shifts? This can't be undone.")) return;
+    shifts = [];
+    active = null;
+    saveShifts(shifts);
+    saveActive(null);
+    render();
+    showToast("All shifts cleared");
+  });
+
+  // ---------- service worker ----------
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(err){
+        console.warn("Service worker registration failed", err);
+      });
+    });
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

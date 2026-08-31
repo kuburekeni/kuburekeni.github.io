@@ -69,10 +69,35 @@ function getInitials(name){
 function avatarColor(name){
   return AVATAR_PALETTE[hashStr(name || "?") % AVATAR_PALETTE.length];
 }
-function avatarHtml(name, sizeClass){
-  const c = avatarColor(name);
+// Renders a photo if the person has one, otherwise coloured initials.
+function avatarHtml(name, sizeClass, avatarUrl){
   const cls = "avatar" + (sizeClass ? " " + sizeClass : "");
+  if(avatarUrl){
+    return '<div class="'+cls+'" style="background-image:url('+JSON.stringify(avatarUrl)+');background-size:cover;background-position:center;"></div>';
+  }
+  const c = avatarColor(name);
   return '<div class="'+cls+'" style="background:'+c.bg+';color:'+c.fg+';">'+escapeHtml(getInitials(name))+'</div>';
+}
+
+// ---------- hours ----------
+// Duration of a shift in decimal hours, handling shifts that run past midnight.
+function shiftHours(startTime, endTime){
+  let mins = timeToMinutes(endTime) - timeToMinutes(startTime);
+  if(mins <= 0) mins += 24 * 60; // overnight shift
+  return mins / 60;
+}
+
+// Monday-start week containing the given ISO date, as { start, end } ISO strings.
+function weekRangeFor(iso){
+  const d = parseDateISO(iso);
+  const day = d.getDay();               // 0 = Sun
+  const diffToMonday = (day === 0 ? -6 : 1 - day);
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diffToMonday);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const fmt = (x) => x.getFullYear()+"-"+pad2(x.getMonth()+1)+"-"+pad2(x.getDate());
+  return { start: fmt(monday), end: fmt(sunday) };
 }
 
 // ---------- toast ----------

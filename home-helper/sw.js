@@ -1,12 +1,12 @@
 /* Bump CACHE when you change index.html, otherwise phones keep the old copy. */
-const CACHE = 'homehelper-v11';
+const CACHE = 'homehelper-v12';
 const FILES = ['./', './index.html', './manifest.webmanifest',
                './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
- 
+
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
- 
+
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -14,7 +14,7 @@ self.addEventListener('activate', e => {
       .then(() => self.clients.claim())
   );
 });
- 
+
 /* Network first so you get updates, cache as the offline fallback. */
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
@@ -28,4 +28,3 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
   );
 });
- 

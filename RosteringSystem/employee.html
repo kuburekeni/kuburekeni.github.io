@@ -38,6 +38,10 @@
         Swaps
         <span class="pill open" id="swapCount" style="margin-left:auto; display:none;">0</span>
       </button>
+      <button class="side-link" data-tab="profile">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
       <button class="side-link" id="notifBtn">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         Notifications
@@ -123,6 +127,31 @@
       </div>
     </div>
 
+    <!-- PROFILE -->
+    <div class="tabpanel" id="tab-profile">
+      <div class="page-head">
+        <div>
+          <h1>Profile</h1>
+          <p>Your photo shows next to your name on the roster and calendar.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="avatar-edit">
+          <div class="avatar-preview" id="avatarPreview">—</div>
+          <div>
+            <div style="font-weight:700; font-size:15px;" id="profileName">—</div>
+            <div class="hint" style="margin-bottom:10px;">JPG or PNG, up to 2 MB.</div>
+            <div class="avatar-actions">
+              <button class="btn primary small" id="avatarPickBtn">Upload photo</button>
+              <button class="btn secondary small" id="avatarRemoveBtn">Remove</button>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="avatarFile" class="hidden-file" accept="image/png, image/jpeg, image/webp">
+        <div class="error-text" id="avatarError"></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -189,6 +218,26 @@
   </div>
 </div>
 
+<!-- Ask for a teammate's shift sheet -->
+<div class="overlay" id="askOverlay">
+  <div class="sheet">
+    <h2>Ask for this shift</h2>
+    <p class="hint" id="askShiftLabel" style="margin-top:-10px; margin-bottom:14px;"></p>
+    <form id="askForm">
+      <div class="field">
+        <label for="askNote">Note (optional)</label>
+        <textarea id="askNote" rows="2" placeholder="Why you'd like to pick it up"></textarea>
+      </div>
+      <p class="hint">They'll get a request they can accept or decline. Nothing changes unless they accept.</p>
+      <div class="error-text" id="askError"></div>
+      <div class="sheet-actions">
+        <button type="button" class="btn secondary" id="askClose">Cancel</button>
+        <button type="submit" class="btn primary">Send request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Calendar day-detail sheet -->
 <div class="overlay" id="calDayOverlay">
   <div class="sheet" style="max-width:480px;">
@@ -225,10 +274,7 @@
     if(!ctx) return;
     me = ctx.profile;
     document.getElementById("whoName").textContent = me.full_name;
-    var av = avatarColor(me.full_name);
-    var avatarEl = document.getElementById("whoAvatar");
-    avatarEl.style.background = av.bg; avatarEl.style.color = av.fg;
-    avatarEl.textContent = getInitials(me.full_name);
+    applySidebarAvatar();
     document.getElementById("signOutBtn").addEventListener("click", signOut);
 
     var today = new Date();
@@ -239,13 +285,16 @@
     wireAvailModal();
     wireCancelModal();
     wireOfferModal();
+    wireAskModal();
     wireCalendar();
     wireNotifications();
+    wireProfile();
 
     await loadTeammates();
     await loadAvailability();
     await loadMyShifts();
     await loadSwaps();
+    renderProfile();
     refreshNotifCount();
     setInterval(refreshNotifCount, 60000);
   }
@@ -264,7 +313,7 @@
 
   async function loadTeammates(){
     var { data } = await supabaseClient
-      .from("profiles").select("id, full_name")
+      .from("profiles").select("id, full_name, avatar_url")
       .eq("company_id", me.company_id).eq("role", "employee")
       .order("full_name", { ascending: true });
     teammates = (data || []).filter(function(p){ return p.id !== me.id; });
@@ -491,9 +540,9 @@
     }
 
     var all = data || [];
-    var nameById = {};
-    teammates.forEach(function(t){ nameById[t.id] = t.full_name; });
-    nameById[me.id] = me.full_name;
+    var nameById = {}, avatarById = {};
+    teammates.forEach(function(t){ nameById[t.id] = t.full_name; avatarById[t.id] = t.avatar_url; });
+    nameById[me.id] = me.full_name; avatarById[me.id] = me.avatar_url;
 
     function slotLabel(req){
       var sa = req.shift_assignments;
@@ -519,7 +568,7 @@
         var el = document.createElement("div");
         el.className = "swap-row";
         el.innerHTML =
-          avatarHtml(who, "sm")+
+          avatarHtml(who, "sm", avatarById[req.requested_by])+
           '<div class="sw-meta"><strong>'+escapeHtml(who)+'</strong> '+verb+' '+escapeHtml(slotLabel(req))+
             (req.note ? '<div class="sw-sub">'+escapeHtml(req.note)+'</div>' : '')+
           '</div>'+
@@ -546,7 +595,7 @@
         var el = document.createElement("div");
         el.className = "swap-row";
         el.innerHTML =
-          avatarHtml(who, "sm")+
+          avatarHtml(who, "sm", avatarById[req.requested_to])+
           '<div class="sw-meta">'+verb+' <strong>'+escapeHtml(who)+'</strong> — '+escapeHtml(slotLabel(req))+
             '<div class="sw-sub">'+statusPill+'</div>'+
           '</div>'+
@@ -617,7 +666,7 @@
     if(slots.length > 0){
       var { data: assigns } = await supabaseClient
         .from("shift_assignments")
-        .select("id, slot_id, employee_id, profiles(full_name)")
+        .select("id, slot_id, employee_id, profiles(full_name, avatar_url)")
         .in("slot_id", slots.map(function(s){ return s.id; }));
       (assigns || []).forEach(function(a){
         if(!bySlot[a.slot_id]) bySlot[a.slot_id] = [];
@@ -654,28 +703,165 @@
   function openCalDay(iso, daySlots, bySlot){
     document.getElementById("calDayTitle").textContent = fmtDateShort(iso);
     var list = document.getElementById("calDayList");
+    list.innerHTML = "";
+
     if(daySlots.length === 0){
       list.innerHTML = '<div class="empty">No shifts scheduled this day.</div>';
-    } else {
-      list.innerHTML = daySlots.map(function(s){
-        var filled = bySlot[s.id] || [];
-        var open = s.headcount - filled.length;
-        var people = filled.length > 0
-          ? filled.map(function(a){
-              var n = a.profiles ? a.profiles.full_name : "Unknown";
-              return '<span class="person-chip">'+avatarHtml(n, "sm")+escapeHtml(n)+'</span>';
-            }).join("")
-          : '<span class="avail-empty">Nobody assigned yet</span>';
-        return '<div class="shift-row">'+
-          '<div class="sr-time">'+s.start_time.slice(0,5)+' – '+s.end_time.slice(0,5)+'</div>'+
-          '<div class="sr-meta">'+
-            (s.roles ? '<span class="pill role">'+escapeHtml(s.roles.name)+'</span> ' : '')+
-            '<span class="pill '+(open > 0 ? "open" : "filled")+'">'+(open > 0 ? open+" open" : "full")+'</span>'+
-            '<div class="sr-chips">'+people+'</div>'+
-          '</div></div>';
-      }).join("");
+      document.getElementById("calDayOverlay").classList.add("open");
+      return;
     }
+
+    daySlots.forEach(function(s){
+      var filled = bySlot[s.id] || [];
+      var open = s.headcount - filled.length;
+      var label = fmtDateShort(s.date)+", "+s.start_time.slice(0,5)+" – "+s.end_time.slice(0,5);
+
+      var row = document.createElement("div");
+      row.className = "shift-row";
+      row.innerHTML =
+        '<div class="sr-time">'+s.start_time.slice(0,5)+' – '+s.end_time.slice(0,5)+'</div>'+
+        '<div class="sr-meta">'+
+          (s.roles ? '<span class="pill role">'+escapeHtml(s.roles.name)+'</span> ' : '')+
+          '<span class="pill '+(open > 0 ? "open" : "filled")+'">'+(open > 0 ? open+" open" : "full")+'</span>'+
+          '<div class="sr-chips"></div>'+
+        '</div>';
+
+      var chipsWrap = row.querySelector(".sr-chips");
+      if(filled.length === 0){
+        chipsWrap.innerHTML = '<span class="avail-empty">Nobody assigned yet</span>';
+      } else {
+        filled.forEach(function(a){
+          var n = a.profiles ? a.profiles.full_name : "Unknown";
+          var chip = document.createElement("span");
+          chip.className = "person-chip";
+          chip.style.cursor = "default";
+          chip.innerHTML = avatarHtml(n, "sm", a.profiles ? a.profiles.avatar_url : null) + escapeHtml(n);
+          chipsWrap.appendChild(chip);
+
+          // Someone else's shift on a future date — offer to ask for it.
+          if(a.employee_id !== me.id && s.date >= todayISO()){
+            var askBtn = document.createElement("button");
+            askBtn.className = "btn secondary small";
+            askBtn.textContent = "Ask for this shift";
+            askBtn.style.marginTop = "6px";
+            askBtn.addEventListener("click", function(){
+              openAskModal(a.id, a.employee_id, label + " (currently " + n + ")");
+            });
+            chipsWrap.appendChild(askBtn);
+          }
+        });
+      }
+
+      list.appendChild(row);
+    });
+
     document.getElementById("calDayOverlay").classList.add("open");
+  }
+
+  // ---------- profile / avatar ----------
+  function applySidebarAvatar(){
+    var el = document.getElementById("whoAvatar");
+    if(me.avatar_url){
+      el.textContent = "";
+      el.style.backgroundImage = "url("+JSON.stringify(me.avatar_url)+")";
+      el.style.backgroundSize = "cover";
+      el.style.backgroundPosition = "center";
+    } else {
+      var av = avatarColor(me.full_name);
+      el.style.backgroundImage = "";
+      el.style.background = av.bg; el.style.color = av.fg;
+      el.textContent = getInitials(me.full_name);
+    }
+  }
+
+  function renderProfile(){
+    document.getElementById("profileName").textContent = me.full_name;
+    var prev = document.getElementById("avatarPreview");
+    if(me.avatar_url){
+      prev.textContent = "";
+      prev.style.backgroundImage = "url("+JSON.stringify(me.avatar_url)+")";
+    } else {
+      var av = avatarColor(me.full_name);
+      prev.style.backgroundImage = "";
+      prev.style.background = av.bg; prev.style.color = av.fg;
+      prev.textContent = getInitials(me.full_name);
+    }
+    document.getElementById("avatarRemoveBtn").style.display = me.avatar_url ? "inline-flex" : "none";
+  }
+
+  function wireProfile(){
+    var fileInput = document.getElementById("avatarFile");
+    document.getElementById("avatarPickBtn").addEventListener("click", function(){ fileInput.click(); });
+
+    fileInput.addEventListener("change", async function(){
+      var errEl = document.getElementById("avatarError");
+      errEl.textContent = "";
+      var file = fileInput.files && fileInput.files[0];
+      if(!file) return;
+      if(file.size > 2 * 1024 * 1024){ errEl.textContent = "That image is over 2 MB — pick a smaller one."; fileInput.value = ""; return; }
+
+      var ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      // Unique filename each upload so the browser never serves a cached old photo.
+      var path = me.id + "/avatar-" + Date.now() + "." + ext;
+
+      var { error: upErr } = await supabaseClient.storage.from("avatars").upload(path, file, { upsert: true });
+      if(upErr){ errEl.textContent = upErr.message; fileInput.value = ""; return; }
+
+      var { data: pub } = supabaseClient.storage.from("avatars").getPublicUrl(path);
+      var url = pub.publicUrl;
+
+      var { error: dbErr } = await supabaseClient.from("profiles").update({ avatar_url: url }).eq("id", me.id);
+      if(dbErr){ errEl.textContent = dbErr.message; fileInput.value = ""; return; }
+
+      me.avatar_url = url;
+      applySidebarAvatar();
+      renderProfile();
+      fileInput.value = "";
+      showToast("Photo updated");
+    });
+
+    document.getElementById("avatarRemoveBtn").addEventListener("click", async function(){
+      var errEl = document.getElementById("avatarError");
+      errEl.textContent = "";
+      var { error } = await supabaseClient.from("profiles").update({ avatar_url: null }).eq("id", me.id);
+      if(error){ errEl.textContent = error.message; return; }
+      me.avatar_url = null;
+      applySidebarAvatar();
+      renderProfile();
+      showToast("Photo removed");
+    });
+  }
+
+  // ---------- ask for a teammate's shift ----------
+  var askAssignmentId = null, askOwnerId = null;
+  function wireAskModal(){
+    var overlay = document.getElementById("askOverlay");
+    document.getElementById("askClose").addEventListener("click", function(){ overlay.classList.remove("open"); });
+    overlay.addEventListener("click", function(e){ if(e.target === overlay) overlay.classList.remove("open"); });
+    document.getElementById("askForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      var errEl = document.getElementById("askError");
+      errEl.textContent = "";
+      var { error } = await supabaseClient.rpc("create_swap_request", {
+        p_assignment_id: askAssignmentId,
+        p_requested_to: askOwnerId,
+        p_direction: "request",
+        p_note: document.getElementById("askNote").value.trim() || null
+      });
+      if(error){ errEl.textContent = error.message; return; }
+      overlay.classList.remove("open");
+      document.getElementById("calDayOverlay").classList.remove("open");
+      await loadSwaps();
+      showToast("Request sent");
+    });
+  }
+  function openAskModal(assignmentId, ownerId, label){
+    askAssignmentId = assignmentId;
+    askOwnerId = ownerId;
+    document.getElementById("askShiftLabel").textContent = label;
+    document.getElementById("askNote").value = "";
+    document.getElementById("askError").textContent = "";
+    document.getElementById("askOverlay").classList.add("open");
   }
 
   // ---------- notifications ----------

@@ -524,22 +524,24 @@ nav button:active{opacity:.55;transform:scale(.94)}
 }
 #lock.hide{display:none}
 #lock.out{opacity:0;transform:scale(1.045);pointer-events:none}
-#lock.busy .keypad{opacity:.35;pointer-events:none;transition:opacity .25s ease}
-#lock.busy .pins i{background:var(--p1);border-color:var(--p1)}
+#lock.busy .auth-buttons{opacity:.4;pointer-events:none;transition:opacity .25s ease}
 .lock-inner{width:100%;max-width:300px;text-align:center}
 .lock-inner .avatars{justify-content:center;margin-bottom:18px}
 .lock-inner .pa{width:56px;height:56px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
 .lock-inner h2{font-size:23px;margin-bottom:6px}
 .lock-inner p{font-size:14px;color:var(--ink-soft);margin-bottom:26px;min-height:20px;transition:color .2s}
 .lock-inner p.bad{color:var(--red);font-weight:600}
-.pins{display:flex;justify-content:center;gap:15px;margin-bottom:34px}
-.pins i{
-  width:13px;height:13px;border-radius:50%;border:1.7px solid var(--ctrl-line);
-  transition:background .2s cubic-bezier(.2,.8,.2,1), border-color .2s cubic-bezier(.2,.8,.2,1),
-              transform .28s cubic-bezier(.34,1.56,.64,1);
+.auth-buttons{display:flex;flex-direction:column;gap:12px}
+.auth-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:13px 18px;border-radius:13px;font-size:15.5px;font-weight:600;letter-spacing:-0.01em;
+  transition:transform .16s cubic-bezier(.2,.8,.2,1), opacity .16s;
 }
-.pins i.on{background:var(--p1);border-color:var(--p1);transform:scale(1.22)}
-.pins.shake{animation:shake .48s cubic-bezier(.36,.07,.19,.97)}
+.auth-btn:active{transform:scale(.97);opacity:.85}
+.auth-btn.apple{background:#000;color:#fff}
+.auth-btn.google{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.auth-error{color:var(--red);font-weight:600;font-size:13.5px;margin-top:18px;min-height:18px}
+.auth-error:not(:empty){animation:shake .48s cubic-bezier(.36,.07,.19,.97)}
 @keyframes shake{
   0%,100%{transform:translateX(0)}
   12%{transform:translateX(-7px)} 24%{transform:translateX(7px)}
@@ -548,29 +550,11 @@ nav button:active{opacity:.55;transform:scale(.94)}
   84%{transform:translateX(-1px)}
 }
 @media (prefers-reduced-motion:reduce){
-  .pins.shake{animation:none}
+  .auth-error:not(:empty){animation:none}
   #lock{transition:none}
   #lock.out{opacity:0;transform:none}
 }
-.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;justify-items:center}
-.keypad button{
-  width:74px;height:74px;border-radius:50%;
-  background:
-    linear-gradient(165deg, rgba(255,255,255,.55) 0%, transparent 45%),
-    var(--fill);
-  font-size:29px;font-weight:400;letter-spacing:-0.02em;color:var(--ink);
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 3px 10px -4px rgba(0,0,0,.1);
-  transition:transform .16s cubic-bezier(.2,.8,.2,1), opacity .16s, background .16s, box-shadow .16s;
-}
-.keypad button:active{transform:scale(.88);opacity:.7;box-shadow:0 1px 0 rgba(255,255,255,.3) inset}
-.keypad button.blank{background:none;pointer-events:none;box-shadow:none}
-.keypad button.act{background:none;font-size:15px;font-weight:600;color:var(--p1);box-shadow:none}
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) .keypad button{
-    background:linear-gradient(165deg, rgba(255,255,255,.1) 0%, transparent 45%), var(--fill);
-    box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 3px 12px -4px rgba(0,0,0,.35);
-  }
   :root:not([data-theme="light"]) #sheet{
     background:linear-gradient(180deg, rgba(255,255,255,.07) 0%, transparent 14%), var(--paper);
     box-shadow:0 -8px 40px rgba(0,0,0,.4), 0 1px 0 rgba(255,255,255,.08) inset;
@@ -582,10 +566,6 @@ nav button:active{opacity:.55;transform:scale(.94)}
     background:linear-gradient(180deg, rgba(255,255,255,.05) 0%, transparent 30%), var(--card);
     box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 4px 14px -6px rgba(0,0,0,.35);
   }
-}
-:root[data-theme="dark"] .keypad button{
-  background:linear-gradient(165deg, rgba(255,255,255,.1) 0%, transparent 45%), var(--fill);
-  box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 3px 12px -4px rgba(0,0,0,.35);
 }
 :root[data-theme="dark"] #sheet{
   background:linear-gradient(180deg, rgba(255,255,255,.07) 0%, transparent 14%), var(--paper);
@@ -653,6 +633,12 @@ nav button:active{opacity:.55;transform:scale(.94)}
   background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);
 }
 .repeat-badge{font-size:11px;color:var(--ink-soft);font-weight:600}
+
+/* ---------- invite code display ---------- */
+.invite-code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:28px;font-weight:700;letter-spacing:.08em;
+  text-align:center;background:var(--fill);border-radius:14px;padding:18px;margin-bottom:6px;
+}
 
 /* ---------- grocery prices + running total ---------- */
 .item-price{font-weight:500;color:var(--ink-soft);font-size:13px;margin-left:5px}
@@ -841,9 +827,18 @@ nav button:active{opacity:.55;transform:scale(.94)}
   <div class="lock-inner">
     <div class="avatars" id="lockAvatars"></div>
     <h2>KandA's Home Helper</h2>
-    <p id="lockMsg">Enter your PIN</p>
-    <div class="pins" id="pins"></div>
-    <div class="keypad" id="keypad"></div>
+    <p id="lockMsg">Sign in to sync with your household</p>
+    <div class="auth-buttons">
+      <button class="auth-btn apple" onclick="signIn('apple')">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16.365 1.43c0 1.14-.42 2.07-1.26 2.87-.9.86-2.03 1.36-3.1 1.27-.05-1.1.44-2.24 1.24-3.02.85-.85 2.14-1.44 3.12-1.53v.41zM20.1 17.2c-.55 1.26-.81 1.82-1.52 2.94-1 1.56-2.4 3.51-4.14 3.53-1.55.02-1.95-1.02-4.05-1.01-2.1.01-2.54 1.03-4.09 1.01-1.74-.02-3.06-1.78-4.06-3.34C-.6 15.65-.9 10.9 1.02 8.36c1.03-1.4 2.63-2.29 4.1-2.29 1.6 0 2.6 1.09 3.92 1.09 1.28 0 2.06-1.1 3.92-1.1 1.29 0 2.66.7 3.65 1.92-3.2 1.76-2.68 6.32.49 7.22z"/></svg>
+        Continue with Apple
+      </button>
+      <button class="auth-btn google" onclick="signIn('google')">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.07 5.07 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.43.34-2.09V7.06H2.18A11 11 0 0 0 1 12c0 1.77.43 3.45 1.18 4.94l3.66-2.85z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 0 0-9.82 6.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+    <p id="authError" class="auth-error"></p>
   </div>
 </div>
 
@@ -968,7 +963,7 @@ const S = {
 };
 let calCursor = new Date();          // month being viewed
 let selDate = isoDate(new Date());   // selected day
-let ME = Number(localStorage.getItem('homehub:me')) || 0;   // which person is using this device (0 or 1)
+let ME = 0;   // which member slot (0 or 1) the signed-in account maps to — set by resolveMe() after sign-in
 let SOUND = localStorage.getItem('homehub:sound') !== 'off';
 const THEMES = ['auto','light','dark'];
 let THEME = THEMES.includes(localStorage.getItem('homehub:theme')) ? localStorage.getItem('homehub:theme') : 'auto';
@@ -1095,54 +1090,41 @@ function setSync(state,msg){ dot.className=state||''; dot.textContent=msg; }
    filled in, or the client fails to load, we fall back to this device only. */
 const SUPABASE_URL = 'https://zjsppdoqzxmzrotoxrie.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_WSqJEk0RT0xz_eGOvRkBuA_OhVzoVMa';
-const HOUSEHOLD = 'kanda';
+
+function isNative(){ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
 
 const sb = (window.supabase && !SUPABASE_URL.includes('YOUR-PROJECT'))
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { flowType: 'pkce', detectSessionInUrl: !isNative(), persistSession: true, autoRefreshToken: true }
+    })
   : null;
 
 const CLOUD = !!sb;
 const RESTING = CLOUD ? 'synced' : 'on this phone';
 
-/* Everything is written encrypted. KEY is derived from the PIN at unlock and
-   only ever lives in memory — there is no copy of it on disk. */
-let KEY = null;
-
-async function encrypt(txt){
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, KEY, new TextEncoder().encode(txt));
-  return b64(iv) + ':' + b64(new Uint8Array(ct));
-}
-async function decrypt(blob){
-  const bits = String(blob).split(':');
-  if(bits.length !== 2) throw new Error('not encrypted');
-  return new TextDecoder().decode(await crypto.subtle.decrypt(
-    {name:'AES-GCM', iv: unb64(bits[0])}, KEY, unb64(bits[1])));
-}
+/* Access to household_data is scoped by row-level security tied to the
+   signed-in account (see the redeem_invite / is_household_member policies
+   in the Supabase project) — there is no client-side encryption anymore,
+   the account IS the lock. */
+let session = null;
+let household = null;   // {household_id, role, households:{name}}
+let households = [];    // every household this account belongs to
 
 const store = {
   async get(k){
-    let raw;
-    if(CLOUD){
-      const { data, error } = await sb.from('homehub_data')
-        .select('value').eq('household', HOUSEHOLD).eq('key', k).maybeSingle();
-      if(error) throw error;
-      raw = data && data.value;
-    }
-    else raw = localStorage.getItem(k);
-    if(raw === null || raw === undefined) return null;
-    return {key:k, value: await decrypt(raw)};
+    if(!CLOUD || !household) return null;
+    const { data, error } = await sb.from('household_data')
+      .select('value').eq('household_id', household.household_id).eq('key', k).maybeSingle();
+    if(error) throw error;
+    return data ? {key:k, value: data.value} : null;
   },
   async set(k,v){
-    const blob = await encrypt(v);
-    if(CLOUD){
-      const { error } = await sb.from('homehub_data')
-        .upsert({household:HOUSEHOLD, key:k, value:blob, updated_at:new Date().toISOString()},
-                {onConflict:'household,key'});
-      if(error) throw error;
-      return {key:k, value:v};
-    }
-    localStorage.setItem(k, blob);
+    if(!CLOUD || !household) throw new Error('not signed in');
+    const { error } = await sb.from('household_data').upsert({
+      household_id: household.household_id, key:k, value:v,
+      updated_by: session.user.id, updated_at: new Date().toISOString()
+    }, { onConflict: 'household_id,key' });
+    if(error) throw error;
     return {key:k, value:v};
   }
 };
@@ -1158,57 +1140,38 @@ function toast(msg){
 
 /* ---------- live sync ---------- */
 const remoteRaw = {};
-let pulseTs = 0, polling = false;
 
 async function loadAll(){
   setSync('saving','loading…');
   for(const k of KEYS){
     try{
       const r = await store.get('homehub:'+k);
-      if(r && r.value){ S[k] = JSON.parse(r.value); remoteRaw[k] = r.value; }
-    }catch(e){ /* key doesn't exist yet — first run */ }
+      if(r && r.value !== null && r.value !== undefined){ S[k] = r.value; remoteRaw[k] = JSON.stringify(r.value); }
+    }catch(e){ console.error('load failed for', k, e); }
   }
-  try{
-    const r = await store.get('homehub:pulse');
-    if(r && r.value) pulseTs = JSON.parse(r.value).ts || 0;
-  }catch(e){}
   setSync('', RESTING);
   renderAll();
 }
 
-async function pollRemote(){
-  if(!CLOUD || polling || document.hidden) return;
-  polling = true;
+/* Realtime pushes changes as they happen (see startRealtime below). This is
+   a fallback resync for when the socket was dropped (e.g. app backgrounded)
+   and reconnects on focus/visibility instead of trusting it caught everything. */
+async function reconcile(){
+  if(!CLOUD || !household || document.hidden) return;
   try{
-    const r = await store.get('homehub:pulse');
-    const pulse = r && r.value ? JSON.parse(r.value) : null;
-    if(pulse && pulse.ts !== pulseTs){
-      pulseTs = pulse.ts;
-      let changed = false;
-      for(const k of KEYS){
-        try{
-          const g = await store.get('homehub:'+k);
-          if(g && g.value !== remoteRaw[k]){
-            remoteRaw[k] = g.value;
-            S[k] = JSON.parse(g.value);
-            changed = true;
-          }
-        }catch(e){}
-      }
-      if(changed){
-        renderAll();
-        if(pulse.by !== ME){
-          play('remote');
-          toast((S.people[pulse.by] || 'Someone') + ' just changed something');
-        }
-      }
+    let changed = false;
+    for(const k of KEYS){
+      const r = await store.get('homehub:'+k);
+      if(!r) continue;
+      const raw = JSON.stringify(r.value);
+      if(raw !== remoteRaw[k]){ S[k] = r.value; remoteRaw[k] = raw; changed = true; }
     }
+    if(changed) renderAll();
     setSync('', RESTING);
   }catch(e){
-    console.error('pollRemote failed:', e);
+    console.error('reconcile failed:', e);
     setSync('error', 'sync error: ' + (e.message || e.code || 'unknown'));
   }
-  polling = false;
 }
 const saveTimers = {};
 function save(key){
@@ -1216,13 +1179,8 @@ function save(key){
   clearTimeout(saveTimers[key]);
   saveTimers[key] = setTimeout(async ()=>{
     try{
-      const raw = JSON.stringify(S[key]);
-      await store.set('homehub:'+key, raw);
-      remoteRaw[key] = raw;
-      if(CLOUD){
-        pulseTs = Date.now();
-        await store.set('homehub:pulse', JSON.stringify({by:ME, ts:pulseTs}));
-      }
+      await store.set('homehub:'+key, S[key]);
+      remoteRaw[key] = JSON.stringify(S[key]);
       setSync('', RESTING);
     }catch(e){
       console.error('save failed for', key, ':', e);
@@ -1232,86 +1190,124 @@ function save(key){
   },350);
 }
 
-/* =================== lock =================== */
-/* There is no stored PIN and no "is it correct" branch to skip past. The PIN
-   derives an AES key; VERIFIER is a known phrase encrypted with the right key.
-   If it decrypts, the PIN was right — and that same key is what reads your
-   data. Get it wrong and everything on disk stays unreadable. */
-const SALT     = '07wWziJqsaA91LstMVvHpQ==';
-const IV       = 'o8DT7k0IX7Bak+Vp';
-const VERIFIER = 'RwgZ85QCH6/LvKUIHIZAAlvaxMMvKT/ytKdPy18XzjQPeRCz';
-const TOKEN    = 'KandA-Home-Helper-v1';
-const ITERS    = 600000;
-const PIN_LEN  = 6;
-let entered = '';
+/* =================== accounts =================== */
+/* Sign-in is Apple/Google OAuth via Supabase Auth. On native builds the
+   OAuth page opens in the system browser (Capacitor's Browser plugin) and
+   hands control back via a custom-scheme deep link; in a plain browser it's
+   a normal full-page redirect. Either way, onAuthStateChange below is what
+   actually drives unlocking the app once a session exists. */
+const OAUTH_REDIRECT = isNative() ? 'homehelper://auth-callback' : (location.origin + location.pathname);
 
-const b64   = bytes => btoa(String.fromCharCode(...bytes));
-const unb64 = str   => Uint8Array.from(atob(str), c=>c.charCodeAt(0));
-
-async function deriveKey(pin){
-  const base = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    {name:'PBKDF2', salt:unb64(SALT), iterations:ITERS, hash:'SHA-256'},
-    base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
-}
-
-function drawPins(){
-  document.getElementById('pins').innerHTML =
-    Array.from({length:PIN_LEN}, (_,i)=>'<i class="'+(i<entered.length?'on':'')+'"></i>').join('');
-}
-function buildKeypad(){
-  const keys = ['1','2','3','4','5','6','7','8','9','','0','del'];
-  document.getElementById('keypad').innerHTML = keys.map(k=>{
-    if(k === '') return '<button class="blank" tabindex="-1"></button>';
-    if(k === 'del') return '<button class="act" onclick="pinDel()" aria-label="Delete">Delete</button>';
-    return '<button onclick="pinTap(\''+k+'\')">'+k+'</button>';
-  }).join('');
-  document.getElementById('lockAvatars').innerHTML = avatar(0)+avatar(1);
-  drawPins();
-}
-function pinTap(d){
-  if(entered.length >= PIN_LEN || document.getElementById('lock').classList.contains('busy')) return;
-  entered += d; drawPins(); play('key');
-  if(entered.length === PIN_LEN) setTimeout(checkPin, 120);
-}
-function pinDel(){ entered = entered.slice(0,-1); drawPins(); play('untick'); }
-
-function pinFail(msg){
-  const pins = document.getElementById('pins'), m = document.getElementById('lockMsg');
-  pins.classList.add('shake');
-  m.textContent = msg; m.classList.add('bad');
-  play('error');
-  if(navigator.vibrate) navigator.vibrate([50,30,50,30,40]);
-  setTimeout(()=>{
-    pins.classList.remove('shake'); entered=''; drawPins();
-    m.textContent = 'Enter your PIN'; m.classList.remove('bad');
-  }, 720);
-}
-
-async function checkPin(){
-  const lock = document.getElementById('lock'), msg = document.getElementById('lockMsg');
-  if(!(window.crypto && crypto.subtle)){
-    pinFail('Needs a secure (https) connection'); return;
-  }
-  lock.classList.add('busy');
-  msg.textContent = 'Unlocking…';
+async function signIn(provider){
+  const err = document.getElementById('authError');
+  err.textContent = '';
+  if(!CLOUD){ err.textContent = "Cloud sync isn't configured on this build."; return; }
   try{
-    const key = await deriveKey(entered);
-    const out = await crypto.subtle.decrypt(
-      {name:'AES-GCM', iv:unb64(IV)}, key, unb64(VERIFIER));
-    if(new TextDecoder().decode(out) !== TOKEN) throw new Error('bad');
-    KEY = key;
+    if(isNative()){
+      const { data, error } = await sb.auth.signInWithOAuth({
+        provider, options: { redirectTo: OAUTH_REDIRECT, skipBrowserRedirect: true }
+      });
+      if(error) throw error;
+      await window.Capacitor.Plugins.Browser.open({ url: data.url });
+    }else{
+      const { error } = await sb.auth.signInWithOAuth({
+        provider, options: { redirectTo: OAUTH_REDIRECT }
+      });
+      if(error) throw error;
+      // browser navigates away here; nothing further to do on this page load
+    }
+  }catch(e){
+    err.textContent = e.message || 'Sign-in failed — try again.';
+  }
+}
+
+if(isNative() && window.Capacitor.Plugins.App){
+  window.Capacitor.Plugins.App.addListener('appUrlOpen', async ({url})=>{
+    try{ await window.Capacitor.Plugins.Browser.close(); }catch(e){}
+    if(url && url.includes('auth-callback') && sb){
+      try{ await sb.auth.exchangeCodeForSession(url); }
+      catch(e){ document.getElementById('authError').textContent = e.message || 'Sign-in failed — try again.'; }
+    }
+  });
+}
+
+async function signOut(){
+  play('lock');
+  closeSheet();
+  try{ await sb.auth.signOut(); }catch(e){}
+  localStorage.removeItem('homehub:household');
+  location.reload();
+}
+
+function showSignedOut(msg){
+  const lock = document.getElementById('lock');
+  lock.classList.remove('hide','out');
+  document.getElementById('lockMsg').textContent = msg || 'Sign in to sync with your household';
+}
+
+/* Which of the (up to two) member slots is "me" — derived from account
+   identity now, not a manual per-device toggle. */
+async function resolveMe(){
+  const { data, error } = await sb.from('household_members')
+    .select('user_id, joined_at')
+    .eq('household_id', household.household_id)
+    .order('joined_at', { ascending: true })
+    .limit(2);
+  if(error){ console.error('resolveMe failed:', error); return; }
+  const idx = data.findIndex(m => m.user_id === session.user.id);
+  ME = idx >= 0 ? idx : 0;
+}
+
+async function afterSignIn(){
+  const lock = document.getElementById('lock'), msg = document.getElementById('lockMsg'), err = document.getElementById('authError');
+  err.textContent = '';
+  lock.classList.remove('hide','out');
+  lock.classList.add('busy');
+  msg.textContent = 'Setting things up…';
+  try{
+    const { data, error } = await sb.from('household_members')
+      .select('household_id, role, households(name)')
+      .eq('user_id', session.user.id);
+    if(error) throw error;
+    if(!data || !data.length) throw new Error('No household found for this account yet — try signing out and back in.');
+    households = data;
+    const saved = localStorage.getItem('homehub:household');
+    household = households.find(h=>h.household_id===saved) || households[0];
+    localStorage.setItem('homehub:household', household.household_id);
+    await resolveMe();
     lock.classList.remove('busy');
     unlock(true);
     await loadAll();
+    await loadSubscription();
     startSync();
     startRealtime();
   }catch(e){
+    console.error(e);
     lock.classList.remove('busy');
-    pinFail('Wrong PIN — try again');
+    err.textContent = e.message || 'Something went wrong loading your household.';
   }
 }
+
+if(sb){
+  sb.auth.onAuthStateChange((event, sess)=>{
+    session = sess;
+    if(session) afterSignIn();
+    else showSignedOut();
+  });
+}
+
+let PREMIUM = false;
+async function loadSubscription(){
+  try{
+    const { data, error } = await sb.from('subscriptions').select('tier').eq('user_id', session.user.id).maybeSingle();
+    if(error) throw error;
+    PREMIUM = !!data && data.tier === 'premium';
+  }catch(e){
+    console.error('loadSubscription failed:', e);
+    PREMIUM = false;
+  }
+}
+
 function unlock(withSound){
   const lock = document.getElementById('lock');
   if(withSound) play('unlock');
@@ -1320,17 +1316,6 @@ function unlock(withSound){
     lock.classList.add('hide');
     lock.classList.remove('out');
   }, 360);
-  entered=''; drawPins();
-}
-function lockNow(){
-  KEY = null;
-  entered=''; drawPins();
-  document.getElementById('lockMsg').textContent = 'Enter your PIN';
-  const lock = document.getElementById('lock');
-  lock.classList.remove('hide','out');
-  play('lock');
-  closeSheet();
-  location.reload();
 }
 
 /* =================== nav =================== */
@@ -1665,8 +1650,8 @@ function ensureDefaultList(kind){
   }
   if(!activeList[kind] || !lists.some(l=>l.id===activeList[kind])) activeList[kind] = lists[0].id;
   // Persist any migration/repair so it doesn't regenerate on next load.
-  if(listsChanged && KEY) save(kind+'Lists');
-  if(itemsChanged && KEY) save(kind==='task'?'tasks':'grocery');
+  if(listsChanged && household) save(kind+'Lists');
+  if(itemsChanged && household) save(kind==='task'?'tasks':'grocery');
 }
 
 function renderListBar(kind){
@@ -2202,33 +2187,78 @@ function openSettings(){
     '<span style="color:var(--p2);font-weight:600">●</span> is person 2.</p>'+
     '<div class="name-row">'+avatar(0)+'<div class="field"><label>Person 1</label><input id="stP0" value="'+esc(S.people[0])+'"></div></div>'+
     '<div class="name-row">'+avatar(1)+'<div class="field"><label>Person 2</label><input id="stP1" value="'+esc(S.people[1])+'"></div></div>'+
-    '<div class="field" style="margin-top:18px"><label>This phone belongs to</label>'+
-      segControl('stMe', [S.people[0], S.people[1]], ME)+
-      '<p style="font-size:12.5px;color:var(--ink-soft);margin-top:7px">Only used to say who made a change. Stays on this device.</p></div>'+
     '<div class="field"><label>Sound effects</label>'+
       segControl('stSnd', ['On','Off'], SOUND?0:1)+'</div>'+
     '<div class="field"><label>Appearance</label>'+
       segControl('stTheme', ['Auto','Light','Dark'], THEMES.indexOf(THEME))+
       '<p style="font-size:12.5px;color:var(--ink-soft);margin-top:7px">Auto follows your iPhone\'s Display setting.</p></div>'+
+    '<div class="field" style="margin-top:18px"><label>Household</label>'+
+      '<p style="font-size:13px;color:var(--ink-soft);margin:2px 0 10px">Signed in as '+esc(session && session.user && session.user.email || '')+
+        (PREMIUM ? ' · <span style="color:var(--p1);font-weight:600">Premium</span>' : '')+'</p>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="btn small ghost" onclick="createInvite()">Invite partner</button>'+
+        '<button class="btn small ghost" onclick="openJoinSheet()">Join a household</button>'+
+      '</div></div>'+
     '<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Cancel</button>'+
     '<button class="btn" onclick="saveSettings()">Save</button></div>'+
-    '<button class="danger-link" style="color:var(--p1)" onclick="lockNow()">Lock the app</button>'
+    '<button class="danger-link" style="color:var(--p1)" onclick="signOut()">Sign out</button>'
   );
 }
 function saveSettings(){
   S.people[0] = document.getElementById('stP0').value.trim() || 'K';
   S.people[1] = document.getElementById('stP1').value.trim() || 'A';
-  ME = segVal('stMe');
   SOUND = segVal('stSnd') === 0;
   THEME = THEMES[segVal('stTheme')] || 'auto';
   applyTheme();
   try{
-    localStorage.setItem('homehub:me', String(ME));
     localStorage.setItem('homehub:sound', SOUND ? 'on' : 'off');
     localStorage.setItem('homehub:theme', THEME);
   }catch(e){}
   save('people'); closeSheet(); renderAll();
   play('tick');
+}
+
+/* ---------- household invites ---------- */
+async function createInvite(){
+  if(!household) return;
+  try{
+    const { data, error } = await sb.from('household_invites')
+      .insert({ household_id: household.household_id, created_by: session.user.id })
+      .select('code').single();
+    if(error) throw error;
+    openSheet(
+      '<h3>Invite your partner</h3>'+
+      '<p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px">Share this code — it works once and expires in 7 days.</p>'+
+      '<div class="invite-code">'+esc(data.code)+'</div>'+
+      '<div class="sheet-actions"><button class="btn" onclick="closeSheet()">Done</button></div>'
+    );
+  }catch(e){
+    toast('Could not create invite: ' + (e.message || e));
+  }
+}
+function openJoinSheet(){
+  openSheet(
+    '<h3>Join a household</h3>'+
+    '<p style="font-size:14px;color:var(--ink-soft);margin-bottom:14px">Enter the code your partner shared with you.</p>'+
+    '<div class="field"><label>Invite code</label><input id="joinCode" placeholder="a1b2c3d4" autocapitalize="off" autocorrect="off"></div>'+
+    '<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Cancel</button>'+
+    '<button class="btn" onclick="redeemInviteCode()">Join</button></div>'
+  );
+  setTimeout(()=>document.getElementById('joinCode')?.focus(),250);
+}
+async function redeemInviteCode(){
+  const code = document.getElementById('joinCode').value.trim().toLowerCase();
+  if(!code) return;
+  try{
+    const { data, error } = await sb.rpc('redeem_invite', { invite_code: code });
+    if(error) throw error;
+    localStorage.setItem('homehub:household', data);
+    toast('Joined! Switching households…');
+    closeSheet();
+    setTimeout(()=>location.reload(), 700);
+  }catch(e){
+    toast(e.message || 'Could not join that household');
+  }
 }
 
 /* =================== init =================== */
@@ -2252,7 +2282,7 @@ if('serviceWorker' in navigator && location.protocol === 'https:'){
 }
 
 applyTheme();
-buildKeypad();
+document.getElementById('lockAvatars').innerHTML = avatar(0)+avatar(1);
 renderAll();
 
 /* Splash → lock handoff */
@@ -2278,12 +2308,26 @@ renderAll();
   else window.addEventListener('load', dismiss);
 })();
 
+let realtimeChannel = null;
 function startRealtime(){
-  if(!CLOUD) return;
-  sb.channel('homehub-'+HOUSEHOLD)
+  if(!CLOUD || !household) return;
+  if(realtimeChannel){ sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+  realtimeChannel = sb.channel('household-'+household.household_id)
     .on('postgres_changes',
-      { event: '*', schema: 'public', table: 'homehub_data', filter: 'household=eq.'+HOUSEHOLD },
-      () => pollRemote())
+      { event: '*', schema: 'public', table: 'household_data', filter: 'household_id=eq.'+household.household_id },
+      (payload)=>{
+        const row = payload.new;
+        if(!row || !row.key || !row.key.startsWith('homehub:')) return;
+        const k = row.key.slice('homehub:'.length);
+        if(!KEYS.includes(k)) return;
+        S[k] = row.value;
+        remoteRaw[k] = JSON.stringify(row.value);
+        renderAll();
+        if(row.updated_by && row.updated_by !== session.user.id){
+          play('remote');
+          toast('Someone just changed something');
+        }
+      })
     .subscribe((status, err) => {
       console.log('realtime status:', status, err || '');
       if(err) setSync('error', 'realtime: ' + status);
@@ -2291,10 +2335,8 @@ function startRealtime(){
 }
 function startSync(){
   if(!CLOUD) return;
-  pollRemote();
-  setInterval(pollRemote, 5000);
-  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pollRemote(); });
-  window.addEventListener('focus', pollRemote);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) reconcile(); });
+  window.addEventListener('focus', reconcile);
 }
 </script>
 </body>

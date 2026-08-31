@@ -411,6 +411,29 @@ h1,h2,h3{ font-family:'Plus Jakarta Sans', sans-serif; margin:0; color:var(--tex
 .hours-total{ font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; }
 .table-wrap{ overflow-x:auto; }
 
+/* ================= Payroll breakdown ================= */
+.hours-table td.money{ font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+.hours-table .sub{ font-size:11px; color:var(--text-muted); }
+.hours-table th.group{
+  text-align:center; border-left:1px solid var(--border); background:var(--primary-tint); color:var(--primary-dark);
+}
+.hours-table td.cat{ text-align:right; font-variant-numeric:tabular-nums; border-left:1px solid var(--border); }
+.hours-table td.zero{ color:var(--text-muted); }
+.no-rate-flag{ font-size:11px; color:var(--warning); font-weight:600; }
+
+.rule-row{
+  display:flex; align-items:center; gap:12px; padding:12px 16px;
+  border-bottom:1px solid var(--border); flex-wrap:wrap;
+}
+.rule-row:last-child{ border-bottom:none; }
+.rule-row .rr-name{ flex:1; min-width:140px; font-weight:600; font-size:13.5px; }
+.rule-row .rr-day{ font-size:12px; color:var(--text-secondary); }
+.rule-row input[type=text], .rule-row input[type=number]{
+  background:#fff; border:1px solid var(--border-strong); color:var(--text-primary);
+  border-radius:7px; padding:7px 9px; font-size:13px; width:100px;
+}
+.settings-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:14px; }
+
 /* ================= Avatar upload ================= */
 .avatar-edit{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
 .avatar-preview{

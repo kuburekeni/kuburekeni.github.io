@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roster — My schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="main" style="max-width:760px; margin:0 auto;">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="logo-mark sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
+      </div>
+      <div class="brand-name" style="font-size:17px;">Roster</div>
+    </div>
+    <div class="who">
+      <div class="avatar sm" id="whoAvatar" style="background:var(--primary-tint); color:var(--primary-dark);">—</div>
+      <span id="whoName"></span> <span class="pill employee">Employee</span>
+      <button class="btn secondary small" id="signOutBtn">Sign out</button>
+    </div>
+  </div>
+
+  <div class="page-head">
+    <div>
+      <h1>My schedule</h1>
+      <p>Set when you can work, and see what's been assigned to you.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="text-transform:none; letter-spacing:0; font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Weekly availability</h2>
+    <p class="hint" style="margin-bottom:14px;">Tell your admin which days and times you can generally work. This repeats every week until you change it.</p>
+  </div>
+  <div class="list-card" style="margin-bottom:24px;">
+    <div id="availGrid"></div>
+  </div>
+
+  <div class="page-head" style="margin-bottom:12px;">
+    <div><h1 style="font-size:18px;">Upcoming shifts</h1></div>
+  </div>
+  <div class="list-card">
+    <div id="myShifts"><div class="loading">Loading…</div></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="common.js"></script>
+<script>
+(function(){
+  "use strict";
+  var me = null;
+
+  async function init(){
+    var ctx = await requireSession("employee");
+    if(!ctx) return;
+    me = ctx.profile;
+    document.getElementById("whoName").textContent = me.full_name;
+    var av = avatarColor(me.full_name);
+    var avatarEl = document.getElementById("whoAvatar");
+    avatarEl.style.background = av.bg; avatarEl.style.color = av.fg;
+    avatarEl.textContent = getInitials(me.full_name);
+    document.getElementById("signOutBtn").addEventListener("click", signOut);
+    await loadAvailability();
+    await loadMyShifts();
+  }
+
+  // ---------- availability ----------
+  var availability = [];
+
+  async function loadAvailability(){
+    var { data, error } = await supabaseClient
+      .from("availability").select("*").eq("employee_id", me.id)
+      .order("day_of_week", { ascending: true })
+      .order("start_time", { ascending: true });
+    if(error){ showToast("Couldn't load availability"); return; }
+    availability = data || [];
+    renderAvailability();
+  }
+
+  function renderAvailability(){
+    var grid = document.getElementById("availGrid");
+    grid.innerHTML = "";
+    for(var d = 0; d < 7; d++){
+      var dayRows = availability.filter(function(a){ return a.day_of_week === d; });
+      var row = document.createElement("div");
+      row.className = "avail-row";
+
+      var slotsHtml = dayRows.length === 0
+        ? '<span class="avail-empty">Not available</span>'
+        : dayRows.map(function(r){
+            return '<span class="avail-slot" data-id="'+r.id+'">'+r.start_time.slice(0,5)+' – '+r.end_time.slice(0,5)+'<button title="Remove">✕</button></span>';
+          }).join("");
+
+      row.innerHTML =
+        '<div class="ar-day">'+DAY_NAMES[d]+'</div>'+
+        '<div class="ar-slots">'+slotsHtml+'</div>'+
+        '<button class="btn secondary small" data-add-day="'+d+'">+ Add time</button>';
+
+      row.querySelectorAll(".avail-slot button").forEach(function(btn){
+        btn.addEventListener("click", function(e){
+          var id = e.target.closest(".avail-slot").getAttribute("data-id");
+          removeAvailabilityRow(id);
+        });
+      });
+      row.querySelector("[data-add-day]").addEventListener("click", function(){ addAvailabilityRow(d); });
+
+      grid.appendChild(row);
+    }
+  }
+
+  async function addAvailabilityRow(dayOfWeek){
+    var start = prompt("Available from (24h, e.g. 09:00)", "09:00");
+    if(start === null) return;
+    var end = prompt("Available until (24h, e.g. 17:00)", "17:00");
+    if(end === null) return;
+    if(!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end) || start >= end){
+      showToast("Enter a valid start/end time, start before end");
+      return;
+    }
+    var { error } = await supabaseClient.from("availability").insert({
+      employee_id: me.id, day_of_week: dayOfWeek, start_time: start, end_time: end
+    });
+    if(error){ showToast(error.message); return; }
+    await loadAvailability();
+    showToast("Availability added");
+  }
+
+  async function removeAvailabilityRow(id){
+    var { error } = await supabaseClient.from("availability").delete().eq("id", id);
+    if(error){ showToast(error.message); return; }
+    await loadAvailability();
+  }
+
+  // ---------- my shifts ----------
+  async function loadMyShifts(){
+    var container = document.getElementById("myShifts");
+    var { data, error } = await supabaseClient
+      .from("shift_assignments")
+      .select("id, shift_slots(date, start_time, end_time, role_label)")
+      .eq("employee_id", me.id);
+    if(error){ container.innerHTML = '<div class="empty">Couldn\'t load your shifts.</div>'; return; }
+
+    var rows = (data || [])
+      .filter(function(r){ return r.shift_slots; })
+      .map(function(r){ return r.shift_slots; })
+      .filter(function(s){ return s.date >= addDaysISO(todayISO(), -1); })
+      .sort(function(a,b){
+        if(a.date !== b.date) return a.date < b.date ? -1 : 1;
+        return a.start_time < b.start_time ? -1 : 1;
+      });
+
+    if(rows.length === 0){
+      container.innerHTML = '<div class="empty">No upcoming shifts assigned yet.</div>';
+      return;
+    }
+
+    container.innerHTML = "";
+    rows.forEach(function(s){
+      var el = document.createElement("div");
+      el.className = "shift-row";
+      el.innerHTML =
+        '<div class="sr-time">'+fmtDateShort(s.date)+'</div>'+
+        '<div class="sr-meta">'+
+          '<span class="pill filled">'+s.start_time.slice(0,5)+' – '+s.end_time.slice(0,5)+'</span> '+
+          (s.role_label ? '<span class="pill role">'+escapeHtml(s.role_label)+'</span>' : '')+
+        '</div>';
+      container.appendChild(el);
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

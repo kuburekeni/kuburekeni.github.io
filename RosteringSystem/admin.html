@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roster — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="logo-mark sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
+      </div>
+      <div class="brand-name">Roster</div>
+    </div>
+
+    <nav class="side-nav">
+      <button class="side-link active" data-tab="roster">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Roster
+      </button>
+      <button class="side-link" data-tab="employees">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Employees
+      </button>
+      <button class="side-link" data-tab="availability">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Availability
+      </button>
+    </nav>
+
+    <div class="side-spacer"></div>
+
+    <div class="side-company">
+      <div class="side-company-name" id="companyName">—</div>
+      <div class="side-company-code">Join code <strong id="joinCode">—</strong></div>
+    </div>
+
+    <div class="side-user">
+      <div class="avatar sm" id="whoAvatar" style="background:var(--primary-tint); color:var(--primary-dark);">—</div>
+      <div class="side-user-info">
+        <div class="side-user-name" id="whoName"></div>
+        <div class="side-user-role">Admin</div>
+      </div>
+      <button class="icon-btn" id="signOutBtn" title="Sign out">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ROSTER -->
+    <div class="tabpanel active" id="tab-roster">
+      <div class="page-head">
+        <div>
+          <h1>Roster</h1>
+          <p>Fill open shifts by hand, or let auto-generate match them to availability.</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="stat-value" id="readoutTeam">0</div>
+          <div class="stat-label">Team members</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="stat-value" id="readoutOpen">0</div>
+          <div class="stat-label">Open seats</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="stat-value" id="readoutFilled">0</div>
+          <div class="stat-label">Filled seats</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="field"><label for="rangeStart">From</label><input type="date" id="rangeStart"></div>
+        <div class="field"><label for="rangeEnd">To</label><input type="date" id="rangeEnd"></div>
+        <div class="toolbar-actions">
+          <button class="btn secondary small" id="quickWeek">This week</button>
+          <button class="btn secondary small" id="quickMonth">This month</button>
+          <button class="btn secondary small" id="addSlotBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add shift slot
+          </button>
+          <button class="btn primary small" id="generateBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Auto-generate roster
+          </button>
+        </div>
+      </div>
+
+      <div id="rosterList"><div class="loading">Loading…</div></div>
+    </div>
+
+    <!-- EMPLOYEES -->
+    <div class="tabpanel" id="tab-employees">
+      <div class="page-head">
+        <div>
+          <h1>Employees</h1>
+          <p>Everyone who has joined your company with the code shown in the sidebar.</p>
+        </div>
+      </div>
+      <div class="list-card">
+        <div id="employeeList"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- AVAILABILITY -->
+    <div class="tabpanel" id="tab-availability">
+      <div class="page-head">
+        <div>
+          <h1>Availability</h1>
+          <p>What each employee has told you they can work, week to week.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="field" style="max-width:280px;"><label for="availEmployeeSelect">Employee</label>
+          <select id="availEmployeeSelect"></select>
+        </div>
+      </div>
+      <div class="list-card">
+        <div id="availGrid"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add slot sheet -->
+<div class="overlay" id="slotOverlay">
+  <div class="sheet">
+    <h2>Add shift slot</h2>
+    <form id="slotForm">
+      <div class="field"><label for="s-date">Date</label><input type="date" id="s-date" required></div>
+      <div class="field-row">
+        <div class="field"><label for="s-start">Start</label><input type="time" id="s-start" required></div>
+        <div class="field"><label for="s-end">End</label><input type="time" id="s-end" required></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="s-role">Role (optional)</label><input type="text" id="s-role" placeholder="e.g. Bar, Kitchen"></div>
+        <div class="field" style="max-width:110px;"><label for="s-headcount">People needed</label><input type="number" id="s-headcount" value="1" min="1" required></div>
+      </div>
+      <div class="error-text" id="slotError"></div>
+      <div class="sheet-actions">
+        <button type="button" class="btn secondary" id="slotCancel">Cancel</button>
+        <button type="submit" class="btn primary">Add slot</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="common.js"></script>
+<script src="roster-engine.js"></script>
+<script>
+(function(){
+  "use strict";
+  var me = null, company = null, employees = [];
+
+  async function init(){
+    var ctx = await requireSession("admin");
+    if(!ctx) return;
+    me = ctx.profile;
+    document.getElementById("whoName").textContent = me.full_name;
+    var av = avatarColor(me.full_name);
+    var avatarEl = document.getElementById("whoAvatar");
+    avatarEl.style.background = av.bg; avatarEl.style.color = av.fg;
+    avatarEl.textContent = getInitials(me.full_name);
+    document.getElementById("signOutBtn").addEventListener("click", signOut);
+
+    var { data: c } = await supabaseClient.from("companies").select("*").eq("id", me.company_id).maybeSingle();
+    company = c;
+    if(company){
+      document.getElementById("companyName").textContent = company.name;
+      document.getElementById("joinCode").textContent = company.join_code;
+    }
+
+    wireTabs();
+    wireSlotForm();
+
+    var start = todayISO();
+    var end = addDaysISO(start, 6);
+    document.getElementById("rangeStart").value = start;
+    document.getElementById("rangeEnd").value = end;
+    document.getElementById("quickWeek").addEventListener("click", function(){
+      var s = todayISO();
+      document.getElementById("rangeStart").value = s;
+      document.getElementById("rangeEnd").value = addDaysISO(s, 6);
+      loadRoster();
+    });
+    document.getElementById("quickMonth").addEventListener("click", function(){
+      var d = new Date();
+      var s = d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-01";
+      var lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+      var e = d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(lastDay);
+      document.getElementById("rangeStart").value = s;
+      document.getElementById("rangeEnd").value = e;
+      loadRoster();
+    });
+    document.getElementById("rangeStart").addEventListener("change", loadRoster);
+    document.getElementById("rangeEnd").addEventListener("change", loadRoster);
+    document.getElementById("generateBtn").addEventListener("click", runGenerate);
+
+    await loadEmployees();
+    await loadRoster();
+    wireAvailabilityTab();
+  }
+
+  function wireTabs(){
+    document.querySelectorAll(".side-nav .side-link").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        document.querySelectorAll(".side-nav .side-link").forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });
+        document.getElementById("tab-"+btn.getAttribute("data-tab")).classList.add("active");
+      });
+    });
+  }
+
+  // ---------- employees ----------
+  async function loadEmployees(){
+    var { data, error } = await supabaseClient
+      .from("profiles").select("*").eq("company_id", me.company_id).eq("role", "employee")
+      .order("full_name", { ascending: true });
+    if(error){ showToast("Couldn't load employees"); return; }
+    employees = data || [];
+    renderEmployees();
+    populateAvailabilitySelect();
+  }
+
+  function renderEmployees(){
+    var container = document.getElementById("employeeList");
+    if(employees.length === 0){
+      container.innerHTML = '<div class="empty">No employees yet — share the join code in the sidebar.</div>';
+      return;
+    }
+    container.innerHTML = "";
+    employees.forEach(function(emp){
+      var el = document.createElement("div");
+      el.className = "employee-row";
+      el.innerHTML =
+        avatarHtml(emp.full_name) +
+        '<div class="er-name">'+escapeHtml(emp.full_name)+'</div>'+
+        '<button class="btn danger small">Remove</button>';
+      el.querySelector("button").addEventListener("click", function(){ removeEmployee(emp); });
+      container.appendChild(el);
+    });
+  }
+
+  async function removeEmployee(emp){
+    if(!confirm("Remove "+emp.full_name+" from the team? This also clears their shift assignments.")) return;
+    var { error } = await supabaseClient.from("profiles").delete().eq("id", emp.id);
+    if(error){ showToast(error.message); return; }
+    await loadEmployees();
+    await loadRoster();
+    showToast("Removed");
+  }
+
+  // ---------- roster ----------
+  function currentRange(){
+    return { start: document.getElementById("rangeStart").value, end: document.getElementById("rangeEnd").value };
+  }
+
+  async function loadRoster(){
+    var r = currentRange();
+    if(!r.start || !r.end) return;
+    var container = document.getElementById("rosterList");
+    container.innerHTML = '<div class="loading">Loading…</div>';
+
+    var { data: slots, error: slotsErr } = await supabaseClient
+      .from("shift_slots").select("*")
+      .eq("company_id", me.company_id)
+      .gte("date", r.start).lte("date", r.end)
+      .order("date", { ascending: true }).order("start_time", { ascending: true });
+    if(slotsErr){ container.innerHTML = '<div class="empty">Couldn\'t load the roster.</div>'; return; }
+
+    document.getElementById("readoutTeam").textContent = employees.length;
+
+    if(!slots || slots.length === 0){
+      document.getElementById("readoutOpen").textContent = "0";
+      document.getElementById("readoutFilled").textContent = "0";
+      container.innerHTML = '<div class="list-card"><div class="empty">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><br>'+
+        'No shift slots in this range yet. Add one, or widen the date range.</div></div>';
+      return;
+    }
+
+    var slotIds = slots.map(function(s){ return s.id; });
+    var { data: assignments } = await supabaseClient
+      .from("shift_assignments")
+      .select("id, slot_id, employee_id, assigned_by, profiles(full_name)")
+      .in("slot_id", slotIds);
+
+    var totalSeats = slots.reduce(function(sum, s){ return sum + s.headcount; }, 0);
+    var filledSeats = (assignments || []).length;
+    document.getElementById("readoutFilled").textContent = filledSeats;
+    document.getElementById("readoutOpen").textContent = Math.max(0, totalSeats - filledSeats);
+
+    var bySlot = {};
+    (assignments || []).forEach(function(a){
+      if(!bySlot[a.slot_id]) bySlot[a.slot_id] = [];
+      bySlot[a.slot_id].push(a);
+    });
+
+    var byDate = {};
+    slots.forEach(function(s){
+      if(!byDate[s.date]) byDate[s.date] = [];
+      byDate[s.date].push(s);
+    });
+
+    var listCard = document.createElement("div");
+    listCard.className = "list-card";
+
+    Object.keys(byDate).sort().forEach(function(date){
+      var dh = document.createElement("div");
+      dh.className = "day-section";
+      dh.textContent = fmtDateShort(date);
+      listCard.appendChild(dh);
+
+      byDate[date].forEach(function(slot){
+        var filled = bySlot[slot.id] || [];
+        var open = slot.headcount - filled.length;
+        var el = document.createElement("div");
+        el.className = "shift-row";
+
+        var chips = filled.map(function(a){
+          var pname = a.profiles ? a.profiles.full_name : "Unknown";
+          return '<span class="person-chip" data-assign-id="'+a.id+'" title="Click to unassign">'+
+            avatarHtml(pname, "sm")+escapeHtml(pname)+
+            '<span class="pill '+(a.assigned_by === "auto" ? "auto" : "manual")+'" style="margin-left:2px;">'+(a.assigned_by === "auto" ? "auto" : "manual")+'</span></span>';
+        }).join("");
+
+        el.innerHTML =
+          '<div class="sr-time">'+slot.start_time.slice(0,5)+' – '+slot.end_time.slice(0,5)+'</div>'+
+          '<div class="sr-meta">'+
+            (slot.role_label ? '<span class="pill role">'+escapeHtml(slot.role_label)+'</span> ' : '')+
+            '<span class="pill '+(open > 0 ? "open" : "filled")+'">'+(open > 0 ? open+" open" : "full")+'</span>'+
+            '<div class="sr-fill">'+filled.length+' of '+slot.headcount+' filled</div>'+
+            (chips ? '<div class="sr-chips">'+chips+'</div>' : '')+
+          '</div>'+
+          '<div class="sr-actions"></div>';
+
+        var actions = el.querySelector(".sr-actions");
+        if(open > 0 && employees.length > 0){
+          var select = document.createElement("select");
+          var already = filled.map(function(a){ return a.employee_id; });
+          employees.filter(function(e){ return already.indexOf(e.id) === -1; }).forEach(function(e){
+            var opt = document.createElement("option");
+            opt.value = e.id; opt.textContent = e.full_name;
+            select.appendChild(opt);
+          });
+          var assignBtn = document.createElement("button");
+          assignBtn.className = "btn secondary small";
+          assignBtn.textContent = "Assign";
+          assignBtn.addEventListener("click", function(){ assignEmployee(slot.id, select.value); });
+          if(select.options.length === 0){ assignBtn.disabled = true; assignBtn.title = "No employees left to assign"; }
+          actions.appendChild(select);
+          actions.appendChild(assignBtn);
+        }
+        var delBtn = document.createElement("button");
+        delBtn.className = "icon-btn";
+        delBtn.title = "Delete slot";
+        delBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+        delBtn.addEventListener("click", function(){ deleteSlot(slot.id); });
+        actions.appendChild(delBtn);
+
+        el.querySelectorAll("[data-assign-id]").forEach(function(chip){
+          chip.addEventListener("click", function(){ unassign(chip.getAttribute("data-assign-id")); });
+        });
+
+        listCard.appendChild(el);
+      });
+    });
+
+    container.innerHTML = "";
+    container.appendChild(listCard);
+  }
+
+  async function assignEmployee(slotId, employeeId){
+    if(!employeeId) return;
+    var { error } = await supabaseClient.from("shift_assignments").insert({
+      slot_id: slotId, employee_id: employeeId, assigned_by: "manual"
+    });
+    if(error){ showToast(error.message); return; }
+    await loadRoster();
+    showToast("Assigned");
+  }
+
+  async function unassign(assignmentId){
+    var { error } = await supabaseClient.from("shift_assignments").delete().eq("id", assignmentId);
+    if(error){ showToast(error.message); return; }
+    await loadRoster();
+  }
+
+  async function deleteSlot(slotId){
+    if(!confirm("Delete this shift slot and any assignments on it?")) return;
+    var { error } = await supabaseClient.from("shift_slots").delete().eq("id", slotId);
+    if(error){ showToast(error.message); return; }
+    await loadRoster();
+    showToast("Slot deleted");
+  }
+
+  async function runGenerate(){
+    var r = currentRange();
+    if(!r.start || !r.end) return;
+    var btn = document.getElementById("generateBtn");
+    btn.disabled = true; btn.textContent = "Generating…";
+    try{
+      var summary = await RosterEngine.generate(me.company_id, r.start, r.end);
+      await loadRoster();
+      showToast(summary.seatsFilled+" seat(s) filled"+(summary.seatsUnfilled > 0 ? ", "+summary.seatsUnfilled+" still open" : ""));
+    }catch(err){
+      showToast(err.message || "Couldn't generate roster");
+    }finally{
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Auto-generate roster';
+    }
+  }
+
+  // ---------- add slot ----------
+  function wireSlotForm(){
+    document.getElementById("addSlotBtn").addEventListener("click", function(){
+      document.getElementById("slotForm").reset();
+      document.getElementById("s-date").value = document.getElementById("rangeStart").value || todayISO();
+      document.getElementById("slotError").textContent = "";
+      document.getElementById("slotOverlay").classList.add("open");
+    });
+    document.getElementById("slotCancel").addEventListener("click", function(){
+      document.getElementById("slotOverlay").classList.remove("open");
+    });
+    document.getElementById("slotOverlay").addEventListener("click", function(e){
+      if(e.target === document.getElementById("slotOverlay")) document.getElementById("slotOverlay").classList.remove("open");
+    });
+    document.getElementById("slotForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      var errEl = document.getElementById("slotError");
+      var date = document.getElementById("s-date").value;
+      var start = document.getElementById("s-start").value;
+      var end = document.getElementById("s-end").value;
+      var role = document.getElementById("s-role").value.trim();
+      var headcount = parseInt(document.getElementById("s-headcount").value, 10) || 1;
+      if(start >= end){ errEl.textContent = "Start must be before end."; return; }
+      var { error } = await supabaseClient.from("shift_slots").insert({
+        company_id: me.company_id, date: date, start_time: start, end_time: end,
+        role_label: role || null, headcount: headcount
+      });
+      if(error){ errEl.textContent = error.message; return; }
+      document.getElementById("slotOverlay").classList.remove("open");
+      await loadRoster();
+      showToast("Shift slot added");
+    });
+  }
+
+  // ---------- availability tab ----------
+  function populateAvailabilitySelect(){
+    var sel = document.getElementById("availEmployeeSelect");
+    sel.innerHTML = "";
+    if(employees.length === 0){
+      sel.innerHTML = '<option value="">No employees yet</option>';
+      document.getElementById("availGrid").innerHTML = "";
+      return;
+    }
+    employees.forEach(function(e){
+      var opt = document.createElement("option");
+      opt.value = e.id; opt.textContent = e.full_name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function wireAvailabilityTab(){
+    var sel = document.getElementById("availEmployeeSelect");
+    sel.addEventListener("change", function(){ loadAvailabilityFor(sel.value); });
+    if(employees.length > 0) loadAvailabilityFor(sel.value);
+  }
+
+  async function loadAvailabilityFor(employeeId){
+    var grid = document.getElementById("availGrid");
+    if(!employeeId){ grid.innerHTML = ""; return; }
+    grid.innerHTML = '<div class="loading">Loading…</div>';
+    var { data, error } = await supabaseClient
+      .from("availability").select("*").eq("employee_id", employeeId)
+      .order("day_of_week", { ascending: true }).order("start_time", { ascending: true });
+    if(error){ grid.innerHTML = '<div class="empty">Couldn\'t load availability.</div>'; return; }
+
+    grid.innerHTML = "";
+    for(var d = 0; d < 7; d++){
+      var rows = (data || []).filter(function(a){ return a.day_of_week === d; });
+      var row = document.createElement("div");
+      row.className = "avail-row";
+      var slotsHtml = rows.length === 0
+        ? '<span class="avail-empty">Not available</span>'
+        : rows.map(function(r){ return '<span class="avail-slot">'+r.start_time.slice(0,5)+' – '+r.end_time.slice(0,5)+'</span>'; }).join("");
+      row.innerHTML = '<div class="ar-day">'+DAY_NAMES[d]+'</div><div class="ar-slots">'+slotsHtml+'</div>';
+      grid.appendChild(row);
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

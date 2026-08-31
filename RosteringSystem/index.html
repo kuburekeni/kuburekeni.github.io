@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roster — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="auth-shell">
+<div class="auth-card">
+
+  <div class="auth-brand">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
+    </div>
+    <div class="brand-name">Roster</div>
+    <div class="brand-tag">Shift scheduling for growing teams</div>
+  </div>
+
+  <!-- Loading state while we check for an existing session -->
+  <div id="checking" class="loading">Checking your session…</div>
+
+  <!-- Signed out: sign in / sign up -->
+  <div id="authPanel" style="display:none;">
+    <div class="uline-tabs">
+      <button class="uline-tab active" data-tab="signin">Sign in</button>
+      <button class="uline-tab" data-tab="signup">Create account</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-signin">
+      <form id="signinForm">
+        <div class="field"><label for="si-email">Email</label><input type="email" id="si-email" required></div>
+        <div class="field"><label for="si-password">Password</label><input type="password" id="si-password" required></div>
+        <button class="btn primary" type="submit" style="width:100%; justify-content:center;">Sign in</button>
+        <div class="error-text" id="si-error"></div>
+      </form>
+    </div>
+
+    <div class="tabpanel" id="tab-signup">
+      <form id="signupForm">
+        <div class="field"><label for="su-email">Email</label><input type="email" id="su-email" required></div>
+        <div class="field"><label for="su-password">Password</label><input type="password" id="su-password" required minlength="6"></div>
+        <button class="btn primary" type="submit" style="width:100%; justify-content:center;">Create account</button>
+        <div class="hint">Next you'll set up or join a company. If your project requires email confirmation, confirm via the emailed link first, then sign in above.</div>
+        <div class="error-text" id="su-error"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Signed in, no company yet: create or join one -->
+  <div id="setupPanel" style="display:none;">
+    <div class="uline-tabs">
+      <button class="uline-tab active" data-setup="create">Set up a company</button>
+      <button class="uline-tab" data-setup="join">Join a company</button>
+    </div>
+
+    <div class="tabpanel active" id="setup-create">
+      <form id="createForm">
+        <div class="field"><label for="cc-name">Your name</label><input type="text" id="cc-name" required></div>
+        <div class="field"><label for="cc-company">Company name</label><input type="text" id="cc-company" required></div>
+        <button class="btn primary" type="submit" style="width:100%; justify-content:center;">Create company</button>
+        <div class="hint">You'll be the admin/owner. You'll get a join code afterwards to share with employees.</div>
+        <div class="error-text" id="cc-error"></div>
+      </form>
+    </div>
+
+    <div class="tabpanel" id="setup-join">
+      <form id="joinForm">
+        <div class="field"><label for="jc-name">Your name</label><input type="text" id="jc-name" required></div>
+        <div class="field"><label for="jc-code">Join code</label><input type="text" id="jc-code" required maxlength="6" style="text-transform:uppercase;" placeholder="e.g. 7F3A2B"></div>
+        <button class="btn primary" type="submit" style="width:100%; justify-content:center;">Join company</button>
+        <div class="hint">Get this code from your company's admin.</div>
+        <div class="error-text" id="jc-error"></div>
+      </form>
+    </div>
+
+    <button class="btn secondary" id="setupSignOut" style="width:100%; margin-top:14px; justify-content:center;">Sign out</button>
+  </div>
+
+</div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="common.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  function wireTabs(container, attr, panelPrefix){
+    container.querySelectorAll(".uline-tab").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        container.querySelectorAll(".uline-tab").forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        var target = btn.getAttribute(attr);
+        document.querySelectorAll("[id^='"+panelPrefix+"']").forEach(function(p){ p.classList.remove("active"); });
+        document.getElementById(panelPrefix + target).classList.add("active");
+      });
+    });
+  }
+  wireTabs(document.querySelector("#authPanel .uline-tabs"), "data-tab", "tab-");
+  wireTabs(document.querySelector("#setupPanel .uline-tabs"), "data-setup", "setup-");
+
+  async function boot(){
+    var checking = document.getElementById("checking");
+    var authPanel = document.getElementById("authPanel");
+    var setupPanel = document.getElementById("setupPanel");
+
+    var { data: { session } } = await supabaseClient.auth.getSession();
+    if(!session){
+      checking.style.display = "none";
+      authPanel.style.display = "block";
+      return;
+    }
+
+    var { data: profile } = await supabaseClient
+      .from("profiles").select("*").eq("id", session.user.id).maybeSingle();
+
+    checking.style.display = "none";
+
+    if(profile){
+      window.location.href = profile.role === "admin" ? "admin.html" : "employee.html";
+      return;
+    }
+    setupPanel.style.display = "block";
+  }
+  boot();
+
+  document.getElementById("signinForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    var errEl = document.getElementById("si-error");
+    errEl.textContent = "";
+    var email = document.getElementById("si-email").value.trim();
+    var password = document.getElementById("si-password").value;
+    var { error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+    if(error){ errEl.textContent = error.message; return; }
+    window.location.reload();
+  });
+
+  document.getElementById("signupForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    var errEl = document.getElementById("su-error");
+    errEl.textContent = "";
+    var email = document.getElementById("su-email").value.trim();
+    var password = document.getElementById("su-password").value;
+    var { data, error } = await supabaseClient.auth.signUp({ email: email, password: password });
+    if(error){ errEl.textContent = error.message; return; }
+    if(data.session){
+      window.location.reload();
+    } else {
+      errEl.style.color = "var(--success)";
+      errEl.textContent = "Account created. Check your email to confirm it, then sign in.";
+    }
+  });
+
+  document.getElementById("createForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    var errEl = document.getElementById("cc-error");
+    errEl.textContent = "";
+    var name = document.getElementById("cc-name").value.trim();
+    var company = document.getElementById("cc-company").value.trim();
+    var { error } = await supabaseClient.rpc("create_company", { company_name: company, admin_name: name });
+    if(error){ errEl.textContent = error.message; return; }
+    window.location.href = "admin.html";
+  });
+
+  document.getElementById("joinForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    var errEl = document.getElementById("jc-error");
+    errEl.textContent = "";
+    var name = document.getElementById("jc-name").value.trim();
+    var code = document.getElementById("jc-code").value.trim();
+    var { error } = await supabaseClient.rpc("join_company", { p_join_code: code, employee_name: name });
+    if(error){ errEl.textContent = error.message; return; }
+    window.location.href = "employee.html";
+  });
+
+  document.getElementById("setupSignOut").addEventListener("click", async function(){
+    await supabaseClient.auth.signOut();
+    window.location.reload();
+  });
+})();
+</script>
+</body>
+</html>

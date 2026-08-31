@@ -48,6 +48,25 @@
   </div>
 </div>
 
+<!-- Add availability sheet -->
+<div class="overlay" id="availOverlay">
+  <div class="sheet">
+    <h2>Add availability</h2>
+    <p class="hint" id="availDayLabel" style="margin-top:-10px; margin-bottom:16px;"></p>
+    <form id="availForm">
+      <div class="field-row">
+        <div class="field"><label for="av-start">From</label><input type="time" id="av-start" required></div>
+        <div class="field"><label for="av-end">Until</label><input type="time" id="av-end" required></div>
+      </div>
+      <div class="error-text" id="availError"></div>
+      <div class="sheet-actions">
+        <button type="button" class="btn secondary" id="availCancel">Cancel</button>
+        <button type="submit" class="btn primary">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="common.js"></script>
@@ -108,28 +127,59 @@
           removeAvailabilityRow(id);
         });
       });
-      row.querySelector("[data-add-day]").addEventListener("click", function(){ addAvailabilityRow(d); });
+      row.querySelector("[data-add-day]").addEventListener("click", function(e){
+        var day = parseInt(e.currentTarget.getAttribute("data-add-day"), 10);
+        openAvailModal(day);
+      });
 
       grid.appendChild(row);
     }
   }
 
-  async function addAvailabilityRow(dayOfWeek){
-    var start = prompt("Available from (24h, e.g. 09:00)", "09:00");
-    if(start === null) return;
-    var end = prompt("Available until (24h, e.g. 17:00)", "17:00");
-    if(end === null) return;
-    if(!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end) || start >= end){
-      showToast("Enter a valid start/end time, start before end");
+  // ---------- add-availability modal ----------
+  var pendingDay = null;
+  var availOverlay = document.getElementById("availOverlay");
+  var availForm = document.getElementById("availForm");
+
+  function openAvailModal(dayOfWeek){
+    pendingDay = dayOfWeek;
+    document.getElementById("availDayLabel").textContent = "For " + DAY_NAMES[dayOfWeek] + ":";
+    document.getElementById("av-start").value = "09:00";
+    document.getElementById("av-end").value = "17:00";
+    document.getElementById("availError").textContent = "";
+    availOverlay.classList.add("open");
+    document.getElementById("av-start").focus();
+  }
+  function closeAvailModal(){
+    availOverlay.classList.remove("open");
+    pendingDay = null;
+  }
+  document.getElementById("availCancel").addEventListener("click", closeAvailModal);
+  availOverlay.addEventListener("click", function(e){
+    if(e.target === availOverlay) closeAvailModal();
+  });
+
+  availForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    var errEl = document.getElementById("availError");
+    var start = document.getElementById("av-start").value;
+    var end = document.getElementById("av-end").value;
+    if(pendingDay === null || pendingDay < 0 || pendingDay > 6){
+      errEl.textContent = "Something went wrong picking the day — please try again.";
+      return;
+    }
+    if(!start || !end || start >= end){
+      errEl.textContent = "Enter a start time before the end time.";
       return;
     }
     var { error } = await supabaseClient.from("availability").insert({
-      employee_id: me.id, day_of_week: dayOfWeek, start_time: start, end_time: end
+      employee_id: me.id, day_of_week: pendingDay, start_time: start, end_time: end
     });
-    if(error){ showToast(error.message); return; }
+    if(error){ errEl.textContent = error.message; return; }
+    closeAvailModal();
     await loadAvailability();
     showToast("Availability added");
-  }
+  });
 
   async function removeAvailabilityRow(id){
     var { error } = await supabaseClient.from("availability").delete().eq("id", id);

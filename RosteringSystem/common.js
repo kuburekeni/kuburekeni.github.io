@@ -90,9 +90,28 @@ function showToast(msg){
   showToast._t = setTimeout(()=>{ t.classList.remove("show"); }, 2200);
 }
 
+// ---------- setup guard ----------
+// If supabase-config.js or the Supabase CDN script didn't load (usually a
+// missing/misplaced file on the host), fail with a clear on-page message
+// instead of a cryptic console-only crash.
+function ensureSupabaseReady(){
+  if(typeof window.supabase === "undefined" || typeof supabaseClient === "undefined"){
+    document.body.innerHTML =
+      '<div style="max-width:480px;margin:80px auto;padding:24px 28px;font-family:system-ui,-apple-system,sans-serif;text-align:center;color:#101323;">'+
+      '<h2 style="margin:0 0 10px;">Setup incomplete</h2>'+
+      '<p style="color:#5B6472;line-height:1.6;margin:0;">This page could not load the Supabase library or <code>supabase-config.js</code>. '+
+      'Check that every file &mdash; <code>app.css</code>, <code>common.js</code>, <code>supabase-config.js</code>, <code>roster-engine.js</code>, and the HTML pages &mdash; '+
+      'is uploaded to the exact same folder, and open DevTools &rarr; Network to see which request 404\u2019d.</p>'+
+      '</div>';
+    return false;
+  }
+  return true;
+}
+
 // ---------- auth guard ----------
 // Returns { session, profile } once resolved, or redirects to index.html.
 async function requireSession(requiredRole){
+  if(!ensureSupabaseReady()) return null;
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session){
     window.location.href = "index.html";
@@ -119,4 +138,37 @@ async function requireSession(requiredRole){
 async function signOut(){
   await supabaseClient.auth.signOut();
   window.location.href = "index.html";
+}
+
+// ---------- calendar helpers ----------
+// Returns 42 cells (6 weeks, Sunday-start) covering the given month, each
+// { iso, day, inMonth, isToday } — enough to render a standard month grid.
+function buildMonthGrid(year, monthIndex){
+  var firstOfMonth = new Date(year, monthIndex, 1);
+  var startWeekday = firstOfMonth.getDay();
+  var gridStart = new Date(year, monthIndex, 1 - startWeekday);
+  var today = todayISO();
+  var cells = [];
+  for(var i = 0; i < 42; i++){
+    var d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    var iso = d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+    cells.push({ iso: iso, day: d.getDate(), inMonth: d.getMonth() === monthIndex, isToday: iso === today });
+  }
+  return cells;
+}
+
+// ---------- relative time ----------
+function timeAgo(iso){
+  var then = new Date(iso).getTime();
+  var diffSec = Math.floor((Date.now() - then) / 1000);
+  if(diffSec < 60) return "just now";
+  var diffMin = Math.floor(diffSec / 60);
+  if(diffMin < 60) return diffMin + "m ago";
+  var diffHr = Math.floor(diffMin / 60);
+  if(diffHr < 24) return diffHr + "h ago";
+  var diffDay = Math.floor(diffHr / 24);
+  if(diffDay < 7) return diffDay + "d ago";
+  var d = new Date(then);
+  return MONTH_NAMES[d.getMonth()] + " " + d.getDate();
 }

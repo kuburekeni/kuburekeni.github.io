@@ -37,6 +37,10 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2.59 12.58A2 2 0 0 1 2 11.17V4a2 2 0 0 1 2-2h7.17a2 2 0 0 1 1.41.59l7.99 7.99a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
         Roles
       </button>
+      <button class="side-link" data-tab="payroll">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Payroll
+      </button>
       <button class="side-link" data-tab="availability">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Availability
@@ -170,6 +174,45 @@
       </div>
     </div>
 
+    <!-- PAYROLL -->
+    <div class="tabpanel" id="tab-payroll">
+      <div class="page-head">
+        <div>
+          <h1>Payroll</h1>
+          <p>Hours per employee for a week — worked so far, and total rostered.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="field"><label for="payWeek">Week of</label><input type="date" id="payWeek"></div>
+        <div class="toolbar-actions">
+          <button class="btn secondary small" id="payPrevWeek">‹ Previous</button>
+          <button class="btn secondary small" id="payThisWeek">This week</button>
+          <button class="btn secondary small" id="payNextWeek">Next ›</button>
+          <button class="btn primary small" id="payExport">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="table-wrap">
+          <table class="hours-table" id="payTable">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th class="num">Shifts</th>
+                <th class="num">Hours worked</th>
+                <th class="num">Hours rostered</th>
+              </tr>
+            </thead>
+            <tbody id="payBody"><tr><td colspan="4"><div class="loading">Loading…</div></td></tr></tbody>
+            <tfoot id="payFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+      <p class="hint" id="payRangeLabel" style="margin-top:12px;"></p>
+    </div>
+
     <!-- AVAILABILITY -->
     <div class="tabpanel" id="tab-availability">
       <div class="page-head">
@@ -267,10 +310,17 @@
     if(!ctx) return;
     me = ctx.profile;
     document.getElementById("whoName").textContent = me.full_name;
-    var av = avatarColor(me.full_name);
     var avatarEl = document.getElementById("whoAvatar");
-    avatarEl.style.background = av.bg; avatarEl.style.color = av.fg;
-    avatarEl.textContent = getInitials(me.full_name);
+    if(me.avatar_url){
+      avatarEl.textContent = "";
+      avatarEl.style.backgroundImage = "url("+JSON.stringify(me.avatar_url)+")";
+      avatarEl.style.backgroundSize = "cover";
+      avatarEl.style.backgroundPosition = "center";
+    } else {
+      var av = avatarColor(me.full_name);
+      avatarEl.style.background = av.bg; avatarEl.style.color = av.fg;
+      avatarEl.textContent = getInitials(me.full_name);
+    }
     document.getElementById("signOutBtn").addEventListener("click", signOut);
 
     var { data: c } = await supabaseClient.from("companies").select("*").eq("id", me.company_id).maybeSingle();
@@ -286,6 +336,7 @@
     wireRoleForm();
     wireNotifications();
     wireCalendar();
+    wirePayroll();
 
     var start = todayISO();
     var end = addDaysISO(start, 6);
@@ -330,6 +381,7 @@
         document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });
         document.getElementById("tab-"+btn.getAttribute("data-tab")).classList.add("active");
         if(btn.getAttribute("data-tab") === "calendar") renderCalendar();
+        if(btn.getAttribute("data-tab") === "payroll") loadPayroll();
       });
     });
   }
@@ -434,7 +486,7 @@
         ? '<div class="role-chip-row">'+roleNames.map(function(n){ return '<span class="pill role">'+escapeHtml(n)+'</span>'; }).join("")+'</div>'
         : '<div class="role-chip-row"><span class="pill employee">No role set</span></div>';
       el.innerHTML =
-        avatarHtml(emp.full_name) +
+        avatarHtml(emp.full_name, null, emp.avatar_url) +
         '<div class="er-name"><div>'+escapeHtml(emp.full_name)+'</div>'+chipsHtml+'</div>'+
         '<button class="btn secondary small" data-roles-btn>Roles</button>'+
         '<button class="btn danger small" data-remove-btn>Remove</button>';
@@ -521,7 +573,7 @@
     if(slotIds.length > 0){
       var { data: a } = await supabaseClient
         .from("shift_assignments")
-        .select("id, slot_id, employee_id, assigned_by, profiles(full_name)")
+        .select("id, slot_id, employee_id, assigned_by, profiles(full_name, avatar_url)")
         .in("slot_id", slotIds);
       assignments = a || [];
     }
@@ -543,7 +595,7 @@
     var chips = filled.map(function(a){
       var pname = a.profiles ? a.profiles.full_name : "Unknown";
       return '<span class="person-chip" data-assign-id="'+a.id+'" title="Click to unassign">'+
-        avatarHtml(pname, "sm")+escapeHtml(pname)+
+        avatarHtml(pname, "sm", a.profiles ? a.profiles.avatar_url : null)+escapeHtml(pname)+
         '<span class="pill '+(a.assigned_by === "auto" ? "auto" : "manual")+'" style="margin-left:2px;">'+(a.assigned_by === "auto" ? "auto" : "manual")+'</span></span>';
     }).join("");
 
@@ -837,6 +889,114 @@
       });
     }
     document.getElementById("calDayOverlay").classList.add("open");
+  }
+
+  // ---------- payroll ----------
+  var payrollRows = [], payrollRange = null;
+
+  function wirePayroll(){
+    var input = document.getElementById("payWeek");
+    input.value = todayISO();
+    input.addEventListener("change", loadPayroll);
+    document.getElementById("payThisWeek").addEventListener("click", function(){
+      input.value = todayISO(); loadPayroll();
+    });
+    document.getElementById("payPrevWeek").addEventListener("click", function(){
+      input.value = addDaysISO(input.value || todayISO(), -7); loadPayroll();
+    });
+    document.getElementById("payNextWeek").addEventListener("click", function(){
+      input.value = addDaysISO(input.value || todayISO(), 7); loadPayroll();
+    });
+    document.getElementById("payExport").addEventListener("click", exportPayrollCsv);
+  }
+
+  async function loadPayroll(){
+    var anchor = document.getElementById("payWeek").value || todayISO();
+    var range = weekRangeFor(anchor);
+    payrollRange = range;
+    document.getElementById("payRangeLabel").textContent =
+      "Week of " + fmtDateShort(range.start) + " to " + fmtDateShort(range.end) +
+      ". \u201cWorked\u201d counts shifts that have already finished; \u201crostered\u201d is the whole week.";
+
+    var body = document.getElementById("payBody");
+    body.innerHTML = '<tr><td colspan="4"><div class="loading">Loading…</div></td></tr>';
+    document.getElementById("payFoot").innerHTML = "";
+
+    var result;
+    try{ result = await fetchShiftsForRange(range.start, range.end); }
+    catch(e){ body.innerHTML = '<tr><td colspan="4"><div class="empty">Couldn\'t load hours.</div></td></tr>'; return; }
+
+    var slotById = {};
+    result.slots.forEach(function(s){ slotById[s.id] = s; });
+
+    // Tally per employee. A shift counts as "worked" once its end has passed.
+    var now = new Date();
+    var tally = {};
+    employees.forEach(function(e){ tally[e.id] = { name: e.full_name, avatar: e.avatar_url, shifts: 0, worked: 0, rostered: 0 }; });
+
+    Object.keys(result.bySlot).forEach(function(slotId){
+      var slot = slotById[slotId];
+      if(!slot) return;
+      var hrs = shiftHours(slot.start_time, slot.end_time);
+      result.bySlot[slotId].forEach(function(a){
+        var t = tally[a.employee_id];
+        if(!t) return; // assignment for someone no longer on the team
+        t.shifts++;
+        t.rostered += hrs;
+        var end = parseDateISO(slot.date);
+        end.setHours(parseInt(slot.end_time.slice(0,2),10), parseInt(slot.end_time.slice(3,5),10), 0, 0);
+        if(timeToMinutes(slot.end_time) <= timeToMinutes(slot.start_time)) end.setDate(end.getDate()+1); // overnight
+        if(end <= now) t.worked += hrs;
+      });
+    });
+
+    payrollRows = employees.map(function(e){ return tally[e.id]; })
+      .sort(function(a,b){ return b.rostered - a.rostered; });
+
+    if(payrollRows.length === 0){
+      body.innerHTML = '<tr><td colspan="4"><div class="empty">No employees yet.</div></td></tr>';
+      return;
+    }
+
+    body.innerHTML = payrollRows.map(function(t){
+      return '<tr>'+
+        '<td><div class="who-cell">'+avatarHtml(t.name, "sm", t.avatar)+'<span class="nm">'+escapeHtml(t.name)+'</span></div></td>'+
+        '<td class="num">'+t.shifts+'</td>'+
+        '<td class="num">'+fmtHours(t.worked)+'</td>'+
+        '<td class="num">'+fmtHours(t.rostered)+'</td>'+
+      '</tr>';
+    }).join("");
+
+    var totShifts = payrollRows.reduce(function(s,t){ return s + t.shifts; }, 0);
+    var totWorked = payrollRows.reduce(function(s,t){ return s + t.worked; }, 0);
+    var totRostered = payrollRows.reduce(function(s,t){ return s + t.rostered; }, 0);
+    document.getElementById("payFoot").innerHTML =
+      '<tr><td class="hours-total">Total</td>'+
+      '<td class="num hours-total">'+totShifts+'</td>'+
+      '<td class="num hours-total">'+fmtHours(totWorked)+'</td>'+
+      '<td class="num hours-total">'+fmtHours(totRostered)+'</td></tr>';
+  }
+
+  function exportPayrollCsv(){
+    if(payrollRows.length === 0){ showToast("Nothing to export"); return; }
+    var rows = [["Employee","Shifts","Hours worked","Hours rostered"]];
+    payrollRows.forEach(function(t){
+      rows.push([t.name, t.shifts, t.worked.toFixed(2), t.rostered.toFixed(2)]);
+    });
+    var csv = rows.map(function(r){
+      return r.map(function(cell){
+        var c = String(cell).replace(/"/g,'""');
+        return /[",\n]/.test(c) ? '"'+c+'"' : c;
+      }).join(",");
+    }).join("\n");
+    var blob = new Blob([csv], { type: "text/csv" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "payroll-" + payrollRange.start + "-to-" + payrollRange.end + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("CSV exported");
   }
 
   // ---------- notifications ----------

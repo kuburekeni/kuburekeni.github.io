@@ -1,514 +1,274 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Roster — Admin</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css">
-</head>
-<body>
-<div class="app-shell">
+-- ============================================================
+-- Roster SaaS — v2 migration (run once, AFTER schema.sql)
+-- Adds: role types, in-app notifications, employee-initiated
+-- shift cancellation, and employee-to-employee shift swaps.
+-- Purely additive — safe to run on a database that already has
+-- companies/employees/shifts in it.
+-- ============================================================
 
-  <aside class="sidebar">
-    <div class="side-brand">
-      <div class="logo-mark sm">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
-      </div>
-      <div class="brand-name">Roster</div>
-    </div>
+-- ---------- Role types ----------
 
-    <nav class="side-nav">
-      <button class="side-link active" data-tab="roster">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Roster
-      </button>
-      <button class="side-link" data-tab="employees">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Employees
-      </button>
-      <button class="side-link" data-tab="availability">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Availability
-      </button>
-    </nav>
+create table if not exists roles (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies(id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now(),
+  unique (company_id, name)
+);
 
-    <div class="side-spacer"></div>
+-- an employee can hold more than one role (e.g. both Waiter and Bartender)
+create table if not exists employee_roles (
+  employee_id uuid not null references profiles(id) on delete cascade,
+  role_id uuid not null references roles(id) on delete cascade,
+  primary key (employee_id, role_id)
+);
 
-    <div class="side-company">
-      <div class="side-company-name" id="companyName">—</div>
-      <div class="side-company-code">Join code <strong id="joinCode">—</strong></div>
-    </div>
+-- a shift slot can require a specific role (nullable = any employee is fine)
+alter table shift_slots add column if not exists role_id uuid references roles(id) on delete set null;
 
-    <div class="side-user">
-      <div class="avatar sm" id="whoAvatar" style="background:var(--primary-tint); color:var(--primary-dark);">—</div>
-      <div class="side-user-info">
-        <div class="side-user-name" id="whoName"></div>
-        <div class="side-user-role">Admin</div>
-      </div>
-      <button class="icon-btn" id="signOutBtn" title="Sign out">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-    </div>
-  </aside>
+create index if not exists idx_roles_company on roles(company_id);
+create index if not exists idx_employee_roles_employee on employee_roles(employee_id);
+create index if not exists idx_employee_roles_role on employee_roles(role_id);
+create index if not exists idx_slots_role on shift_slots(role_id);
 
-  <main class="main">
+alter table roles enable row level security;
+alter table employee_roles enable row level security;
 
-    <!-- ROSTER -->
-    <div class="tabpanel active" id="tab-roster">
-      <div class="page-head">
-        <div>
-          <h1>Roster</h1>
-          <p>Fill open shifts by hand, or let auto-generate match them to availability.</p>
-        </div>
-      </div>
+drop policy if exists roles_select on roles;
+create policy roles_select on roles for select using (company_id = my_company_id());
+drop policy if exists roles_insert on roles;
+create policy roles_insert on roles for insert with check (my_role() = 'admin' and company_id = my_company_id());
+drop policy if exists roles_delete on roles;
+create policy roles_delete on roles for delete using (my_role() = 'admin' and company_id = my_company_id());
 
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-          <div class="stat-value" id="readoutTeam">0</div>
-          <div class="stat-label">Team members</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-          <div class="stat-value" id="readoutOpen">0</div>
-          <div class="stat-label">Open seats</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-          <div class="stat-value" id="readoutFilled">0</div>
-          <div class="stat-label">Filled seats</div>
-        </div>
-      </div>
+drop policy if exists employee_roles_select on employee_roles;
+create policy employee_roles_select on employee_roles for select using (
+  employee_id in (select id from profiles where company_id = my_company_id())
+);
+drop policy if exists employee_roles_insert on employee_roles;
+create policy employee_roles_insert on employee_roles for insert with check (
+  my_role() = 'admin'
+  and employee_id in (select id from profiles where company_id = my_company_id())
+  and role_id in (select id from roles where company_id = my_company_id())
+);
+drop policy if exists employee_roles_delete on employee_roles;
+create policy employee_roles_delete on employee_roles for delete using (
+  my_role() = 'admin' and employee_id in (select id from profiles where company_id = my_company_id())
+);
 
-      <div class="toolbar">
-        <div class="field"><label for="rangeStart">From</label><input type="date" id="rangeStart"></div>
-        <div class="field"><label for="rangeEnd">To</label><input type="date" id="rangeEnd"></div>
-        <div class="toolbar-actions">
-          <button class="btn secondary small" id="quickWeek">This week</button>
-          <button class="btn secondary small" id="quickMonth">This month</button>
-          <button class="btn secondary small" id="addSlotBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add shift slot
-          </button>
-          <button class="btn primary small" id="generateBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            Auto-generate roster
-          </button>
-        </div>
-      </div>
+-- ---------- In-app notifications ----------
 
-      <div id="rosterList"><div class="loading">Loading…</div></div>
-    </div>
+create table if not exists notifications (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies(id) on delete cascade,
+  recipient_id uuid not null references profiles(id) on delete cascade,
+  actor_id uuid references profiles(id) on delete set null,
+  type text not null check (type in ('shift_cancelled','swap_requested','swap_accepted','swap_declined')),
+  message text not null,
+  slot_id uuid references shift_slots(id) on delete set null,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_notifications_recipient on notifications(recipient_id, is_read);
 
-    <!-- EMPLOYEES -->
-    <div class="tabpanel" id="tab-employees">
-      <div class="page-head">
-        <div>
-          <h1>Employees</h1>
-          <p>Everyone who has joined your company with the code shown in the sidebar.</p>
-        </div>
-      </div>
-      <div class="list-card">
-        <div id="employeeList"><div class="loading">Loading…</div></div>
-      </div>
-    </div>
+alter table notifications enable row level security;
+drop policy if exists notifications_select on notifications;
+create policy notifications_select on notifications for select using (recipient_id = auth.uid());
+drop policy if exists notifications_update on notifications;
+create policy notifications_update on notifications for update using (recipient_id = auth.uid());
+-- No insert policy: notifications are only ever written by the security-definer
+-- functions below, which run with elevated privilege and bypass RLS for the insert.
 
-    <!-- AVAILABILITY -->
-    <div class="tabpanel" id="tab-availability">
-      <div class="page-head">
-        <div>
-          <h1>Availability</h1>
-          <p>What each employee has told you they can work, week to week.</p>
-        </div>
-      </div>
-      <div class="card">
-        <div class="field" style="max-width:280px;"><label for="availEmployeeSelect">Employee</label>
-          <select id="availEmployeeSelect"></select>
-        </div>
-      </div>
-      <div class="list-card">
-        <div id="availGrid"></div>
-      </div>
-    </div>
+-- ---------- Shift swap requests ----------
 
-  </main>
-</div>
+create table if not exists swap_requests (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies(id) on delete cascade,
+  assignment_id uuid not null references shift_assignments(id) on delete cascade,
+  requested_by uuid not null references profiles(id) on delete cascade,
+  requested_to uuid not null references profiles(id) on delete cascade,
+  direction text not null check (direction in ('offer','request')),
+  status text not null default 'pending' check (status in ('pending','accepted','declined','cancelled')),
+  note text,
+  created_at timestamptz not null default now(),
+  responded_at timestamptz
+);
+create index if not exists idx_swap_requested_to on swap_requests(requested_to, status);
+create index if not exists idx_swap_requested_by on swap_requests(requested_by, status);
 
-<!-- Add slot sheet -->
-<div class="overlay" id="slotOverlay">
-  <div class="sheet">
-    <h2>Add shift slot</h2>
-    <form id="slotForm">
-      <div class="field"><label for="s-date">Date</label><input type="date" id="s-date" required></div>
-      <div class="field-row">
-        <div class="field"><label for="s-start">Start</label><input type="time" id="s-start" required></div>
-        <div class="field"><label for="s-end">End</label><input type="time" id="s-end" required></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label for="s-role">Role (optional)</label><input type="text" id="s-role" placeholder="e.g. Bar, Kitchen"></div>
-        <div class="field" style="max-width:110px;"><label for="s-headcount">People needed</label><input type="number" id="s-headcount" value="1" min="1" required></div>
-      </div>
-      <div class="error-text" id="slotError"></div>
-      <div class="sheet-actions">
-        <button type="button" class="btn secondary" id="slotCancel">Cancel</button>
-        <button type="submit" class="btn primary">Add slot</button>
-      </div>
-    </form>
-  </div>
-</div>
+alter table swap_requests enable row level security;
+drop policy if exists swap_select on swap_requests;
+create policy swap_select on swap_requests for select using (
+  requested_by = auth.uid() or requested_to = auth.uid()
+  or (my_role() = 'admin' and company_id = my_company_id())
+);
+-- No insert/update policy: all writes go through the functions below, which
+-- validate ownership and direction before touching anything.
 
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="common.js"></script>
-<script src="roster-engine.js"></script>
-<script>
-(function(){
-  "use strict";
-  var me = null, company = null, employees = [];
+-- ---------- Functions ----------
 
-  async function init(){
-    var ctx = await requireSession("admin");
-    if(!ctx) return;
-    me = ctx.profile;
-    document.getElementById("whoName").textContent = me.full_name;
-    var av = avatarColor(me.full_name);
-    var avatarEl = document.getElementById("whoAvatar");
-    avatarEl.style.background = av.bg; avatarEl.style.color = av.fg;
-    avatarEl.textContent = getInitials(me.full_name);
-    document.getElementById("signOutBtn").addEventListener("click", signOut);
+-- Employee cancels/declines a shift they're currently assigned to. Frees the
+-- seat back to "open" and notifies the company's admin.
+create or replace function employee_cancel_shift(p_assignment_id uuid, p_reason text default null)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  v_employee_id uuid;
+  v_slot record;
+  v_employee_name text;
+begin
+  select employee_id into v_employee_id from shift_assignments where id = p_assignment_id;
+  if v_employee_id is null or v_employee_id <> auth.uid() then
+    raise exception 'You can only cancel your own shifts';
+  end if;
 
-    var { data: c } = await supabaseClient.from("companies").select("*").eq("id", me.company_id).maybeSingle();
-    company = c;
-    if(company){
-      document.getElementById("companyName").textContent = company.name;
-      document.getElementById("joinCode").textContent = company.join_code;
-    }
+  select ss.date, ss.start_time, ss.end_time, ss.id as slot_id, ss.company_id, c.owner_id
+    into v_slot
+    from shift_assignments sa
+    join shift_slots ss on ss.id = sa.slot_id
+    join companies c on c.id = ss.company_id
+    where sa.id = p_assignment_id;
 
-    wireTabs();
-    wireSlotForm();
+  select full_name into v_employee_name from profiles where id = auth.uid();
 
-    var start = todayISO();
-    var end = addDaysISO(start, 6);
-    document.getElementById("rangeStart").value = start;
-    document.getElementById("rangeEnd").value = end;
-    document.getElementById("quickWeek").addEventListener("click", function(){
-      var s = todayISO();
-      document.getElementById("rangeStart").value = s;
-      document.getElementById("rangeEnd").value = addDaysISO(s, 6);
-      loadRoster();
-    });
-    document.getElementById("quickMonth").addEventListener("click", function(){
-      var d = new Date();
-      var s = d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-01";
-      var lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
-      var e = d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(lastDay);
-      document.getElementById("rangeStart").value = s;
-      document.getElementById("rangeEnd").value = e;
-      loadRoster();
-    });
-    document.getElementById("rangeStart").addEventListener("change", loadRoster);
-    document.getElementById("rangeEnd").addEventListener("change", loadRoster);
-    document.getElementById("generateBtn").addEventListener("click", runGenerate);
+  delete from shift_assignments where id = p_assignment_id;
 
-    await loadEmployees();
-    await loadRoster();
-    wireAvailabilityTab();
-  }
+  insert into notifications(company_id, recipient_id, actor_id, type, message, slot_id)
+  values (
+    v_slot.company_id, v_slot.owner_id, auth.uid(), 'shift_cancelled',
+    v_employee_name || ' can no longer work ' || to_char(v_slot.date, 'Dy DD Mon') || ' ' ||
+      to_char(v_slot.start_time, 'HH24:MI') || '\u2013' || to_char(v_slot.end_time, 'HH24:MI') ||
+      coalesce(' \u2014 ' || nullif(p_reason, ''), ''),
+    v_slot.slot_id
+  );
+end;
+$$;
+grant execute on function employee_cancel_shift(uuid, text) to authenticated;
 
-  function wireTabs(){
-    document.querySelectorAll(".side-nav .side-link").forEach(function(btn){
-      btn.addEventListener("click", function(){
-        document.querySelectorAll(".side-nav .side-link").forEach(function(b){ b.classList.remove("active"); });
-        btn.classList.add("active");
-        document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });
-        document.getElementById("tab-"+btn.getAttribute("data-tab")).classList.add("active");
-      });
-    });
-  }
+-- Create a swap request. direction='offer' = requested_by is giving away
+-- their own shift to requested_to. direction='request' = requested_by wants
+-- to take requested_to's shift.
+create or replace function create_swap_request(p_assignment_id uuid, p_requested_to uuid, p_direction text, p_note text default null)
+returns uuid
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  v_owner uuid;
+  v_company_id uuid;
+  v_new_id uuid;
+  v_requester_name text;
+  v_slot record;
+begin
+  if p_direction not in ('offer','request') then
+    raise exception 'Invalid direction';
+  end if;
+  if p_requested_to = auth.uid() then
+    raise exception 'Pick a different teammate';
+  end if;
 
-  // ---------- employees ----------
-  async function loadEmployees(){
-    var { data, error } = await supabaseClient
-      .from("profiles").select("*").eq("company_id", me.company_id).eq("role", "employee")
-      .order("full_name", { ascending: true });
-    if(error){ showToast("Couldn't load employees"); return; }
-    employees = data || [];
-    renderEmployees();
-    populateAvailabilitySelect();
-  }
+  select sa.employee_id, ss.company_id into v_owner, v_company_id
+    from shift_assignments sa join shift_slots ss on ss.id = sa.slot_id
+    where sa.id = p_assignment_id;
 
-  function renderEmployees(){
-    var container = document.getElementById("employeeList");
-    if(employees.length === 0){
-      container.innerHTML = '<div class="empty">No employees yet — share the join code in the sidebar.</div>';
-      return;
-    }
-    container.innerHTML = "";
-    employees.forEach(function(emp){
-      var el = document.createElement("div");
-      el.className = "employee-row";
-      el.innerHTML =
-        avatarHtml(emp.full_name) +
-        '<div class="er-name">'+escapeHtml(emp.full_name)+'</div>'+
-        '<button class="btn danger small">Remove</button>';
-      el.querySelector("button").addEventListener("click", function(){ removeEmployee(emp); });
-      container.appendChild(el);
-    });
-  }
+  if v_owner is null then raise exception 'Shift not found'; end if;
+  if v_company_id <> my_company_id() then raise exception 'Not your company'; end if;
+  if (select company_id from profiles where id = p_requested_to) <> my_company_id() then
+    raise exception 'That person is not on your team';
+  end if;
 
-  async function removeEmployee(emp){
-    if(!confirm("Remove "+emp.full_name+" from the team? This also clears their shift assignments.")) return;
-    var { error } = await supabaseClient.from("profiles").delete().eq("id", emp.id);
-    if(error){ showToast(error.message); return; }
-    await loadEmployees();
-    await loadRoster();
-    showToast("Removed");
-  }
+  if p_direction = 'offer' then
+    if v_owner <> auth.uid() then raise exception 'You can only offer away your own shift'; end if;
+  else
+    if v_owner <> p_requested_to then raise exception 'That is not their shift'; end if;
+  end if;
 
-  // ---------- roster ----------
-  function currentRange(){
-    return { start: document.getElementById("rangeStart").value, end: document.getElementById("rangeEnd").value };
-  }
+  insert into swap_requests(company_id, assignment_id, requested_by, requested_to, direction, note)
+    values (v_company_id, p_assignment_id, auth.uid(), p_requested_to, p_direction, nullif(p_note,''))
+    returning id into v_new_id;
 
-  async function loadRoster(){
-    var r = currentRange();
-    if(!r.start || !r.end) return;
-    var container = document.getElementById("rosterList");
-    container.innerHTML = '<div class="loading">Loading…</div>';
+  select full_name into v_requester_name from profiles where id = auth.uid();
+  select ss.date, ss.start_time, ss.end_time, ss.id as slot_id into v_slot
+    from shift_slots ss join shift_assignments sa on sa.slot_id = ss.id where sa.id = p_assignment_id;
 
-    var { data: slots, error: slotsErr } = await supabaseClient
-      .from("shift_slots").select("*")
-      .eq("company_id", me.company_id)
-      .gte("date", r.start).lte("date", r.end)
-      .order("date", { ascending: true }).order("start_time", { ascending: true });
-    if(slotsErr){ container.innerHTML = '<div class="empty">Couldn\'t load the roster.</div>'; return; }
+  insert into notifications(company_id, recipient_id, actor_id, type, message, slot_id)
+  values (
+    v_company_id, p_requested_to, auth.uid(), 'swap_requested',
+    v_requester_name || (case when p_direction = 'offer' then ' wants to give you their shift on ' else ' wants to take your shift on ' end) ||
+      to_char(v_slot.date, 'Dy DD Mon') || ' ' || to_char(v_slot.start_time,'HH24:MI') || '\u2013' || to_char(v_slot.end_time,'HH24:MI'),
+    v_slot.slot_id
+  );
 
-    document.getElementById("readoutTeam").textContent = employees.length;
+  return v_new_id;
+end;
+$$;
+grant execute on function create_swap_request(uuid, uuid, text, text) to authenticated;
 
-    if(!slots || slots.length === 0){
-      document.getElementById("readoutOpen").textContent = "0";
-      document.getElementById("readoutFilled").textContent = "0";
-      container.innerHTML = '<div class="list-card"><div class="empty">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><br>'+
-        'No shift slots in this range yet. Add one, or widen the date range.</div></div>';
-      return;
-    }
+-- Recipient accepts or declines a swap request aimed at them.
+create or replace function respond_to_swap_request(p_request_id uuid, p_accept boolean)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+declare
+  v_req record;
+  v_current_owner uuid;
+  v_slot record;
+  v_responder_name text;
+begin
+  select * into v_req from swap_requests where id = p_request_id;
+  if v_req is null then raise exception 'Request not found'; end if;
+  if v_req.requested_to <> auth.uid() then raise exception 'This request is not yours to answer'; end if;
+  if v_req.status <> 'pending' then raise exception 'This request has already been resolved'; end if;
 
-    var slotIds = slots.map(function(s){ return s.id; });
-    var { data: assignments } = await supabaseClient
-      .from("shift_assignments")
-      .select("id, slot_id, employee_id, assigned_by, profiles(full_name)")
-      .in("slot_id", slotIds);
+  select full_name into v_responder_name from profiles where id = auth.uid();
 
-    var totalSeats = slots.reduce(function(sum, s){ return sum + s.headcount; }, 0);
-    var filledSeats = (assignments || []).length;
-    document.getElementById("readoutFilled").textContent = filledSeats;
-    document.getElementById("readoutOpen").textContent = Math.max(0, totalSeats - filledSeats);
+  if not p_accept then
+    update swap_requests set status = 'declined', responded_at = now() where id = p_request_id;
+    insert into notifications(company_id, recipient_id, actor_id, type, message)
+      values (v_req.company_id, v_req.requested_by, auth.uid(), 'swap_declined', v_responder_name || ' declined your shift swap request');
+    return;
+  end if;
 
-    var bySlot = {};
-    (assignments || []).forEach(function(a){
-      if(!bySlot[a.slot_id]) bySlot[a.slot_id] = [];
-      bySlot[a.slot_id].push(a);
-    });
+  select employee_id into v_current_owner from shift_assignments where id = v_req.assignment_id;
+  if v_current_owner is null then raise exception 'That shift no longer exists'; end if;
 
-    var byDate = {};
-    slots.forEach(function(s){
-      if(!byDate[s.date]) byDate[s.date] = [];
-      byDate[s.date].push(s);
-    });
+  if v_req.direction = 'offer' then
+    if v_current_owner <> v_req.requested_by then raise exception 'That shift has already changed hands'; end if;
+    update shift_assignments set employee_id = v_req.requested_to, assigned_by = 'manual' where id = v_req.assignment_id;
+  else
+    if v_current_owner <> v_req.requested_to then raise exception 'That shift has already changed hands'; end if;
+    update shift_assignments set employee_id = v_req.requested_by, assigned_by = 'manual' where id = v_req.assignment_id;
+  end if;
 
-    var listCard = document.createElement("div");
-    listCard.className = "list-card";
+  update swap_requests set status = 'accepted', responded_at = now() where id = p_request_id;
 
-    Object.keys(byDate).sort().forEach(function(date){
-      var dh = document.createElement("div");
-      dh.className = "day-section";
-      dh.textContent = fmtDateShort(date);
-      listCard.appendChild(dh);
+  select ss.date, ss.start_time, ss.end_time, ss.id as slot_id into v_slot
+    from shift_slots ss join shift_assignments sa on sa.slot_id = ss.id where sa.id = v_req.assignment_id;
 
-      byDate[date].forEach(function(slot){
-        var filled = bySlot[slot.id] || [];
-        var open = slot.headcount - filled.length;
-        var el = document.createElement("div");
-        el.className = "shift-row";
+  insert into notifications(company_id, recipient_id, actor_id, type, message, slot_id)
+  values (
+    v_req.company_id, v_req.requested_by, auth.uid(), 'swap_accepted',
+    v_responder_name || ' accepted your shift swap for ' || to_char(v_slot.date,'Dy DD Mon') || ' ' ||
+      to_char(v_slot.start_time,'HH24:MI') || '\u2013' || to_char(v_slot.end_time,'HH24:MI'),
+    v_slot.slot_id
+  );
+end;
+$$;
+grant execute on function respond_to_swap_request(uuid, boolean) to authenticated;
 
-        var chips = filled.map(function(a){
-          var pname = a.profiles ? a.profiles.full_name : "Unknown";
-          return '<span class="person-chip" data-assign-id="'+a.id+'" title="Click to unassign">'+
-            avatarHtml(pname, "sm")+escapeHtml(pname)+
-            '<span class="pill '+(a.assigned_by === "auto" ? "auto" : "manual")+'" style="margin-left:2px;">'+(a.assigned_by === "auto" ? "auto" : "manual")+'</span></span>';
-        }).join("");
-
-        el.innerHTML =
-          '<div class="sr-time">'+slot.start_time.slice(0,5)+' – '+slot.end_time.slice(0,5)+'</div>'+
-          '<div class="sr-meta">'+
-            (slot.role_label ? '<span class="pill role">'+escapeHtml(slot.role_label)+'</span> ' : '')+
-            '<span class="pill '+(open > 0 ? "open" : "filled")+'">'+(open > 0 ? open+" open" : "full")+'</span>'+
-            '<div class="sr-fill">'+filled.length+' of '+slot.headcount+' filled</div>'+
-            (chips ? '<div class="sr-chips">'+chips+'</div>' : '')+
-          '</div>'+
-          '<div class="sr-actions"></div>';
-
-        var actions = el.querySelector(".sr-actions");
-        if(open > 0 && employees.length > 0){
-          var select = document.createElement("select");
-          var already = filled.map(function(a){ return a.employee_id; });
-          employees.filter(function(e){ return already.indexOf(e.id) === -1; }).forEach(function(e){
-            var opt = document.createElement("option");
-            opt.value = e.id; opt.textContent = e.full_name;
-            select.appendChild(opt);
-          });
-          var assignBtn = document.createElement("button");
-          assignBtn.className = "btn secondary small";
-          assignBtn.textContent = "Assign";
-          assignBtn.addEventListener("click", function(){ assignEmployee(slot.id, select.value); });
-          if(select.options.length === 0){ assignBtn.disabled = true; assignBtn.title = "No employees left to assign"; }
-          actions.appendChild(select);
-          actions.appendChild(assignBtn);
-        }
-        var delBtn = document.createElement("button");
-        delBtn.className = "icon-btn";
-        delBtn.title = "Delete slot";
-        delBtn.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-        delBtn.addEventListener("click", function(){ deleteSlot(slot.id); });
-        actions.appendChild(delBtn);
-
-        el.querySelectorAll("[data-assign-id]").forEach(function(chip){
-          chip.addEventListener("click", function(){ unassign(chip.getAttribute("data-assign-id")); });
-        });
-
-        listCard.appendChild(el);
-      });
-    });
-
-    container.innerHTML = "";
-    container.appendChild(listCard);
-  }
-
-  async function assignEmployee(slotId, employeeId){
-    if(!employeeId) return;
-    var { error } = await supabaseClient.from("shift_assignments").insert({
-      slot_id: slotId, employee_id: employeeId, assigned_by: "manual"
-    });
-    if(error){ showToast(error.message); return; }
-    await loadRoster();
-    showToast("Assigned");
-  }
-
-  async function unassign(assignmentId){
-    var { error } = await supabaseClient.from("shift_assignments").delete().eq("id", assignmentId);
-    if(error){ showToast(error.message); return; }
-    await loadRoster();
-  }
-
-  async function deleteSlot(slotId){
-    if(!confirm("Delete this shift slot and any assignments on it?")) return;
-    var { error } = await supabaseClient.from("shift_slots").delete().eq("id", slotId);
-    if(error){ showToast(error.message); return; }
-    await loadRoster();
-    showToast("Slot deleted");
-  }
-
-  async function runGenerate(){
-    var r = currentRange();
-    if(!r.start || !r.end) return;
-    var btn = document.getElementById("generateBtn");
-    btn.disabled = true; btn.textContent = "Generating…";
-    try{
-      var summary = await RosterEngine.generate(me.company_id, r.start, r.end);
-      await loadRoster();
-      showToast(summary.seatsFilled+" seat(s) filled"+(summary.seatsUnfilled > 0 ? ", "+summary.seatsUnfilled+" still open" : ""));
-    }catch(err){
-      showToast(err.message || "Couldn't generate roster");
-    }finally{
-      btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Auto-generate roster';
-    }
-  }
-
-  // ---------- add slot ----------
-  function wireSlotForm(){
-    document.getElementById("addSlotBtn").addEventListener("click", function(){
-      document.getElementById("slotForm").reset();
-      document.getElementById("s-date").value = document.getElementById("rangeStart").value || todayISO();
-      document.getElementById("slotError").textContent = "";
-      document.getElementById("slotOverlay").classList.add("open");
-    });
-    document.getElementById("slotCancel").addEventListener("click", function(){
-      document.getElementById("slotOverlay").classList.remove("open");
-    });
-    document.getElementById("slotOverlay").addEventListener("click", function(e){
-      if(e.target === document.getElementById("slotOverlay")) document.getElementById("slotOverlay").classList.remove("open");
-    });
-    document.getElementById("slotForm").addEventListener("submit", async function(e){
-      e.preventDefault();
-      var errEl = document.getElementById("slotError");
-      var date = document.getElementById("s-date").value;
-      var start = document.getElementById("s-start").value;
-      var end = document.getElementById("s-end").value;
-      var role = document.getElementById("s-role").value.trim();
-      var headcount = parseInt(document.getElementById("s-headcount").value, 10) || 1;
-      if(start >= end){ errEl.textContent = "Start must be before end."; return; }
-      var { error } = await supabaseClient.from("shift_slots").insert({
-        company_id: me.company_id, date: date, start_time: start, end_time: end,
-        role_label: role || null, headcount: headcount
-      });
-      if(error){ errEl.textContent = error.message; return; }
-      document.getElementById("slotOverlay").classList.remove("open");
-      await loadRoster();
-      showToast("Shift slot added");
-    });
-  }
-
-  // ---------- availability tab ----------
-  function populateAvailabilitySelect(){
-    var sel = document.getElementById("availEmployeeSelect");
-    sel.innerHTML = "";
-    if(employees.length === 0){
-      sel.innerHTML = '<option value="">No employees yet</option>';
-      document.getElementById("availGrid").innerHTML = "";
-      return;
-    }
-    employees.forEach(function(e){
-      var opt = document.createElement("option");
-      opt.value = e.id; opt.textContent = e.full_name;
-      sel.appendChild(opt);
-    });
-  }
-
-  function wireAvailabilityTab(){
-    var sel = document.getElementById("availEmployeeSelect");
-    sel.addEventListener("change", function(){ loadAvailabilityFor(sel.value); });
-    if(employees.length > 0) loadAvailabilityFor(sel.value);
-  }
-
-  async function loadAvailabilityFor(employeeId){
-    var grid = document.getElementById("availGrid");
-    if(!employeeId){ grid.innerHTML = ""; return; }
-    grid.innerHTML = '<div class="loading">Loading…</div>';
-    var { data, error } = await supabaseClient
-      .from("availability").select("*").eq("employee_id", employeeId)
-      .order("day_of_week", { ascending: true }).order("start_time", { ascending: true });
-    if(error){ grid.innerHTML = '<div class="empty">Couldn\'t load availability.</div>'; return; }
-
-    grid.innerHTML = "";
-    for(var d = 0; d < 7; d++){
-      var rows = (data || []).filter(function(a){ return a.day_of_week === d; });
-      var row = document.createElement("div");
-      row.className = "avail-row";
-      var slotsHtml = rows.length === 0
-        ? '<span class="avail-empty">Not available</span>'
-        : rows.map(function(r){ return '<span class="avail-slot">'+r.start_time.slice(0,5)+' – '+r.end_time.slice(0,5)+'</span>'; }).join("");
-      row.innerHTML = '<div class="ar-day">'+DAY_NAMES[d]+'</div><div class="ar-slots">'+slotsHtml+'</div>';
-      grid.appendChild(row);
-    }
-  }
-
-  init();
-})();
-</script>
-</body>
-</html>
+-- Requester cancels their own still-pending swap request.
+create or replace function cancel_swap_request(p_request_id uuid)
+returns void
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  update swap_requests set status = 'cancelled', responded_at = now()
+    where id = p_request_id and requested_by = auth.uid() and status = 'pending';
+  if not found then raise exception 'Nothing to cancel'; end if;
+end;
+$$;
+grant execute on function cancel_swap_request(uuid) to authenticated;

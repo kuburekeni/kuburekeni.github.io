@@ -41,6 +41,10 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Payroll
       </button>
+      <button class="side-link" data-tab="paysettings">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Pay settings
+      </button>
       <button class="side-link" data-tab="availability">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Availability
@@ -179,7 +183,7 @@
       <div class="page-head">
         <div>
           <h1>Payroll</h1>
-          <p>Hours per employee for a week — worked so far, and total rostered.</p>
+          <p>Hours split by pay category, with overtime, for the selected week.</p>
         </div>
       </div>
       <div class="toolbar">
@@ -197,20 +201,59 @@
       <div class="card" style="padding:0; overflow:hidden;">
         <div class="table-wrap">
           <table class="hours-table" id="payTable">
-            <thead>
-              <tr>
-                <th>Employee</th>
-                <th class="num">Shifts</th>
-                <th class="num">Hours worked</th>
-                <th class="num">Hours rostered</th>
-              </tr>
-            </thead>
-            <tbody id="payBody"><tr><td colspan="4"><div class="loading">Loading…</div></td></tr></tbody>
+            <thead id="payHead"></thead>
+            <tbody id="payBody"><tr><td><div class="loading">Loading…</div></td></tr></tbody>
             <tfoot id="payFoot"></tfoot>
           </table>
         </div>
       </div>
       <p class="hint" id="payRangeLabel" style="margin-top:12px;"></p>
+    </div>
+
+    <!-- PAY SETTINGS -->
+    <div class="tabpanel" id="tab-paysettings">
+      <div class="page-head">
+        <div>
+          <h1>Pay settings</h1>
+          <p>Your rates, overtime thresholds, and public holidays.</p>
+        </div>
+      </div>
+
+      <h2>Pay categories</h2>
+      <div class="list-card" style="margin-bottom:22px;">
+        <div id="rulesList"><div class="loading">Loading…</div></div>
+      </div>
+
+      <h2>Overtime</h2>
+      <div class="card" style="margin-bottom:22px;">
+        <div class="settings-grid">
+          <div class="field"><label for="otWeekly">Weekly threshold (hrs)</label><input type="number" id="otWeekly" step="0.5" min="0"></div>
+          <div class="field"><label for="otDaily">Daily threshold (hrs)</label><input type="number" id="otDaily" step="0.5" min="0"></div>
+          <div class="field"><label for="otMult">Overtime multiplier</label><input type="number" id="otMult" step="0.05" min="1"></div>
+          <div class="field"><label for="otStep">Second tier after (hrs, optional)</label><input type="number" id="otStep" step="0.5" min="0" placeholder="none"></div>
+          <div class="field"><label for="otStepMult">Second tier multiplier</label><input type="number" id="otStepMult" step="0.05" min="1" placeholder="none"></div>
+        </div>
+        <button class="btn primary small" id="saveSettingsBtn">Save overtime settings</button>
+        <div class="error-text" id="settingsError"></div>
+      </div>
+
+      <h2>Employee base rates</h2>
+      <div class="list-card" style="margin-bottom:22px;">
+        <div id="ratesList"><div class="loading">Loading…</div></div>
+      </div>
+
+      <h2>Public holidays</h2>
+      <div class="card">
+        <form id="holidayForm" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+          <div class="field" style="margin-bottom:0;"><label for="holDate">Date</label><input type="date" id="holDate" required></div>
+          <div class="field" style="flex:1; min-width:160px; margin-bottom:0;"><label for="holName">Name</label><input type="text" id="holName" placeholder="e.g. Labour Day" required maxlength="60"></div>
+          <button class="btn primary" type="submit">Add</button>
+        </form>
+        <div class="error-text" id="holidayError"></div>
+      </div>
+      <div class="list-card">
+        <div id="holidaysList"><div class="loading">Loading…</div></div>
+      </div>
     </div>
 
     <!-- AVAILABILITY -->
@@ -299,6 +342,7 @@
 <script src="supabase-config.js"></script>
 <script src="common.js"></script>
 <script src="roster-engine.js"></script>
+<script src="payroll-engine.js"></script>
 <script>
 (function(){
   "use strict";
@@ -337,6 +381,7 @@
     wireNotifications();
     wireCalendar();
     wirePayroll();
+    wirePaySettings();
 
     var start = todayISO();
     var end = addDaysISO(start, 6);
@@ -382,6 +427,7 @@
         document.getElementById("tab-"+btn.getAttribute("data-tab")).classList.add("active");
         if(btn.getAttribute("data-tab") === "calendar") renderCalendar();
         if(btn.getAttribute("data-tab") === "payroll") loadPayroll();
+        if(btn.getAttribute("data-tab") === "paysettings") loadPaySettings();
       });
     });
   }
@@ -891,8 +937,161 @@
     document.getElementById("calDayOverlay").classList.add("open");
   }
 
+  // ---------- pay settings ----------
+  var paySettings = null, payRules = [], holidays = [];
+
+  async function loadPaySettings(){
+    var s = await supabaseClient.from("pay_settings").select("*").eq("company_id", me.company_id).maybeSingle();
+    paySettings = s.data;
+    if(!paySettings){
+      // First run for a company created before v4 — create the row on demand.
+      var ins = await supabaseClient.from("pay_settings").insert({ company_id: me.company_id }).select().maybeSingle();
+      paySettings = ins.data || { weekly_overtime_hours: 38, daily_overtime_hours: 10, overtime_multiplier: 1.5 };
+    }
+    document.getElementById("otWeekly").value = paySettings.weekly_overtime_hours;
+    document.getElementById("otDaily").value = paySettings.daily_overtime_hours;
+    document.getElementById("otMult").value = paySettings.overtime_multiplier;
+    document.getElementById("otStep").value = paySettings.overtime_step_hours == null ? "" : paySettings.overtime_step_hours;
+    document.getElementById("otStepMult").value = paySettings.overtime_step_multiplier == null ? "" : paySettings.overtime_step_multiplier;
+
+    var r = await supabaseClient.from("pay_rules").select("*").eq("company_id", me.company_id).order("sort_order");
+    payRules = r.data || [];
+    renderRules();
+
+    var h = await supabaseClient.from("public_holidays").select("*").eq("company_id", me.company_id).order("date");
+    holidays = h.data || [];
+    renderHolidays();
+
+    renderRates();
+  }
+
+  var DAY_TYPE_LABEL = {
+    weekday: "Mon–Fri", saturday: "Saturday", sunday: "Sunday", public_holiday: "Public holiday"
+  };
+
+  function renderRules(){
+    var c = document.getElementById("rulesList");
+    if(payRules.length === 0){
+      c.innerHTML = '<div class="empty">No pay categories found. Re-run schema-v4.sql to seed the defaults.</div>';
+      return;
+    }
+    c.innerHTML = "";
+    payRules.forEach(function(rule){
+      var el = document.createElement("div");
+      el.className = "rule-row";
+      el.innerHTML =
+        '<div class="rr-name"><input type="text" value="'+escapeHtml(rule.name)+'" data-name style="width:100%; max-width:200px;">'+
+          '<div class="rr-day">'+DAY_TYPE_LABEL[rule.day_type]+'</div></div>'+
+        '<div><label class="rr-day" style="display:block; margin-bottom:4px;">Multiplier</label>'+
+          '<input type="number" step="0.05" min="0" value="'+rule.multiplier+'" data-mult></div>'+
+        '<button class="btn secondary small" data-save>Save</button>';
+      el.querySelector("[data-save]").addEventListener("click", async function(){
+        var name = el.querySelector("[data-name]").value.trim();
+        var mult = parseFloat(el.querySelector("[data-mult]").value);
+        if(!name || isNaN(mult)){ showToast("Enter a name and a valid multiplier"); return; }
+        var { error } = await supabaseClient.from("pay_rules")
+          .update({ name: name, multiplier: mult }).eq("id", rule.id);
+        if(error){ showToast(error.message); return; }
+        rule.name = name; rule.multiplier = mult;
+        showToast("Category saved");
+      });
+      c.appendChild(el);
+    });
+  }
+
+  function renderRates(){
+    var c = document.getElementById("ratesList");
+    if(employees.length === 0){
+      c.innerHTML = '<div class="empty">No employees yet.</div>';
+      return;
+    }
+    c.innerHTML = "";
+    employees.forEach(function(emp){
+      var el = document.createElement("div");
+      el.className = "rule-row";
+      el.innerHTML =
+        '<div class="rr-name" style="display:flex; align-items:center; gap:10px;">'+
+          avatarHtml(emp.full_name, "sm", emp.avatar_url)+escapeHtml(emp.full_name)+'</div>'+
+        '<div><label class="rr-day" style="display:block; margin-bottom:4px;">Base rate / hr</label>'+
+          '<input type="number" step="0.01" min="0" value="'+(emp.base_hourly_rate == null ? "" : emp.base_hourly_rate)+'" placeholder="not set" data-rate></div>'+
+        '<button class="btn secondary small" data-save>Save</button>';
+      el.querySelector("[data-save]").addEventListener("click", async function(){
+        var raw = el.querySelector("[data-rate]").value.trim();
+        var val = raw === "" ? null : parseFloat(raw);
+        if(raw !== "" && (isNaN(val) || val < 0)){ showToast("Enter a valid rate"); return; }
+        var { error } = await supabaseClient.from("profiles").update({ base_hourly_rate: val }).eq("id", emp.id);
+        if(error){ showToast(error.message); return; }
+        emp.base_hourly_rate = val;
+        showToast("Rate saved");
+      });
+      c.appendChild(el);
+    });
+  }
+
+  function renderHolidays(){
+    var c = document.getElementById("holidaysList");
+    if(holidays.length === 0){
+      c.innerHTML = '<div class="empty">No public holidays added yet.</div>';
+      return;
+    }
+    c.innerHTML = "";
+    holidays.forEach(function(h){
+      var el = document.createElement("div");
+      el.className = "employee-row";
+      el.innerHTML =
+        '<div class="er-name">'+escapeHtml(h.name)+'<div class="rr-day">'+fmtDateShort(h.date)+'</div></div>'+
+        '<button class="icon-btn" title="Remove"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+      el.querySelector("button").addEventListener("click", async function(){
+        var { error } = await supabaseClient.from("public_holidays").delete().eq("id", h.id);
+        if(error){ showToast(error.message); return; }
+        await loadPaySettings();
+        showToast("Holiday removed");
+      });
+      c.appendChild(el);
+    });
+  }
+
+  function wirePaySettings(){
+    document.getElementById("saveSettingsBtn").addEventListener("click", async function(){
+      var errEl = document.getElementById("settingsError");
+      errEl.textContent = "";
+      var stepRaw = document.getElementById("otStep").value.trim();
+      var stepMultRaw = document.getElementById("otStepMult").value.trim();
+      if((stepRaw === "") !== (stepMultRaw === "")){
+        errEl.textContent = "Set both second-tier fields, or leave both blank."; return;
+      }
+      var payload = {
+        weekly_overtime_hours: parseFloat(document.getElementById("otWeekly").value) || 0,
+        daily_overtime_hours: parseFloat(document.getElementById("otDaily").value) || 0,
+        overtime_multiplier: parseFloat(document.getElementById("otMult").value) || 1,
+        overtime_step_hours: stepRaw === "" ? null : parseFloat(stepRaw),
+        overtime_step_multiplier: stepMultRaw === "" ? null : parseFloat(stepMultRaw),
+        updated_at: new Date().toISOString()
+      };
+      var { error } = await supabaseClient.from("pay_settings").update(payload).eq("company_id", me.company_id);
+      if(error){ errEl.textContent = error.message; return; }
+      Object.assign(paySettings, payload);
+      showToast("Overtime settings saved");
+    });
+
+    document.getElementById("holidayForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      var errEl = document.getElementById("holidayError");
+      errEl.textContent = "";
+      var { error } = await supabaseClient.from("public_holidays").insert({
+        company_id: me.company_id,
+        date: document.getElementById("holDate").value,
+        name: document.getElementById("holName").value.trim()
+      });
+      if(error){ errEl.textContent = error.message; return; }
+      document.getElementById("holName").value = "";
+      await loadPaySettings();
+      showToast("Holiday added");
+    });
+  }
+
   // ---------- payroll ----------
-  var payrollRows = [], payrollRange = null;
+  var payrollRows = [], payrollRange = null, payrollCategories = [];
 
   function wirePayroll(){
     var input = document.getElementById("payWeek");
@@ -911,78 +1110,154 @@
   }
 
   async function loadPayroll(){
+    if(!paySettings) await loadPaySettings();
+
     var anchor = document.getElementById("payWeek").value || todayISO();
     var range = weekRangeFor(anchor);
     payrollRange = range;
     document.getElementById("payRangeLabel").textContent =
       "Week of " + fmtDateShort(range.start) + " to " + fmtDateShort(range.end) +
-      ". \u201cWorked\u201d counts shifts that have already finished; \u201crostered\u201d is the whole week.";
+      ". Overtime past " + paySettings.daily_overtime_hours + "h/day or " +
+      paySettings.weekly_overtime_hours + "h/week. Overnight shifts are split across days.";
 
     var body = document.getElementById("payBody");
-    body.innerHTML = '<tr><td colspan="4"><div class="loading">Loading…</div></td></tr>';
+    body.innerHTML = '<tr><td><div class="loading">Loading…</div></td></tr>';
     document.getElementById("payFoot").innerHTML = "";
 
     var result;
     try{ result = await fetchShiftsForRange(range.start, range.end); }
-    catch(e){ body.innerHTML = '<tr><td colspan="4"><div class="empty">Couldn\'t load hours.</div></td></tr>'; return; }
+    catch(e){ body.innerHTML = '<tr><td><div class="empty">Couldn\'t load hours.</div></td></tr>'; return; }
 
     var slotById = {};
     result.slots.forEach(function(s){ slotById[s.id] = s; });
 
-    // Tally per employee. A shift counts as "worked" once its end has passed.
-    var now = new Date();
-    var tally = {};
-    employees.forEach(function(e){ tally[e.id] = { name: e.full_name, avatar: e.avatar_url, shifts: 0, worked: 0, rostered: 0 }; });
-
+    // Flatten assignments into the shape the engine wants.
+    var flat = [];
     Object.keys(result.bySlot).forEach(function(slotId){
       var slot = slotById[slotId];
       if(!slot) return;
-      var hrs = shiftHours(slot.start_time, slot.end_time);
       result.bySlot[slotId].forEach(function(a){
-        var t = tally[a.employee_id];
-        if(!t) return; // assignment for someone no longer on the team
-        t.shifts++;
-        t.rostered += hrs;
-        var end = parseDateISO(slot.date);
-        end.setHours(parseInt(slot.end_time.slice(0,2),10), parseInt(slot.end_time.slice(3,5),10), 0, 0);
-        if(timeToMinutes(slot.end_time) <= timeToMinutes(slot.start_time)) end.setDate(end.getDate()+1); // overnight
-        if(end <= now) t.worked += hrs;
+        flat.push({
+          employee_id: a.employee_id,
+          date: slot.date,
+          start_time: slot.start_time,
+          end_time: slot.end_time
+        });
       });
     });
 
-    payrollRows = employees.map(function(e){ return tally[e.id]; })
-      .sort(function(a,b){ return b.rostered - a.rostered; });
+    var rulesByDayType = {};
+    payRules.forEach(function(r){ rulesByDayType[r.day_type] = r; });
+    var holidaySet = new Set(holidays.map(function(h){ return h.date; }));
+    var ratesByEmployee = {};
+    employees.forEach(function(e){ if(e.base_hourly_rate != null) ratesByEmployee[e.id] = Number(e.base_hourly_rate); });
+
+    var calc = PayrollEngine.calculate(flat, {
+      rulesByDayType: rulesByDayType,
+      holidaySet: holidaySet,
+      settings: paySettings,
+      ratesByEmployee: ratesByEmployee
+    });
+
+    // Only show category columns that actually have hours this week.
+    var order = ["weekday","saturday","sunday","public_holiday"];
+    payrollCategories = order.filter(function(dt){
+      return Object.keys(calc).some(function(id){ return calc[id].categories[dt] && calc[id].categories[dt].hours > 0; });
+    });
+    var anyOt2 = Object.keys(calc).some(function(id){ return calc[id].overtime.tier2.hours > 0; });
+
+    var head = '<tr><th>Employee</th>';
+    payrollCategories.forEach(function(dt){
+      var rule = rulesByDayType[dt];
+      head += '<th class="group">'+escapeHtml(rule ? rule.name : DAY_TYPE_LABEL[dt])+
+        '<div class="sub">×'+(rule ? rule.multiplier : 1)+'</div></th>';
+    });
+    head += '<th class="group">Overtime<div class="sub">×'+paySettings.overtime_multiplier+'</div></th>';
+    if(anyOt2) head += '<th class="group">OT tier 2<div class="sub">×'+paySettings.overtime_step_multiplier+'</div></th>';
+    head += '<th class="num">Total hrs</th><th class="num">Est. pay</th></tr>';
+    document.getElementById("payHead").innerHTML = head;
+
+    payrollRows = employees.map(function(e){
+      var c = calc[e.id];
+      return {
+        id: e.id, name: e.full_name, avatar: e.avatar_url,
+        data: c || { categories:{}, overtime:{tier1:{hours:0,pay:0},tier2:{hours:0,pay:0}}, totalHours:0, totalPay: e.base_hourly_rate!=null?0:null, hasRate: e.base_hourly_rate!=null }
+      };
+    }).filter(function(r){ return r.data.totalHours > 0; })
+      .sort(function(a,b){ return b.data.totalHours - a.data.totalHours; });
 
     if(payrollRows.length === 0){
-      body.innerHTML = '<tr><td colspan="4"><div class="empty">No employees yet.</div></td></tr>';
+      var span = payrollCategories.length + 3 + (anyOt2?1:0);
+      body.innerHTML = '<tr><td colspan="'+span+'"><div class="empty">No rostered hours this week.</div></td></tr>';
       return;
     }
 
-    body.innerHTML = payrollRows.map(function(t){
-      return '<tr>'+
-        '<td><div class="who-cell">'+avatarHtml(t.name, "sm", t.avatar)+'<span class="nm">'+escapeHtml(t.name)+'</span></div></td>'+
-        '<td class="num">'+t.shifts+'</td>'+
-        '<td class="num">'+fmtHours(t.worked)+'</td>'+
-        '<td class="num">'+fmtHours(t.rostered)+'</td>'+
-      '</tr>';
+    body.innerHTML = payrollRows.map(function(r){
+      var d = r.data;
+      var cells = '<td><div class="who-cell">'+avatarHtml(r.name, "sm", r.avatar)+
+        '<span class="nm">'+escapeHtml(r.name)+
+        (d.hasRate ? '' : '<div class="no-rate-flag">no rate set</div>')+'</span></div></td>';
+      payrollCategories.forEach(function(dt){
+        var cat = d.categories[dt];
+        var h = cat ? cat.hours : 0;
+        cells += '<td class="cat'+(h===0?' zero':'')+'">'+(h===0?'—':fmtHours(h))+'</td>';
+      });
+      cells += '<td class="cat'+(d.overtime.tier1.hours===0?' zero':'')+'">'+(d.overtime.tier1.hours===0?'—':fmtHours(d.overtime.tier1.hours))+'</td>';
+      if(anyOt2) cells += '<td class="cat'+(d.overtime.tier2.hours===0?' zero':'')+'">'+(d.overtime.tier2.hours===0?'—':fmtHours(d.overtime.tier2.hours))+'</td>';
+      cells += '<td class="num"><strong>'+fmtHours(d.totalHours)+'</strong></td>';
+      cells += '<td class="money">'+(d.totalPay == null ? '<span class="no-rate-flag">—</span>' : '$'+d.totalPay.toFixed(2))+'</td>';
+      return '<tr>'+cells+'</tr>';
     }).join("");
 
-    var totShifts = payrollRows.reduce(function(s,t){ return s + t.shifts; }, 0);
-    var totWorked = payrollRows.reduce(function(s,t){ return s + t.worked; }, 0);
-    var totRostered = payrollRows.reduce(function(s,t){ return s + t.rostered; }, 0);
-    document.getElementById("payFoot").innerHTML =
-      '<tr><td class="hours-total">Total</td>'+
-      '<td class="num hours-total">'+totShifts+'</td>'+
-      '<td class="num hours-total">'+fmtHours(totWorked)+'</td>'+
-      '<td class="num hours-total">'+fmtHours(totRostered)+'</td></tr>';
+    // Totals row
+    var footCells = '<td class="hours-total">Total</td>';
+    payrollCategories.forEach(function(dt){
+      var sum = payrollRows.reduce(function(s,r){ return s + (r.data.categories[dt] ? r.data.categories[dt].hours : 0); }, 0);
+      footCells += '<td class="cat hours-total">'+(sum===0?'—':fmtHours(sum))+'</td>';
+    });
+    var otSum = payrollRows.reduce(function(s,r){ return s + r.data.overtime.tier1.hours; }, 0);
+    footCells += '<td class="cat hours-total">'+(otSum===0?'—':fmtHours(otSum))+'</td>';
+    if(anyOt2){
+      var ot2Sum = payrollRows.reduce(function(s,r){ return s + r.data.overtime.tier2.hours; }, 0);
+      footCells += '<td class="cat hours-total">'+(ot2Sum===0?'—':fmtHours(ot2Sum))+'</td>';
+    }
+    var hoursSum = payrollRows.reduce(function(s,r){ return s + r.data.totalHours; }, 0);
+    var paySum = payrollRows.reduce(function(s,r){ return s + (r.data.totalPay || 0); }, 0);
+    footCells += '<td class="num hours-total">'+fmtHours(hoursSum)+'</td>';
+    footCells += '<td class="money hours-total">$'+paySum.toFixed(2)+'</td>';
+    document.getElementById("payFoot").innerHTML = '<tr>'+footCells+'</tr>';
   }
 
   function exportPayrollCsv(){
     if(payrollRows.length === 0){ showToast("Nothing to export"); return; }
-    var rows = [["Employee","Shifts","Hours worked","Hours rostered"]];
-    payrollRows.forEach(function(t){
-      rows.push([t.name, t.shifts, t.worked.toFixed(2), t.rostered.toFixed(2)]);
+    var rulesByDayType = {};
+    payRules.forEach(function(r){ rulesByDayType[r.day_type] = r; });
+
+    var header = ["Employee"];
+    payrollCategories.forEach(function(dt){
+      var rule = rulesByDayType[dt];
+      header.push((rule ? rule.name : dt) + " hrs (x" + (rule ? rule.multiplier : 1) + ")");
     });
+    header.push("Overtime hrs (x"+paySettings.overtime_multiplier+")");
+    var anyOt2 = payrollRows.some(function(r){ return r.data.overtime.tier2.hours > 0; });
+    if(anyOt2) header.push("OT tier 2 hrs (x"+paySettings.overtime_step_multiplier+")");
+    header.push("Total hrs", "Base rate", "Est. pay");
+
+    var rows = [header];
+    payrollRows.forEach(function(r){
+      var emp = employees.filter(function(e){ return e.id === r.id; })[0];
+      var line = [r.name];
+      payrollCategories.forEach(function(dt){
+        line.push((r.data.categories[dt] ? r.data.categories[dt].hours : 0).toFixed(2));
+      });
+      line.push(r.data.overtime.tier1.hours.toFixed(2));
+      if(anyOt2) line.push(r.data.overtime.tier2.hours.toFixed(2));
+      line.push(r.data.totalHours.toFixed(2));
+      line.push(emp && emp.base_hourly_rate != null ? Number(emp.base_hourly_rate).toFixed(2) : "");
+      line.push(r.data.totalPay == null ? "" : r.data.totalPay.toFixed(2));
+      rows.push(line);
+    });
+
     var csv = rows.map(function(r){
       return r.map(function(cell){
         var c = String(cell).replace(/"/g,'""');
@@ -998,7 +1273,6 @@
     URL.revokeObjectURL(url);
     showToast("CSV exported");
   }
-
   // ---------- notifications ----------
   function wireNotifications(){
     document.getElementById("notifBtn").addEventListener("click", openNotifications);

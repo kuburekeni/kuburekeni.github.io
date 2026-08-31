@@ -10,42 +10,120 @@
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<div class="main" style="max-width:760px; margin:0 auto;">
-  <div class="topbar">
-    <div style="display:flex; align-items:center; gap:10px;">
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="side-brand">
       <div class="logo-mark sm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
       </div>
-      <div class="brand-name" style="font-size:17px;">Roster</div>
+      <div class="brand-name">Roster</div>
     </div>
-    <div class="who">
+
+    <nav class="side-nav">
+      <button class="side-link active" data-tab="shifts">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        My shifts
+      </button>
+      <button class="side-link" data-tab="calendar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="9.01" y2="16"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="15" y1="16" x2="15.01" y2="16"/></svg>
+        Team calendar
+      </button>
+      <button class="side-link" data-tab="availability">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Availability
+      </button>
+      <button class="side-link" data-tab="swaps">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Swaps
+        <span class="pill open" id="swapCount" style="margin-left:auto; display:none;">0</span>
+      </button>
+      <button class="side-link" id="notifBtn">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Notifications
+        <span class="pill open" id="notifCount" style="margin-left:auto; display:none;">0</span>
+      </button>
+    </nav>
+
+    <div class="side-spacer"></div>
+
+    <div class="side-user">
       <div class="avatar sm" id="whoAvatar" style="background:var(--primary-tint); color:var(--primary-dark);">—</div>
-      <span id="whoName"></span> <span class="pill employee">Employee</span>
-      <button class="btn secondary small" id="signOutBtn">Sign out</button>
+      <div class="side-user-info">
+        <div class="side-user-name" id="whoName"></div>
+        <div class="side-user-role">Employee</div>
+      </div>
+      <button class="icon-btn" id="signOutBtn" title="Sign out">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
     </div>
-  </div>
+  </aside>
 
-  <div class="page-head">
-    <div>
-      <h1>My schedule</h1>
-      <p>Set when you can work, and see what's been assigned to you.</p>
+  <main class="main">
+
+    <!-- MY SHIFTS -->
+    <div class="tabpanel active" id="tab-shifts">
+      <div class="page-head">
+        <div>
+          <h1>My shifts</h1>
+          <p>Your upcoming shifts. You can hand one to a teammate, or cancel if you can't make it.</p>
+        </div>
+      </div>
+      <div class="list-card">
+        <div id="myShifts"><div class="loading">Loading…</div></div>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <h2 style="text-transform:none; letter-spacing:0; font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">Weekly availability</h2>
-    <p class="hint" style="margin-bottom:14px;">Tell your admin which days and times you can generally work. This repeats every week until you change it.</p>
-  </div>
-  <div class="list-card" style="margin-bottom:24px;">
-    <div id="availGrid"></div>
-  </div>
+    <!-- TEAM CALENDAR -->
+    <div class="tabpanel" id="tab-calendar">
+      <div class="page-head">
+        <div>
+          <h1>Team calendar</h1>
+          <p>Who's working when. Your own shifts are highlighted.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cal-header">
+          <button class="btn secondary small" id="calPrev">‹ Prev</button>
+          <div class="cal-title" id="calMonthLabel">—</div>
+          <button class="btn secondary small" id="calNext">Next ›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
 
-  <div class="page-head" style="margin-bottom:12px;">
-    <div><h1 style="font-size:18px;">Upcoming shifts</h1></div>
-  </div>
-  <div class="list-card">
-    <div id="myShifts"><div class="loading">Loading…</div></div>
-  </div>
+    <!-- AVAILABILITY -->
+    <div class="tabpanel" id="tab-availability">
+      <div class="page-head">
+        <div>
+          <h1>Availability</h1>
+          <p>Tell your admin which days and times you can generally work. This repeats every week until you change it.</p>
+        </div>
+      </div>
+      <div class="list-card">
+        <div id="availGrid"></div>
+      </div>
+    </div>
+
+    <!-- SWAPS -->
+    <div class="tabpanel" id="tab-swaps">
+      <div class="page-head">
+        <div>
+          <h1>Shift swaps</h1>
+          <p>Requests waiting on you, and ones you've sent.</p>
+        </div>
+      </div>
+      <h2 style="margin-top:6px;">Waiting on you</h2>
+      <div class="list-card" style="margin-bottom:22px;">
+        <div id="incomingSwaps"><div class="loading">Loading…</div></div>
+      </div>
+      <h2>Sent by you</h2>
+      <div class="list-card">
+        <div id="outgoingSwaps"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
 <!-- Add availability sheet -->
@@ -67,13 +145,80 @@
   </div>
 </div>
 
+<!-- Cancel shift sheet -->
+<div class="overlay" id="cancelOverlay">
+  <div class="sheet">
+    <h2>Can't work this shift?</h2>
+    <p class="hint" id="cancelShiftLabel" style="margin-top:-10px; margin-bottom:14px;"></p>
+    <form id="cancelForm">
+      <div class="field">
+        <label for="cancelReason">Reason (optional)</label>
+        <textarea id="cancelReason" rows="3" placeholder="Let your admin know why"></textarea>
+      </div>
+      <p class="hint">This frees the shift up and notifies your admin straight away.</p>
+      <div class="error-text" id="cancelError"></div>
+      <div class="sheet-actions">
+        <button type="button" class="btn secondary" id="cancelClose">Never mind</button>
+        <button type="submit" class="btn danger">Cancel shift</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Offer shift (give away) sheet -->
+<div class="overlay" id="offerOverlay">
+  <div class="sheet">
+    <h2>Give away this shift</h2>
+    <p class="hint" id="offerShiftLabel" style="margin-top:-10px; margin-bottom:14px;"></p>
+    <form id="offerForm">
+      <div class="field">
+        <label for="offerTo">Ask which teammate?</label>
+        <select id="offerTo" required></select>
+      </div>
+      <div class="field">
+        <label for="offerNote">Note (optional)</label>
+        <textarea id="offerNote" rows="2" placeholder="Any context for them"></textarea>
+      </div>
+      <p class="hint">They'll get a request they can accept or decline. Nothing changes unless they accept.</p>
+      <div class="error-text" id="offerError"></div>
+      <div class="sheet-actions">
+        <button type="button" class="btn secondary" id="offerClose">Cancel</button>
+        <button type="submit" class="btn primary">Send request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Calendar day-detail sheet -->
+<div class="overlay" id="calDayOverlay">
+  <div class="sheet" style="max-width:480px;">
+    <h2 id="calDayTitle">—</h2>
+    <div id="calDayList"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn secondary" id="calDayClose" style="width:100%;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notifications sheet -->
+<div class="overlay" id="notifOverlay">
+  <div class="sheet">
+    <h2>Notifications</h2>
+    <div id="notifList"><div class="loading">Loading…</div></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn secondary" id="notifClose" style="width:100%;">Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="common.js"></script>
 <script>
 (function(){
   "use strict";
-  var me = null;
+  var me = null, availability = [], teammates = [];
+  var calYear, calMonth;
 
   async function init(){
     var ctx = await requireSession("employee");
@@ -85,13 +230,47 @@
     avatarEl.style.background = av.bg; avatarEl.style.color = av.fg;
     avatarEl.textContent = getInitials(me.full_name);
     document.getElementById("signOutBtn").addEventListener("click", signOut);
+
+    var today = new Date();
+    calYear = today.getFullYear();
+    calMonth = today.getMonth();
+
+    wireTabs();
+    wireAvailModal();
+    wireCancelModal();
+    wireOfferModal();
+    wireCalendar();
+    wireNotifications();
+
+    await loadTeammates();
     await loadAvailability();
     await loadMyShifts();
+    await loadSwaps();
+    refreshNotifCount();
+    setInterval(refreshNotifCount, 60000);
+  }
+
+  function wireTabs(){
+    document.querySelectorAll(".side-nav .side-link[data-tab]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        document.querySelectorAll(".side-nav .side-link[data-tab]").forEach(function(b){ b.classList.remove("active"); });
+        btn.classList.add("active");
+        document.querySelectorAll(".tabpanel").forEach(function(p){ p.classList.remove("active"); });
+        document.getElementById("tab-"+btn.getAttribute("data-tab")).classList.add("active");
+        if(btn.getAttribute("data-tab") === "calendar") renderCalendar();
+      });
+    });
+  }
+
+  async function loadTeammates(){
+    var { data } = await supabaseClient
+      .from("profiles").select("id, full_name")
+      .eq("company_id", me.company_id).eq("role", "employee")
+      .order("full_name", { ascending: true });
+    teammates = (data || []).filter(function(p){ return p.id !== me.id; });
   }
 
   // ---------- availability ----------
-  var availability = [];
-
   async function loadAvailability(){
     var { data, error } = await supabaseClient
       .from("availability").select("*").eq("employee_id", me.id)
@@ -128,58 +307,51 @@
         });
       });
       row.querySelector("[data-add-day]").addEventListener("click", function(e){
-        var day = parseInt(e.currentTarget.getAttribute("data-add-day"), 10);
-        openAvailModal(day);
+        openAvailModal(parseInt(e.currentTarget.getAttribute("data-add-day"), 10));
       });
 
       grid.appendChild(row);
     }
   }
 
-  // ---------- add-availability modal ----------
   var pendingDay = null;
-  var availOverlay = document.getElementById("availOverlay");
-  var availForm = document.getElementById("availForm");
+  function wireAvailModal(){
+    var overlay = document.getElementById("availOverlay");
+    document.getElementById("availCancel").addEventListener("click", closeAvailModal);
+    overlay.addEventListener("click", function(e){ if(e.target === overlay) closeAvailModal(); });
 
+    document.getElementById("availForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      var errEl = document.getElementById("availError");
+      var start = document.getElementById("av-start").value;
+      var end = document.getElementById("av-end").value;
+      if(pendingDay === null || pendingDay < 0 || pendingDay > 6){
+        errEl.textContent = "Something went wrong picking the day — please try again."; return;
+      }
+      if(!start || !end || start >= end){
+        errEl.textContent = "Enter a start time before the end time."; return;
+      }
+      var { error } = await supabaseClient.from("availability").insert({
+        employee_id: me.id, day_of_week: pendingDay, start_time: start, end_time: end
+      });
+      if(error){ errEl.textContent = error.message; return; }
+      closeAvailModal();
+      await loadAvailability();
+      showToast("Availability added");
+    });
+  }
   function openAvailModal(dayOfWeek){
     pendingDay = dayOfWeek;
     document.getElementById("availDayLabel").textContent = "For " + DAY_NAMES[dayOfWeek] + ":";
     document.getElementById("av-start").value = "09:00";
     document.getElementById("av-end").value = "17:00";
     document.getElementById("availError").textContent = "";
-    availOverlay.classList.add("open");
-    document.getElementById("av-start").focus();
+    document.getElementById("availOverlay").classList.add("open");
   }
   function closeAvailModal(){
-    availOverlay.classList.remove("open");
+    document.getElementById("availOverlay").classList.remove("open");
     pendingDay = null;
   }
-  document.getElementById("availCancel").addEventListener("click", closeAvailModal);
-  availOverlay.addEventListener("click", function(e){
-    if(e.target === availOverlay) closeAvailModal();
-  });
-
-  availForm.addEventListener("submit", async function(e){
-    e.preventDefault();
-    var errEl = document.getElementById("availError");
-    var start = document.getElementById("av-start").value;
-    var end = document.getElementById("av-end").value;
-    if(pendingDay === null || pendingDay < 0 || pendingDay > 6){
-      errEl.textContent = "Something went wrong picking the day — please try again.";
-      return;
-    }
-    if(!start || !end || start >= end){
-      errEl.textContent = "Enter a start time before the end time.";
-      return;
-    }
-    var { error } = await supabaseClient.from("availability").insert({
-      employee_id: me.id, day_of_week: pendingDay, start_time: start, end_time: end
-    });
-    if(error){ errEl.textContent = error.message; return; }
-    closeAvailModal();
-    await loadAvailability();
-    showToast("Availability added");
-  });
 
   async function removeAvailabilityRow(id){
     var { error } = await supabaseClient.from("availability").delete().eq("id", id);
@@ -192,17 +364,17 @@
     var container = document.getElementById("myShifts");
     var { data, error } = await supabaseClient
       .from("shift_assignments")
-      .select("id, shift_slots(date, start_time, end_time, role_label)")
+      .select("id, shift_slots(id, date, start_time, end_time, roles(name))")
       .eq("employee_id", me.id);
     if(error){ container.innerHTML = '<div class="empty">Couldn\'t load your shifts.</div>'; return; }
 
     var rows = (data || [])
       .filter(function(r){ return r.shift_slots; })
-      .map(function(r){ return r.shift_slots; })
-      .filter(function(s){ return s.date >= addDaysISO(todayISO(), -1); })
+      .filter(function(r){ return r.shift_slots.date >= addDaysISO(todayISO(), -1); })
       .sort(function(a,b){
-        if(a.date !== b.date) return a.date < b.date ? -1 : 1;
-        return a.start_time < b.start_time ? -1 : 1;
+        var sa = a.shift_slots, sb = b.shift_slots;
+        if(sa.date !== sb.date) return sa.date < sb.date ? -1 : 1;
+        return sa.start_time < sb.start_time ? -1 : 1;
       });
 
     if(rows.length === 0){
@@ -211,17 +383,348 @@
     }
 
     container.innerHTML = "";
-    rows.forEach(function(s){
+    rows.forEach(function(r){
+      var s = r.shift_slots;
       var el = document.createElement("div");
       el.className = "shift-row";
       el.innerHTML =
         '<div class="sr-time">'+fmtDateShort(s.date)+'</div>'+
         '<div class="sr-meta">'+
           '<span class="pill filled">'+s.start_time.slice(0,5)+' – '+s.end_time.slice(0,5)+'</span> '+
-          (s.role_label ? '<span class="pill role">'+escapeHtml(s.role_label)+'</span>' : '')+
+          (s.roles ? '<span class="pill role">'+escapeHtml(s.roles.name)+'</span>' : '')+
+        '</div>'+
+        '<div class="sr-actions">'+
+          '<button class="btn secondary small" data-offer>Give away</button>'+
+          '<button class="btn danger small" data-cancel>Can\'t work</button>'+
         '</div>';
+      var label = fmtDateShort(s.date)+", "+s.start_time.slice(0,5)+" – "+s.end_time.slice(0,5);
+      el.querySelector("[data-offer]").addEventListener("click", function(){ openOfferModal(r.id, label); });
+      el.querySelector("[data-cancel]").addEventListener("click", function(){ openCancelModal(r.id, label); });
       container.appendChild(el);
     });
+  }
+
+  // ---------- cancel shift ----------
+  var cancelAssignmentId = null;
+  function wireCancelModal(){
+    var overlay = document.getElementById("cancelOverlay");
+    document.getElementById("cancelClose").addEventListener("click", function(){ overlay.classList.remove("open"); });
+    overlay.addEventListener("click", function(e){ if(e.target === overlay) overlay.classList.remove("open"); });
+    document.getElementById("cancelForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      var errEl = document.getElementById("cancelError");
+      errEl.textContent = "";
+      var reason = document.getElementById("cancelReason").value.trim();
+      var { error } = await supabaseClient.rpc("employee_cancel_shift", {
+        p_assignment_id: cancelAssignmentId, p_reason: reason || null
+      });
+      if(error){ errEl.textContent = error.message; return; }
+      overlay.classList.remove("open");
+      await loadMyShifts();
+      showToast("Shift cancelled — your admin has been notified");
+    });
+  }
+  function openCancelModal(assignmentId, label){
+    cancelAssignmentId = assignmentId;
+    document.getElementById("cancelShiftLabel").textContent = label;
+    document.getElementById("cancelReason").value = "";
+    document.getElementById("cancelError").textContent = "";
+    document.getElementById("cancelOverlay").classList.add("open");
+  }
+
+  // ---------- offer shift ----------
+  var offerAssignmentId = null;
+  function wireOfferModal(){
+    var overlay = document.getElementById("offerOverlay");
+    document.getElementById("offerClose").addEventListener("click", function(){ overlay.classList.remove("open"); });
+    overlay.addEventListener("click", function(e){ if(e.target === overlay) overlay.classList.remove("open"); });
+    document.getElementById("offerForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+      var errEl = document.getElementById("offerError");
+      errEl.textContent = "";
+      var to = document.getElementById("offerTo").value;
+      if(!to){ errEl.textContent = "Pick a teammate."; return; }
+      var { error } = await supabaseClient.rpc("create_swap_request", {
+        p_assignment_id: offerAssignmentId,
+        p_requested_to: to,
+        p_direction: "offer",
+        p_note: document.getElementById("offerNote").value.trim() || null
+      });
+      if(error){ errEl.textContent = error.message; return; }
+      overlay.classList.remove("open");
+      await loadSwaps();
+      showToast("Request sent");
+    });
+  }
+  function openOfferModal(assignmentId, label){
+    offerAssignmentId = assignmentId;
+    document.getElementById("offerShiftLabel").textContent = label;
+    document.getElementById("offerNote").value = "";
+    document.getElementById("offerError").textContent = "";
+    var sel = document.getElementById("offerTo");
+    sel.innerHTML = "";
+    if(teammates.length === 0){
+      sel.innerHTML = '<option value="">No teammates yet</option>';
+    } else {
+      teammates.forEach(function(t){
+        var opt = document.createElement("option");
+        opt.value = t.id; opt.textContent = t.full_name;
+        sel.appendChild(opt);
+      });
+    }
+    document.getElementById("offerOverlay").classList.add("open");
+  }
+
+  // ---------- swaps ----------
+  async function loadSwaps(){
+    var incoming = document.getElementById("incomingSwaps");
+    var outgoing = document.getElementById("outgoingSwaps");
+
+    var { data, error } = await supabaseClient
+      .from("swap_requests")
+      .select("*, shift_assignments(shift_slots(date, start_time, end_time))")
+      .order("created_at", { ascending: false });
+    if(error){
+      incoming.innerHTML = '<div class="empty">Couldn\'t load swap requests.</div>';
+      outgoing.innerHTML = "";
+      return;
+    }
+
+    var all = data || [];
+    var nameById = {};
+    teammates.forEach(function(t){ nameById[t.id] = t.full_name; });
+    nameById[me.id] = me.full_name;
+
+    function slotLabel(req){
+      var sa = req.shift_assignments;
+      if(!sa || !sa.shift_slots) return "a shift";
+      var s = sa.shift_slots;
+      return fmtDateShort(s.date)+", "+s.start_time.slice(0,5)+" – "+s.end_time.slice(0,5);
+    }
+
+    var mineIncoming = all.filter(function(r){ return r.requested_to === me.id && r.status === "pending"; });
+    var mineOutgoing = all.filter(function(r){ return r.requested_by === me.id; });
+
+    var badge = document.getElementById("swapCount");
+    if(mineIncoming.length > 0){ badge.textContent = mineIncoming.length; badge.style.display = "inline-flex"; }
+    else{ badge.style.display = "none"; }
+
+    if(mineIncoming.length === 0){
+      incoming.innerHTML = '<div class="empty">Nothing waiting on you.</div>';
+    } else {
+      incoming.innerHTML = "";
+      mineIncoming.forEach(function(req){
+        var who = nameById[req.requested_by] || "A teammate";
+        var verb = req.direction === "offer" ? "wants to give you" : "wants to take";
+        var el = document.createElement("div");
+        el.className = "swap-row";
+        el.innerHTML =
+          avatarHtml(who, "sm")+
+          '<div class="sw-meta"><strong>'+escapeHtml(who)+'</strong> '+verb+' '+escapeHtml(slotLabel(req))+
+            (req.note ? '<div class="sw-sub">'+escapeHtml(req.note)+'</div>' : '')+
+          '</div>'+
+          '<div class="sw-actions">'+
+            '<button class="btn secondary small" data-decline>Decline</button>'+
+            '<button class="btn primary small" data-accept>Accept</button>'+
+          '</div>';
+        el.querySelector("[data-accept]").addEventListener("click", function(){ respondSwap(req.id, true); });
+        el.querySelector("[data-decline]").addEventListener("click", function(){ respondSwap(req.id, false); });
+        incoming.appendChild(el);
+      });
+    }
+
+    if(mineOutgoing.length === 0){
+      outgoing.innerHTML = '<div class="empty">You haven\'t sent any requests.</div>';
+    } else {
+      outgoing.innerHTML = "";
+      mineOutgoing.forEach(function(req){
+        var who = nameById[req.requested_to] || "A teammate";
+        var verb = req.direction === "offer" ? "Give away to" : "Take from";
+        var statusPill = req.status === "pending" ? '<span class="pill open">pending</span>'
+          : req.status === "accepted" ? '<span class="pill filled">accepted</span>'
+          : '<span class="pill employee">'+req.status+'</span>';
+        var el = document.createElement("div");
+        el.className = "swap-row";
+        el.innerHTML =
+          avatarHtml(who, "sm")+
+          '<div class="sw-meta">'+verb+' <strong>'+escapeHtml(who)+'</strong> — '+escapeHtml(slotLabel(req))+
+            '<div class="sw-sub">'+statusPill+'</div>'+
+          '</div>'+
+          '<div class="sw-actions"></div>';
+        if(req.status === "pending"){
+          var cancelBtn = document.createElement("button");
+          cancelBtn.className = "btn secondary small";
+          cancelBtn.textContent = "Withdraw";
+          cancelBtn.addEventListener("click", function(){ withdrawSwap(req.id); });
+          el.querySelector(".sw-actions").appendChild(cancelBtn);
+        }
+        outgoing.appendChild(el);
+      });
+    }
+  }
+
+  async function respondSwap(requestId, accept){
+    var { error } = await supabaseClient.rpc("respond_to_swap_request", {
+      p_request_id: requestId, p_accept: accept
+    });
+    if(error){ showToast(error.message); return; }
+    await loadSwaps();
+    await loadMyShifts();
+    showToast(accept ? "Swap accepted — the shift is yours" : "Request declined");
+  }
+
+  async function withdrawSwap(requestId){
+    var { error } = await supabaseClient.rpc("cancel_swap_request", { p_request_id: requestId });
+    if(error){ showToast(error.message); return; }
+    await loadSwaps();
+    showToast("Request withdrawn");
+  }
+
+  // ---------- calendar ----------
+  function wireCalendar(){
+    document.getElementById("calPrev").addEventListener("click", function(){
+      calMonth--; if(calMonth < 0){ calMonth = 11; calYear--; }
+      renderCalendar();
+    });
+    document.getElementById("calNext").addEventListener("click", function(){
+      calMonth++; if(calMonth > 11){ calMonth = 0; calYear++; }
+      renderCalendar();
+    });
+    document.getElementById("calDayClose").addEventListener("click", function(){
+      document.getElementById("calDayOverlay").classList.remove("open");
+    });
+    document.getElementById("calDayOverlay").addEventListener("click", function(e){
+      if(e.target === document.getElementById("calDayOverlay")) document.getElementById("calDayOverlay").classList.remove("open");
+    });
+  }
+
+  async function renderCalendar(){
+    document.getElementById("calMonthLabel").textContent = MONTH_NAMES[calMonth] + " " + calYear;
+    var cells = buildMonthGrid(calYear, calMonth);
+    var rangeStart = cells[0].iso, rangeEnd = cells[cells.length - 1].iso;
+
+    var grid = document.getElementById("calGrid");
+    grid.innerHTML = DAY_SHORT.map(function(d){ return '<div class="cal-dow">'+d+'</div>'; }).join("");
+
+    var { data: slots } = await supabaseClient
+      .from("shift_slots").select("*, roles(name)")
+      .eq("company_id", me.company_id)
+      .gte("date", rangeStart).lte("date", rangeEnd)
+      .order("start_time", { ascending: true });
+    slots = slots || [];
+
+    var bySlot = {};
+    if(slots.length > 0){
+      var { data: assigns } = await supabaseClient
+        .from("shift_assignments")
+        .select("id, slot_id, employee_id, profiles(full_name)")
+        .in("slot_id", slots.map(function(s){ return s.id; }));
+      (assigns || []).forEach(function(a){
+        if(!bySlot[a.slot_id]) bySlot[a.slot_id] = [];
+        bySlot[a.slot_id].push(a);
+      });
+    }
+
+    var byDate = {};
+    slots.forEach(function(s){
+      if(!byDate[s.date]) byDate[s.date] = [];
+      byDate[s.date].push(s);
+    });
+
+    cells.forEach(function(cell){
+      var daySlots = byDate[cell.iso] || [];
+      var el = document.createElement("div");
+      el.className = "cal-cell" + (cell.inMonth ? "" : " other-month") + (cell.isToday ? " today" : "");
+      var chipsHtml = daySlots.slice(0, 3).map(function(s){
+        var filled = bySlot[s.id] || [];
+        var isMine = filled.some(function(a){ return a.employee_id === me.id; });
+        var label = filled.length > 0
+          ? filled.map(function(a){ return a.profiles ? a.profiles.full_name.split(" ")[0] : "?"; }).join(", ")
+          : ((s.headcount - filled.length)+" open");
+        return '<div class="cal-chip'+(filled.length === 0 ? " open" : "")+'"'+(isMine ? ' style="background:var(--primary); color:#fff;"' : '')+'>'+
+          s.start_time.slice(0,5)+' '+escapeHtml(label)+'</div>';
+      }).join("");
+      var more = daySlots.length > 3 ? '<div class="cal-more">+'+(daySlots.length - 3)+' more</div>' : "";
+      el.innerHTML = '<div class="cal-date">'+cell.day+'</div>'+chipsHtml+more;
+      el.addEventListener("click", function(){ openCalDay(cell.iso, daySlots, bySlot); });
+      grid.appendChild(el);
+    });
+  }
+
+  function openCalDay(iso, daySlots, bySlot){
+    document.getElementById("calDayTitle").textContent = fmtDateShort(iso);
+    var list = document.getElementById("calDayList");
+    if(daySlots.length === 0){
+      list.innerHTML = '<div class="empty">No shifts scheduled this day.</div>';
+    } else {
+      list.innerHTML = daySlots.map(function(s){
+        var filled = bySlot[s.id] || [];
+        var open = s.headcount - filled.length;
+        var people = filled.length > 0
+          ? filled.map(function(a){
+              var n = a.profiles ? a.profiles.full_name : "Unknown";
+              return '<span class="person-chip">'+avatarHtml(n, "sm")+escapeHtml(n)+'</span>';
+            }).join("")
+          : '<span class="avail-empty">Nobody assigned yet</span>';
+        return '<div class="shift-row">'+
+          '<div class="sr-time">'+s.start_time.slice(0,5)+' – '+s.end_time.slice(0,5)+'</div>'+
+          '<div class="sr-meta">'+
+            (s.roles ? '<span class="pill role">'+escapeHtml(s.roles.name)+'</span> ' : '')+
+            '<span class="pill '+(open > 0 ? "open" : "filled")+'">'+(open > 0 ? open+" open" : "full")+'</span>'+
+            '<div class="sr-chips">'+people+'</div>'+
+          '</div></div>';
+      }).join("");
+    }
+    document.getElementById("calDayOverlay").classList.add("open");
+  }
+
+  // ---------- notifications ----------
+  function wireNotifications(){
+    document.getElementById("notifBtn").addEventListener("click", openNotifications);
+    document.getElementById("notifClose").addEventListener("click", function(){
+      document.getElementById("notifOverlay").classList.remove("open");
+    });
+    document.getElementById("notifOverlay").addEventListener("click", function(e){
+      if(e.target === document.getElementById("notifOverlay")) document.getElementById("notifOverlay").classList.remove("open");
+    });
+  }
+
+  async function refreshNotifCount(){
+    var { count } = await supabaseClient
+      .from("notifications").select("id", { count: "exact", head: true })
+      .eq("recipient_id", me.id).eq("is_read", false);
+    var badge = document.getElementById("notifCount");
+    if(count && count > 0){ badge.textContent = count; badge.style.display = "inline-flex"; }
+    else{ badge.style.display = "none"; }
+  }
+
+  async function openNotifications(){
+    var overlay = document.getElementById("notifOverlay");
+    var list = document.getElementById("notifList");
+    list.innerHTML = '<div class="loading">Loading…</div>';
+    overlay.classList.add("open");
+
+    var { data, error } = await supabaseClient
+      .from("notifications").select("*").eq("recipient_id", me.id)
+      .order("created_at", { ascending: false }).limit(30);
+    if(error){ list.innerHTML = '<div class="empty">Couldn\'t load notifications.</div>'; return; }
+
+    if(!data || data.length === 0){
+      list.innerHTML = '<div class="empty">No notifications yet.</div>';
+    } else {
+      list.innerHTML = data.map(function(n){
+        return '<div class="notif-item'+(n.is_read ? "" : " unread")+'">'+
+          '<div class="ni-msg">'+escapeHtml(n.message)+'</div>'+
+          '<div class="ni-time">'+timeAgo(n.created_at)+'</div>'+
+        '</div>';
+      }).join("");
+    }
+
+    var unreadIds = data ? data.filter(function(n){ return !n.is_read; }).map(function(n){ return n.id; }) : [];
+    if(unreadIds.length > 0){
+      await supabaseClient.from("notifications").update({ is_read: true }).in("id", unreadIds);
+      refreshNotifCount();
+    }
   }
 
   init();

@@ -63,6 +63,17 @@ const RosterEngine = {
     employeeIds.forEach(id => { availByEmployee[id] = []; });
     (availRows || []).forEach(a => { availByEmployee[a.employee_id].push(a); });
 
+    // 3b. Each employee's role(s), so slots that require a specific role only
+    //     match employees who hold it. A slot with no role_id fits anyone.
+    const { data: roleRows, error: roleErr } = await supabaseClient
+      .from("employee_roles")
+      .select("employee_id, role_id")
+      .in("employee_id", employeeIds);
+    if(roleErr) throw roleErr;
+    const rolesByEmployee = {};
+    employeeIds.forEach(id => { rolesByEmployee[id] = new Set(); });
+    (roleRows || []).forEach(r => { rolesByEmployee[r.employee_id].add(r.role_id); });
+
     // 4. All assignments across the WHOLE company in range (not just the slots
     //    we're filling) so we correctly avoid double-booking on days that
     //    already have unrelated shifts assigned.
@@ -130,6 +141,7 @@ const RosterEngine = {
 
       let candidates = employeeIds.filter(id => {
         if(alreadyOnSlot.has(id)) return false;
+        if(slot.role_id && !rolesByEmployee[id].has(slot.role_id)) return false;
         if(!availabilityCovers(availByEmployee[id] || [], dayOfWeek, slot.start_time, slot.end_time)) return false;
         const bookings = employeeBookings[id] || [];
         const clashes = bookings.some(b => overlaps(slot.date, slot.start_time, slot.end_time, b.date, b.start, b.end));

@@ -2,11 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roster — My schedule</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2E5AF5">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Roster">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -67,11 +75,24 @@
 
     <!-- MY SHIFTS -->
     <div class="tabpanel active" id="tab-shifts">
+      <div class="view-banner" id="adminBanner" style="display:none;">
+        <span>You're viewing the employee side as an admin.</span>
+        <a class="btn secondary small" href="admin.html">Back to admin</a>
+      </div>
+
       <div class="page-head">
         <div>
           <h1>My shifts</h1>
-          <p>Your upcoming shifts. You can hand one to a teammate, or cancel if you can't make it.</p>
+          <p>Clock on when you start, and off when you finish — your hours are logged automatically.</p>
         </div>
+      </div>
+
+      <div class="clock-card" id="clockCard">
+        <div class="clock-status" id="clockStatus">Not clocked in</div>
+        <div class="clock-timer" id="clockTimer">00:00:00</div>
+        <div class="clock-sub" id="clockSub">Tap below when you start your shift</div>
+        <button class="btn primary clock-btn" id="clockBtn">Clock in</button>
+        <div class="error-text" id="clockError"></div>
       </div>
       <div class="list-card">
         <div id="myShifts"><div class="loading">Loading…</div></div>
@@ -270,7 +291,7 @@
   var calYear, calMonth;
 
   async function init(){
-    var ctx = await requireSession("employee");
+    var ctx = await requireSession();   // admins may view this page too
     if(!ctx) return;
     me = ctx.profile;
     document.getElementById("whoName").textContent = me.full_name;
@@ -289,7 +310,14 @@
     wireCalendar();
     wireNotifications();
     wireProfile();
+    wireClock();
 
+    if(me.role === "admin"){
+      document.getElementById("adminBanner").style.display = "flex";
+      document.querySelector('.side-user-role').textContent = "Admin (employee view)";
+    }
+
+    await loadClockState();
     await loadTeammates();
     await loadAvailability();
     await loadMyShifts();
@@ -314,7 +342,7 @@
   async function loadTeammates(){
     var { data } = await supabaseClient
       .from("profiles").select("id, full_name, avatar_url")
-      .eq("company_id", me.company_id).eq("role", "employee")
+      .eq("company_id", me.company_id).eq("rosterable", true)
       .order("full_name", { ascending: true });
     teammates = (data || []).filter(function(p){ return p.id !== me.id; });
   }
@@ -413,7 +441,7 @@
     var container = document.getElementById("myShifts");
     var { data, error } = await supabaseClient
       .from("shift_assignments")
-      .select("id, shift_slots(id, date, start_time, end_time, roles(name))")
+      .select("id, shift_slots(id, date, start_time, end_time, notes, roles(name))")
       .eq("employee_id", me.id);
     if(error){ container.innerHTML = '<div class="empty">Couldn\'t load your shifts.</div>'; return; }
 
@@ -441,6 +469,7 @@
         '<div class="sr-meta">'+
           '<span class="pill filled">'+s.start_time.slice(0,5)+' – '+s.end_time.slice(0,5)+'</span> '+
           (s.roles ? '<span class="pill role">'+escapeHtml(s.roles.name)+'</span>' : '')+
+          (s.notes ? '<div class="task-note"><span class="tn-label">Tasks for this shift</span>'+escapeHtml(s.notes)+'</div>' : '')+
         '</div>'+
         '<div class="sr-actions">'+
           '<button class="btn secondary small" data-offer>Give away</button>'+
@@ -758,6 +787,77 @@
     document.getElementById("calDayOverlay").classList.add("open");
   }
 
+  // ---------- time clock ----------
+  var openEntry = null, clockTick = null;
+
+  function wireClock(){
+    document.getElementById("clockBtn").addEventListener("click", async function(){
+      var btn = document.getElementById("clockBtn");
+      var errEl = document.getElementById("clockError");
+      errEl.textContent = "";
+      btn.disabled = true;
+      try{
+        if(openEntry){
+          var out = await supabaseClient.rpc("clock_out", { p_note: null });
+          if(out.error) throw out.error;
+          showToast("Clocked out");
+        } else {
+          var inn = await supabaseClient.rpc("clock_in", { p_note: null });
+          if(inn.error) throw inn.error;
+          showToast("Clocked in");
+        }
+        await loadClockState();
+        await loadMyShifts();
+      }catch(err){
+        errEl.textContent = err.message || "Something went wrong";
+      }finally{
+        btn.disabled = false;
+      }
+    });
+  }
+
+  async function loadClockState(){
+    var { data, error } = await supabaseClient
+      .from("time_entries").select("*")
+      .eq("employee_id", me.id).is("clock_out", null)
+      .order("clock_in", { ascending: false }).limit(1);
+    if(error){ return; }
+    openEntry = (data && data.length) ? data[0] : null;
+    renderClock();
+  }
+
+  function renderClock(){
+    var card = document.getElementById("clockCard");
+    var status = document.getElementById("clockStatus");
+    var sub = document.getElementById("clockSub");
+    var btn = document.getElementById("clockBtn");
+    var timer = document.getElementById("clockTimer");
+
+    if(clockTick){ clearInterval(clockTick); clockTick = null; }
+
+    if(openEntry){
+      card.classList.add("on");
+      status.textContent = "On the clock";
+      var started = new Date(openEntry.clock_in);
+      sub.textContent = "Since " + pad2(started.getHours()) + ":" + pad2(started.getMinutes());
+      btn.textContent = "Clock out";
+      btn.classList.remove("primary"); btn.classList.add("danger");
+      var tick = function(){
+        var secs = Math.max(0, Math.floor((Date.now() - started.getTime())/1000));
+        timer.textContent = pad2(Math.floor(secs/3600))+":"+pad2(Math.floor((secs%3600)/60))+":"+pad2(secs%60);
+      };
+      tick();
+      clockTick = setInterval(tick, 1000);
+    } else {
+      card.classList.remove("on");
+      status.textContent = "Not clocked in";
+      sub.textContent = "Tap below when you start your shift";
+      timer.textContent = "00:00:00";
+      btn.textContent = "Clock in";
+      btn.classList.remove("danger"); btn.classList.add("primary");
+    }
+  }
+
   // ---------- profile / avatar ----------
   function applySidebarAvatar(){
     var el = document.getElementById("whoAvatar");
@@ -915,6 +1015,13 @@
 
   init();
 })();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(e){ console.warn("SW registration failed", e); });
+  });
+}
 </script>
 </body>
 </html>

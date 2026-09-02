@@ -2,11 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roster — Sign in</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2E5AF5">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Roster">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -22,7 +30,7 @@
   </div>
 
   <!-- Loading state while we check for an existing session -->
-  <div id="checking" class="loading">Checking your session...</div>
+  <div id="checking" class="loading">Checking your session…</div>
 
   <!-- Signed out: sign in / sign up -->
   <div id="authPanel" style="display:none;">
@@ -71,9 +79,9 @@
     <div class="tabpanel" id="setup-join">
       <form id="joinForm">
         <div class="field"><label for="jc-name">Your name</label><input type="text" id="jc-name" required></div>
-        <div class="field"><label for="jc-code">Join code</label><input type="text" id="jc-code" required maxlength="6" style="text-transform:uppercase;" placeholder="e.g. 7F3A2B"></div>
+        <div class="field"><label for="jc-code">Invite code</label><input type="text" id="jc-code" required maxlength="13" style="text-transform:uppercase; letter-spacing:.08em; font-family:monospace;" placeholder="ABCDE-FGHJK" autocapitalize="characters" autocomplete="off" spellcheck="false"></div>
         <button class="btn primary" type="submit" style="width:100%; justify-content:center;">Join company</button>
-        <div class="hint">Get this code from your company's admin.</div>
+        <div class="hint">Get this from your admin. Codes expire, so ask for a fresh one if it doesn't work.</div>
         <div class="error-text" id="jc-error"></div>
       </form>
     </div>
@@ -106,6 +114,7 @@
   wireTabs(document.querySelector("#setupPanel .uline-tabs"), "data-setup", "setup-");
 
   async function boot(){
+    if(!ensureSupabaseReady()) return;
     var checking = document.getElementById("checking");
     var authPanel = document.getElementById("authPanel");
     var setupPanel = document.getElementById("setupPanel");
@@ -174,7 +183,7 @@
     errEl.textContent = "";
     var name = document.getElementById("jc-name").value.trim();
     var code = document.getElementById("jc-code").value.trim();
-    var { error } = await supabaseClient.rpc("join_company", { p_join_code: code, employee_name: name });
+    var { error } = await supabaseClient.rpc("join_with_invite", { p_code: code, p_name: name });
     if(error){ errEl.textContent = error.message; return; }
     window.location.href = "employee.html";
   });
@@ -184,6 +193,13 @@
     window.location.reload();
   });
 })();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(e){ console.warn("SW registration failed", e); });
+  });
+}
 </script>
 </body>
 </html>

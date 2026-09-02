@@ -347,16 +347,36 @@ h1,h2,h3{ font-family:'Plus Jakarta Sans', sans-serif; margin:0; color:var(--tex
 @media (max-width:860px){
   .app-shell{ flex-direction:column; }
   .sidebar{
-    width:100%; height:auto; position:relative; border-right:none; border-bottom:1px solid var(--border);
-    flex-direction:row; align-items:center; padding:12px 14px; gap:14px; overflow-x:auto;
+    width:100%; height:auto; border-right:none; border-bottom:1px solid var(--border);
+    flex-direction:row; align-items:center; gap:14px;
+    /* Scroll the nav horizontally, but never clip it vertically. */
+    overflow-x:auto; overflow-y:visible;
+    /* Sticky so the nav stays reachable while the page scrolls. */
+    position:sticky; top:0; z-index:20;
+    padding:12px 14px;
+    /* Longhand so the safe-area rule below isn't wiped by the shorthand. */
+    padding-top:12px;
+    -webkit-overflow-scrolling:touch;
   }
   .side-brand{ padding:0; flex-shrink:0; }
   .side-nav{ flex-direction:row; flex-shrink:0; }
+  .side-link{ white-space:nowrap; width:auto; flex-shrink:0; }
+  .side-nav{ gap:4px; }
   .side-spacer{ display:none; }
   .side-company{ margin:0; flex-shrink:0; white-space:nowrap; }
   .side-user{ margin:0; padding:0; border:none; flex-shrink:0; }
   .side-user-name, .side-user-role{ display:none; }
   .main{ padding:20px 16px 50px; }
+
+  /* Re-apply safe areas AFTER the shorthands above, or the notch clips the bar. */
+  @supports (padding: max(0px)) {
+    .sidebar{ padding-top: max(12px, env(safe-area-inset-top)); }
+    .main{
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+      padding-bottom: max(50px, calc(env(safe-area-inset-bottom) + 30px));
+    }
+  }
 }
 @media (max-width:560px){
   /* Keep the three KPIs on one row and compact on phones */

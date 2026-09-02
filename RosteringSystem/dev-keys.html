@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roster — Access keys</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2E5AF5">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="main" style="max-width:720px; margin:0 auto;">
+
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="logo-mark sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M9 15l2 2 4-4"/></svg>
+      </div>
+      <div class="brand-name" style="font-size:17px;">Access keys</div>
+    </div>
+    <div class="who">
+      <a class="btn secondary small" href="admin.html">Back to admin</a>
+    </div>
+  </div>
+
+  <div id="denied" style="display:none;">
+    <div class="card"><div class="empty">This page is for the developer account only.</div></div>
+  </div>
+
+  <div id="devPanel" style="display:none;">
+    <div class="page-head">
+      <div>
+        <h1>Issue an access key</h1>
+        <p>A business needs one of these to create an admin account. Employees don't — they join with an invite from their own admin.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="lkLabel">Issued to</label>
+        <input type="text" id="lkLabel" placeholder="e.g. Corner Cafe, Toowoomba" maxlength="80">
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="lkMax">Companies allowed</label><input type="number" id="lkMax" value="1" min="1" max="100"></div>
+        <div class="field"><label for="lkExpiry">Expires</label>
+          <select id="lkExpiry">
+            <option value="">Never</option>
+            <option value="14">14 days (trial)</option>
+            <option value="30">30 days</option>
+            <option value="365">1 year</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lkNotes">Notes (optional)</label>
+        <input type="text" id="lkNotes" placeholder="Anything worth remembering" maxlength="200">
+      </div>
+      <button class="btn primary" id="lkCreate" style="width:100%; justify-content:center;">Generate key</button>
+      <div class="error-text" id="lkError"></div>
+    </div>
+
+    <div class="card" id="lkResultCard" style="display:none; background:var(--primary-tint); border-color:var(--primary);">
+      <div style="font-weight:700; margin-bottom:6px;">New key — copy it now</div>
+      <div class="hint" style="margin-bottom:10px;">This is the only time it will be shown.</div>
+      <div class="joincode-big" id="lkResult" style="font-size:clamp(20px,6vw,30px);">—</div>
+      <button class="btn secondary small" id="lkCopy" style="width:100%; justify-content:center;">Copy key</button>
+    </div>
+
+    <div class="page-head" style="margin-top:26px; margin-bottom:12px;">
+      <div><h1 style="font-size:18px;">Issued keys</h1></div>
+    </div>
+    <div class="list-card">
+      <div id="lkList"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="common.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  async function init(){
+    var ctx = await requireSession();
+    if(!ctx) return;
+
+    var { data: isDev, error } = await supabaseClient.rpc("is_platform_admin");
+    if(error || !isDev){
+      document.getElementById("denied").style.display = "block";
+      return;
+    }
+    document.getElementById("devPanel").style.display = "block";
+
+    document.getElementById("lkCreate").addEventListener("click", createKey);
+    document.getElementById("lkCopy").addEventListener("click", async function(){
+      try{
+        await navigator.clipboard.writeText(document.getElementById("lkResult").textContent);
+        showToast("Key copied");
+      }catch(e){ showToast("Couldn't copy — read it off the screen"); }
+    });
+
+    loadKeys();
+  }
+
+  async function createKey(){
+    var btn = document.getElementById("lkCreate");
+    var errEl = document.getElementById("lkError");
+    errEl.textContent = "";
+    var label = document.getElementById("lkLabel").value.trim();
+    if(!label){ errEl.textContent = "Add a label so you can tell keys apart."; return; }
+
+    btn.disabled = true;
+    try{
+      var expiry = document.getElementById("lkExpiry").value;
+      var { data, error } = await supabaseClient.rpc("create_license_key", {
+        p_label: label,
+        p_max_companies: parseInt(document.getElementById("lkMax").value,10) || 1,
+        p_expires_days: expiry === "" ? null : parseInt(expiry,10),
+        p_plan: expiry === "14" ? "trial" : "standard",
+        p_notes: document.getElementById("lkNotes").value.trim() || null
+      });
+      if(error) throw error;
+      document.getElementById("lkResult").textContent = data;
+      document.getElementById("lkResultCard").style.display = "block";
+      document.getElementById("lkLabel").value = "";
+      document.getElementById("lkNotes").value = "";
+      loadKeys();
+    }catch(err){
+      errEl.textContent = err.message || "Couldn't create key";
+    }finally{
+      btn.disabled = false;
+    }
+  }
+
+  async function loadKeys(){
+    var c = document.getElementById("lkList");
+    var { data, error } = await supabaseClient
+      .from("license_keys").select("*").order("created_at", { ascending: false });
+    if(error){ c.innerHTML = '<div class="empty">Couldn\'t load keys.</div>'; return; }
+    if(!data || data.length === 0){ c.innerHTML = '<div class="empty">No keys issued yet.</div>'; return; }
+
+    c.innerHTML = "";
+    data.forEach(function(k){
+      var expired = k.expires_at && new Date(k.expires_at) < new Date();
+      var exhausted = k.used_count >= k.max_companies;
+      var status = k.revoked_at ? '<span class="pill open">revoked</span>'
+                 : expired ? '<span class="pill open">expired</span>'
+                 : exhausted ? '<span class="pill employee">used up</span>'
+                 : '<span class="pill filled">active</span>';
+
+      var el = document.createElement("div");
+      el.className = "rule-row";
+      el.innerHTML =
+        '<div class="rr-name">'+escapeHtml(k.label)+' '+status+
+          '<div class="rr-day" style="font-family:monospace;">'+escapeHtml(k.key_hint)+'</div>'+
+          '<div class="rr-day">'+k.used_count+' of '+k.max_companies+' used'+
+            (k.expires_at ? ' &middot; expires '+fmtDateShort(k.expires_at.slice(0,10)) : ' &middot; no expiry')+
+            (k.notes ? ' &middot; '+escapeHtml(k.notes) : '')+'</div>'+
+        '</div>';
+      if(!k.revoked_at){
+        var btn = document.createElement("button");
+        btn.className = "btn danger small";
+        btn.textContent = "Revoke";
+        btn.addEventListener("click", async function(){
+          if(!confirm('Revoke the key for "'+k.label+'"? Their existing company keeps working, but the key can\'t be used again.')) return;
+          var r = await supabaseClient.rpc("revoke_license_key", { p_key_id: k.id });
+          if(r.error){ showToast(r.error.message); return; }
+          loadKeys();
+          showToast("Key revoked");
+        });
+        el.appendChild(btn);
+      }
+      c.appendChild(el);
+    });
+  }
+
+  init();
+})();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(e){ console.warn("SW registration failed", e); });
+  });
+}
+</script>
+</body>
+</html>

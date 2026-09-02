@@ -2,11 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roster — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2E5AF5">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Roster">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -49,6 +57,14 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Availability
       </button>
+      <button class="side-link" data-tab="timesheets">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Timesheets
+      </button>
+      <button class="side-link" data-tab="myprofile">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My profile
+      </button>
       <button class="side-link" id="notifBtn">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         Notifications
@@ -60,7 +76,10 @@
 
     <div class="side-company">
       <div class="side-company-name" id="companyName">—</div>
-      <div class="side-company-code">Join code <strong id="joinCode">—</strong></div>
+      <button class="side-company-code" id="joinCodeBtn" title="Invite staff">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        <strong>Invite staff</strong>
+      </button>
     </div>
 
     <div class="side-user">
@@ -256,6 +275,59 @@
       </div>
     </div>
 
+    <!-- TIMESHEETS -->
+    <div class="tabpanel" id="tab-timesheets">
+      <div class="page-head">
+        <div>
+          <h1>Timesheets</h1>
+          <p>Actual clock in/out records, compared against what was rostered.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="field"><label for="tsWeek">Week of</label><input type="date" id="tsWeek"></div>
+        <div class="toolbar-actions">
+          <button class="btn secondary small" id="tsPrev">‹ Previous</button>
+          <button class="btn secondary small" id="tsThis">This week</button>
+          <button class="btn secondary small" id="tsNext">Next ›</button>
+        </div>
+      </div>
+      <div class="list-card">
+        <div id="timesheetList"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- MY PROFILE -->
+    <div class="tabpanel" id="tab-myprofile">
+      <div class="page-head">
+        <div>
+          <h1>My profile</h1>
+          <p>Put yourself on the roster and work shifts like any other staff member.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div id="myProfileAvatar"></div>
+          <div style="flex:1; min-width:180px;">
+            <div style="font-weight:700; font-size:15px;" id="myProfileName">—</div>
+            <div class="hint">Signed in as admin</div>
+          </div>
+        </div>
+        <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+        <label style="display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600;">
+          <input type="checkbox" id="rosterableToggle"> Include me on the roster
+        </label>
+        <div class="hint" style="margin-bottom:14px;">
+          Turn this on to be assignable to shifts, clock in and out, and have your hours counted in payroll.
+          You keep full admin access either way.
+        </div>
+        <a class="btn secondary" id="employeeViewBtn" href="employee.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Switch to employee view
+        </a>
+        <div class="error-text" id="myProfileError"></div>
+      </div>
+    </div>
+
     <!-- AVAILABILITY -->
     <div class="tabpanel" id="tab-availability">
       <div class="page-head">
@@ -293,6 +365,11 @@
         </div>
         <div class="field" style="max-width:110px;"><label for="s-headcount">People needed</label><input type="number" id="s-headcount" value="1" min="1" required></div>
       </div>
+      <div class="field">
+        <label for="s-notes">Tasks / notes for this shift (optional)</label>
+        <textarea id="s-notes" rows="3" placeholder="e.g. Prep veg before service, restock the cool room"></textarea>
+        <div class="hint">Staff assigned to this shift will see this on their phone.</div>
+      </div>
       <div class="error-text" id="slotError"></div>
       <div class="sheet-actions">
         <button type="button" class="btn secondary" id="slotCancel">Cancel</button>
@@ -323,6 +400,52 @@
     <div id="calDayList"></div>
     <div class="sheet-actions">
       <button type="button" class="btn secondary" id="calDayClose" style="width:100%;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invite sheet -->
+<div class="overlay" id="joinCodeOverlay">
+  <div class="sheet joincode-sheet" style="max-width:460px;">
+    <h2>Invite staff</h2>
+
+    <div id="inviteGenView">
+      <p class="hint" style="margin-top:-10px; margin-bottom:14px;">
+        Generate a one-off code for your staff to sign up with. It expires, so an old
+        code can't be reused later.
+      </p>
+      <div class="field-row">
+        <div class="field"><label for="invHours">Expires after</label>
+          <select id="invHours">
+            <option value="1">1 hour</option>
+            <option value="24">1 day</option>
+            <option value="168" selected>7 days</option>
+            <option value="720">30 days</option>
+          </select>
+        </div>
+        <div class="field"><label for="invUses">Max uses</label>
+          <input type="number" id="invUses" value="25" min="1" max="500">
+        </div>
+      </div>
+      <button class="btn primary" id="inviteGenBtn" style="width:100%; justify-content:center;">Generate invite code</button>
+      <div class="error-text" id="inviteError"></div>
+    </div>
+
+    <div id="inviteResultView" style="display:none;">
+      <p class="hint" style="margin-top:-10px;">Share this now — it won't be shown again.</p>
+      <div class="joincode-big" id="joinCodeBig">—</div>
+      <div class="joincode-company" id="joinCodeCompany"></div>
+      <div class="sheet-actions" style="margin-bottom:10px;">
+        <button type="button" class="btn secondary" id="joinCodeCopy">Copy code</button>
+        <button type="button" class="btn secondary" id="inviteAnotherBtn">New code</button>
+      </div>
+    </div>
+
+    <h2 style="font-size:13px; margin-top:20px; margin-bottom:8px; color:var(--text-secondary);">Active invites</h2>
+    <div id="inviteList"><div class="loading">Loading…</div></div>
+
+    <div class="sheet-actions">
+      <button type="button" class="btn primary" id="joinCodeClose" style="width:100%;">Done</button>
     </div>
   </div>
 </div>
@@ -371,7 +494,6 @@
     company = c;
     if(company){
       document.getElementById("companyName").textContent = company.name;
-      document.getElementById("joinCode").textContent = company.join_code;
     }
 
     wireTabs();
@@ -382,6 +504,9 @@
     wireCalendar();
     wirePayroll();
     wirePaySettings();
+    wireTimesheets();
+    wireMyProfile();
+    wireJoinCode();
 
     var start = todayISO();
     var end = addDaysISO(start, 6);
@@ -428,6 +553,8 @@
         if(btn.getAttribute("data-tab") === "calendar") renderCalendar();
         if(btn.getAttribute("data-tab") === "payroll") loadPayroll();
         if(btn.getAttribute("data-tab") === "paysettings") loadPaySettings();
+        if(btn.getAttribute("data-tab") === "timesheets") loadTimesheets();
+        if(btn.getAttribute("data-tab") === "myprofile") renderMyProfile();
       });
     });
   }
@@ -501,7 +628,8 @@
   // ---------- employees ----------
   async function loadEmployees(){
     var { data, error } = await supabaseClient
-      .from("profiles").select("*").eq("company_id", me.company_id).eq("role", "employee")
+      .from("profiles").select("*").eq("company_id", me.company_id)
+      .eq("rosterable", true)
       .order("full_name", { ascending: true });
     if(error){ showToast("Couldn't load employees"); return; }
     employees = data || [];
@@ -535,9 +663,10 @@
         avatarHtml(emp.full_name, null, emp.avatar_url) +
         '<div class="er-name"><div>'+escapeHtml(emp.full_name)+'</div>'+chipsHtml+'</div>'+
         '<button class="btn secondary small" data-roles-btn>Roles</button>'+
-        '<button class="btn danger small" data-remove-btn>Remove</button>';
+        (emp.id === me.id ? '<span class="pill admin">you</span>' : '<button class="btn danger small" data-remove-btn>Remove</button>');
       el.querySelector("[data-roles-btn]").addEventListener("click", function(){ openEmployeeRolesModal(emp); });
-      el.querySelector("[data-remove-btn]").addEventListener("click", function(){ removeEmployee(emp); });
+      var rm = el.querySelector("[data-remove-btn]");
+      if(rm) rm.addEventListener("click", function(){ removeEmployee(emp); });
       container.appendChild(el);
     });
   }
@@ -651,6 +780,7 @@
         (slot.roles ? '<span class="pill role">'+escapeHtml(slot.roles.name)+'</span> ' : '')+
         '<span class="pill '+(open > 0 ? "open" : "filled")+'">'+(open > 0 ? open+" open" : "full")+'</span>'+
         '<div class="sr-fill">'+filled.length+' of '+slot.headcount+' filled</div>'+
+        (slot.notes ? '<div class="task-note"><span class="tn-label">Tasks</span>'+escapeHtml(slot.notes)+'</div>' : '')+
         (chips ? '<div class="sr-chips">'+chips+'</div>' : '')+
       '</div>'+
       '<div class="sr-actions"></div>';
@@ -812,7 +942,8 @@
       if(start >= end){ errEl.textContent = "Start must be before end."; return; }
       var { error } = await supabaseClient.from("shift_slots").insert({
         company_id: me.company_id, date: date, start_time: start, end_time: end,
-        role_id: roleId, headcount: headcount
+        role_id: roleId, headcount: headcount,
+        notes: document.getElementById("s-notes").value.trim() || null
       });
       if(error){ errEl.textContent = error.message; return; }
       document.getElementById("slotOverlay").classList.remove("open");
@@ -935,6 +1066,186 @@
       });
     }
     document.getElementById("calDayOverlay").classList.add("open");
+  }
+
+  // ---------- invites ----------
+  function wireJoinCode(){
+    var overlay = document.getElementById("joinCodeOverlay");
+    document.getElementById("joinCodeBtn").addEventListener("click", function(){
+      showInviteGenView();
+      overlay.classList.add("open");
+      loadInvites();
+    });
+    document.getElementById("joinCodeClose").addEventListener("click", function(){ overlay.classList.remove("open"); });
+    overlay.addEventListener("click", function(e){ if(e.target === overlay) overlay.classList.remove("open"); });
+    document.getElementById("inviteGenBtn").addEventListener("click", generateInvite);
+    document.getElementById("inviteAnotherBtn").addEventListener("click", showInviteGenView);
+    document.getElementById("joinCodeCopy").addEventListener("click", async function(){
+      var code = document.getElementById("joinCodeBig").textContent;
+      try{
+        await navigator.clipboard.writeText(code);
+        showToast("Invite code copied");
+      }catch(err){
+        showToast("Couldn't copy — read it off the screen");
+      }
+    });
+  }
+
+  function showInviteGenView(){
+    document.getElementById("inviteGenView").style.display = "block";
+    document.getElementById("inviteResultView").style.display = "none";
+    document.getElementById("inviteError").textContent = "";
+  }
+
+  async function generateInvite(){
+    var btn = document.getElementById("inviteGenBtn");
+    var errEl = document.getElementById("inviteError");
+    errEl.textContent = "";
+    btn.disabled = true;
+    try{
+      var hours = parseInt(document.getElementById("invHours").value, 10);
+      var uses = parseInt(document.getElementById("invUses").value, 10) || 25;
+      var { data, error } = await supabaseClient.rpc("create_invite", { p_hours: hours, p_max_uses: uses });
+      if(error) throw error;
+      document.getElementById("joinCodeBig").textContent = data;
+      document.getElementById("joinCodeCompany").textContent = company ? company.name : "";
+      document.getElementById("inviteGenView").style.display = "none";
+      document.getElementById("inviteResultView").style.display = "block";
+      loadInvites();
+    }catch(err){
+      errEl.textContent = err.message || "Couldn't create invite";
+    }finally{
+      btn.disabled = false;
+    }
+  }
+
+  async function loadInvites(){
+    var c = document.getElementById("inviteList");
+    var { data, error } = await supabaseClient
+      .from("company_invites").select("*")
+      .is("revoked_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false });
+    if(error){ c.innerHTML = '<div class="empty">Couldn\'t load invites.</div>'; return; }
+    if(!data || data.length === 0){
+      c.innerHTML = '<div class="empty" style="padding:18px;">No active invites.</div>';
+      return;
+    }
+    c.innerHTML = "";
+    data.forEach(function(inv){
+      var left = inv.max_uses - inv.used_count;
+      var el = document.createElement("div");
+      el.className = "rule-row";
+      el.innerHTML =
+        '<div class="rr-name" style="font-family:monospace;">'+escapeHtml(inv.code_hint)+
+          '<div class="rr-day">'+left+' use'+(left===1?'':'s')+' left &middot; expires '+fmtDateShort(inv.expires_at.slice(0,10))+'</div></div>'+
+        '<button class="btn danger small" data-revoke>Revoke</button>';
+      el.querySelector("[data-revoke]").addEventListener("click", async function(){
+        var r = await supabaseClient.rpc("revoke_invite", { p_invite_id: inv.id });
+        if(r.error){ showToast(r.error.message); return; }
+        loadInvites();
+        showToast("Invite revoked");
+      });
+      c.appendChild(el);
+    });
+  }
+
+  // ---------- my profile (admin self-rostering) ----------
+  function wireMyProfile(){
+    document.getElementById("rosterableToggle").addEventListener("change", async function(e){
+      var errEl = document.getElementById("myProfileError");
+      errEl.textContent = "";
+      var on = e.target.checked;
+      var { error } = await supabaseClient.from("profiles").update({ rosterable: on }).eq("id", me.id);
+      if(error){ errEl.textContent = error.message; e.target.checked = !on; return; }
+      me.rosterable = on;
+      await loadEmployees();
+      await loadRoster();
+      showToast(on ? "You're on the roster" : "Removed from the roster");
+    });
+  }
+
+  function renderMyProfile(){
+    document.getElementById("myProfileName").textContent = me.full_name;
+    document.getElementById("myProfileAvatar").innerHTML = avatarHtml(me.full_name, "lg", me.avatar_url);
+    document.getElementById("rosterableToggle").checked = !!me.rosterable;
+  }
+
+  // ---------- timesheets ----------
+  function wireTimesheets(){
+    var input = document.getElementById("tsWeek");
+    input.value = todayISO();
+    input.addEventListener("change", loadTimesheets);
+    document.getElementById("tsThis").addEventListener("click", function(){ input.value = todayISO(); loadTimesheets(); });
+    document.getElementById("tsPrev").addEventListener("click", function(){ input.value = addDaysISO(input.value || todayISO(), -7); loadTimesheets(); });
+    document.getElementById("tsNext").addEventListener("click", function(){ input.value = addDaysISO(input.value || todayISO(), 7); loadTimesheets(); });
+  }
+
+  async function loadTimesheets(){
+    var container = document.getElementById("timesheetList");
+    container.innerHTML = '<div class="loading">Loading…</div>';
+    var range = weekRangeFor(document.getElementById("tsWeek").value || todayISO());
+
+    var { data, error } = await supabaseClient
+      .from("time_entries")
+      .select("*, profiles(full_name, avatar_url), shift_slots(date, start_time, end_time)")
+      .eq("company_id", me.company_id)
+      .gte("clock_in", range.start + "T00:00:00")
+      .lte("clock_in", range.end + "T23:59:59")
+      .order("clock_in", { ascending: false });
+
+    if(error){ container.innerHTML = '<div class="empty">Couldn\'t load timesheets.</div>'; return; }
+    if(!data || data.length === 0){
+      container.innerHTML = '<div class="empty">No clock-ins recorded this week.</div>';
+      return;
+    }
+
+    container.innerHTML = "";
+    data.forEach(function(en){
+      var name = en.profiles ? en.profiles.full_name : "Unknown";
+      var inD = new Date(en.clock_in);
+      var outD = en.clock_out ? new Date(en.clock_out) : null;
+      var actualH = outD ? (outD - inD)/3600000 : null;
+
+      // Compare against the rostered shift, if we matched one.
+      var flag = "", variance = "";
+      if(en.shift_slots){
+        var sl = en.shift_slots;
+        var schedStart = parseDateISO(sl.date);
+        schedStart.setHours(+sl.start_time.slice(0,2), +sl.start_time.slice(3,5), 0, 0);
+        var diffMin = Math.round((inD - schedStart)/60000);
+        if(diffMin > 10) flag = '<span class="pill late">'+diffMin+'m late</span>';
+        else if(diffMin < -10) flag = '<span class="pill early">'+Math.abs(diffMin)+'m early</span>';
+        else flag = '<span class="pill ontime">on time</span>';
+
+        if(actualH != null){
+          var rosteredH = shiftHours(sl.start_time, sl.end_time);
+          var d = actualH - rosteredH;
+          if(Math.abs(d) >= 0.25){
+            variance = '<span class="var-flag">'+(d>0?"+":"")+fmtHours(Math.abs(d))+' vs rostered</span>';
+          }
+        }
+      } else {
+        flag = '<span class="pill employee">unscheduled</span>';
+      }
+
+      var el = document.createElement("div");
+      el.className = "entry-row";
+      el.innerHTML =
+        avatarHtml(name, "sm", en.profiles ? en.profiles.avatar_url : null)+
+        '<div class="en-main">'+
+          '<div style="font-weight:600; font-size:13.5px;">'+escapeHtml(name)+'</div>'+
+          '<div class="en-times">'+fmtDateShort(en.clock_in.slice(0,10))+' &middot; '+
+            pad2(inD.getHours())+':'+pad2(inD.getMinutes())+' – '+
+            (outD ? pad2(outD.getHours())+':'+pad2(outD.getMinutes()) : '<em>still on</em>')+
+            (variance ? ' &middot; '+variance : '')+
+          '</div>'+
+        '</div>'+
+        '<div>'+flag+'</div>'+
+        '<div style="font-weight:700; font-variant-numeric:tabular-nums; min-width:60px; text-align:right;">'+
+          (actualH != null ? fmtHours(actualH) : '—')+'</div>';
+      container.appendChild(el);
+    });
   }
 
   // ---------- pay settings ----------
@@ -1118,7 +1429,8 @@
     document.getElementById("payRangeLabel").textContent =
       "Week of " + fmtDateShort(range.start) + " to " + fmtDateShort(range.end) +
       ". Overtime past " + paySettings.daily_overtime_hours + "h/day or " +
-      paySettings.weekly_overtime_hours + "h/week. Overnight shifts are split across days.";
+      paySettings.weekly_overtime_hours + "h/week. Overnight shifts are split across days. " +
+      "Uses actual clocked hours where staff have clocked in, otherwise rostered hours.";
 
     var body = document.getElementById("payBody");
     body.innerHTML = '<tr><td><div class="loading">Loading…</div></td></tr>';
@@ -1131,18 +1443,63 @@
     var slotById = {};
     result.slots.forEach(function(s){ slotById[s.id] = s; });
 
-    // Flatten assignments into the shape the engine wants.
-    var flat = [];
+    // Pull completed clock records for the week so actual hours can override
+    // rostered ones where someone actually punched in.
+    var actualBySlotEmp = {};
+    var extraEntries = [];
+    var te = await supabaseClient
+      .from("time_entries").select("*")
+      .eq("company_id", me.company_id)
+      .gte("clock_in", range.start + "T00:00:00")
+      .lte("clock_in", range.end + "T23:59:59")
+      .not("clock_out", "is", null);
+    (te.data || []).forEach(function(en){
+      if(en.slot_id){
+        actualBySlotEmp[en.slot_id + "|" + en.employee_id] = en;
+      } else {
+        extraEntries.push(en);   // clocked on with no matching rostered shift
+      }
+    });
+
+    function hhmm(d){ return pad2(d.getHours())+":"+pad2(d.getMinutes()); }
+
+    // Flatten assignments into the shape the engine wants, preferring actual
+    // clocked times over rostered ones.
+    var flat = [], usedActual = 0;
     Object.keys(result.bySlot).forEach(function(slotId){
       var slot = slotById[slotId];
       if(!slot) return;
       result.bySlot[slotId].forEach(function(a){
-        flat.push({
-          employee_id: a.employee_id,
-          date: slot.date,
-          start_time: slot.start_time,
-          end_time: slot.end_time
-        });
+        var actual = actualBySlotEmp[slotId + "|" + a.employee_id];
+        if(actual){
+          var inD = new Date(actual.clock_in), outD = new Date(actual.clock_out);
+          usedActual++;
+          flat.push({
+            employee_id: a.employee_id,
+            date: actual.clock_in.slice(0,10),
+            start_time: hhmm(inD),
+            end_time: hhmm(outD)
+          });
+        } else {
+          flat.push({
+            employee_id: a.employee_id,
+            date: slot.date,
+            start_time: slot.start_time,
+            end_time: slot.end_time
+          });
+        }
+      });
+    });
+
+    // Unscheduled shifts someone clocked for still get paid.
+    extraEntries.forEach(function(en){
+      var inD = new Date(en.clock_in), outD = new Date(en.clock_out);
+      usedActual++;
+      flat.push({
+        employee_id: en.employee_id,
+        date: en.clock_in.slice(0,10),
+        start_time: hhmm(inD),
+        end_time: hhmm(outD)
       });
     });
 
@@ -1324,6 +1681,13 @@
 
   init();
 })();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(e){ console.warn("SW registration failed", e); });
+  });
+}
 </script>
 </body>
 </html>

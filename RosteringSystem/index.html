@@ -70,8 +70,13 @@
       <form id="createForm">
         <div class="field"><label for="cc-name">Your name</label><input type="text" id="cc-name" required></div>
         <div class="field"><label for="cc-company">Company name</label><input type="text" id="cc-company" required></div>
+        <div class="field"><label for="cc-key">Access key</label>
+          <input type="text" id="cc-key" required maxlength="20" placeholder="XXXXX-XXXXX-XXXXX"
+                 style="text-transform:uppercase; letter-spacing:.06em; font-family:monospace;"
+                 autocapitalize="characters" autocomplete="off" spellcheck="false">
+        </div>
         <button class="btn primary" type="submit" style="width:100%; justify-content:center;">Create company</button>
-        <div class="hint">You'll be the admin/owner. You'll get a join code afterwards to share with employees.</div>
+        <div class="hint">You'll be the admin/owner. Don't have an access key? <a href="mailto:kuburekeni1212@gmail.com">Get in touch</a>.</div>
         <div class="error-text" id="cc-error"></div>
       </form>
     </div>
@@ -172,7 +177,9 @@
     errEl.textContent = "";
     var name = document.getElementById("cc-name").value.trim();
     var company = document.getElementById("cc-company").value.trim();
-    var { error } = await supabaseClient.rpc("create_company", { company_name: company, admin_name: name });
+    var { error } = await supabaseClient.rpc("create_company", {
+      company_name: company, admin_name: name, license_key: document.getElementById("cc-key").value.trim()
+    });
     if(error){ errEl.textContent = error.message; return; }
     window.location.href = "admin.html";
   });

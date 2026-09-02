@@ -11,6 +11,7 @@ const SHELL = [
   "./index.html",
   "./admin.html",
   "./employee.html",
+  "./dev-keys.html",
   "./app.css",
   "./common.js",
   "./roster-engine.js",

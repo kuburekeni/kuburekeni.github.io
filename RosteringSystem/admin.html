@@ -72,6 +72,11 @@
       </button>
     </nav>
 
+    <a class="side-link" id="devKeysLink" href="dev-keys.html" style="display:none; text-decoration:none;">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      Access keys
+    </a>
+
     <div class="side-spacer"></div>
 
     <div class="side-company">
@@ -535,6 +540,13 @@
     calYear = today.getFullYear();
     calMonth = today.getMonth();
 
+    // Show the developer key-management link only to platform admins.
+    supabaseClient.rpc("is_platform_admin").then(function(res){
+      if(res && res.data === true){
+        document.getElementById("devKeysLink").style.display = "flex";
+      }
+    });
+
     await loadRoles();
     await loadEmployees();
     await loadRoster();
@@ -591,6 +603,13 @@
     if(!confirm('Delete the "'+role.name+'" role? Shifts requiring it will become open to anyone, and it will be removed from any employees who have it.')) return;
     var { error } = await supabaseClient.from("roles").delete().eq("id", role.id);
     if(error){ showToast(error.message); return; }
+    // Show the developer key-management link only to platform admins.
+    supabaseClient.rpc("is_platform_admin").then(function(res){
+      if(res && res.data === true){
+        document.getElementById("devKeysLink").style.display = "flex";
+      }
+    });
+
     await loadRoles();
     await loadEmployees();
     await loadRoster();
@@ -1461,10 +1480,11 @@
       }
     });
 
-    function hhmm(d){ return pad2(d.getHours())+":"+pad2(d.getMinutes()); }
-
     // Flatten assignments into the shape the engine wants, preferring actual
-    // clocked times over rostered ones.
+    // clocked times over rostered ones. Actual entries are passed as raw
+    // timestamps (start_ts/end_ts) so short punches keep full precision —
+    // rounding to HH:MM previously made a 2-second punch look like a
+    // 24-hour overnight shift.
     var flat = [], usedActual = 0;
     Object.keys(result.bySlot).forEach(function(slotId){
       var slot = slotById[slotId];
@@ -1472,13 +1492,11 @@
       result.bySlot[slotId].forEach(function(a){
         var actual = actualBySlotEmp[slotId + "|" + a.employee_id];
         if(actual){
-          var inD = new Date(actual.clock_in), outD = new Date(actual.clock_out);
           usedActual++;
           flat.push({
             employee_id: a.employee_id,
-            date: actual.clock_in.slice(0,10),
-            start_time: hhmm(inD),
-            end_time: hhmm(outD)
+            start_ts: actual.clock_in,
+            end_ts: actual.clock_out
           });
         } else {
           flat.push({
@@ -1493,13 +1511,11 @@
 
     // Unscheduled shifts someone clocked for still get paid.
     extraEntries.forEach(function(en){
-      var inD = new Date(en.clock_in), outD = new Date(en.clock_out);
       usedActual++;
       flat.push({
         employee_id: en.employee_id,
-        date: en.clock_in.slice(0,10),
-        start_time: hhmm(inD),
-        end_time: hhmm(outD)
+        start_ts: en.clock_in,
+        end_ts: en.clock_out
       });
     });
 

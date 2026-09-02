@@ -24,12 +24,13 @@
 
 const PayrollEngine = {
 
-  // Splits one shift into [{ date, hours }] segments, cutting at midnight.
+  // Splits a ROSTERED shift (HH:MM strings) into [{ date, hours }] at midnight.
+  // Because a rostered shift only has minute precision, end <= start is taken
+  // to mean it runs past midnight.
   splitAtMidnight(dateISO, startTime, endTime){
     const startMin = timeToMinutes(startTime);
     let endMin = timeToMinutes(endTime);
-    const overnight = endMin <= startMin;
-    if(overnight) endMin += 24 * 60;
+    if(endMin <= startMin) endMin += 24 * 60;
 
     const segments = [];
     const firstDayMinutes = Math.min(endMin, 24 * 60) - startMin;
@@ -38,6 +39,28 @@ const PayrollEngine = {
     }
     if(endMin > 24 * 60){
       segments.push({ date: addDaysISO(dateISO, 1), hours: (endMin - 24 * 60) / 60 });
+    }
+    return segments;
+  },
+
+  // Splits an ACTUAL clocked period (real timestamps) at midnight.
+  // Unlike the rostered path there is no overnight guesswork: the timestamps
+  // say exactly how long it was, so a 2-second punch stays 2 seconds instead
+  // of being mistaken for a 24-hour shift.
+  splitTimestampsAtMidnight(startTs, endTs){
+    const start = new Date(startTs);
+    const end = new Date(endTs);
+    const segments = [];
+    if(!(end > start)) return segments;   // zero or negative: contributes nothing
+
+    let cursor = new Date(start);
+    while(cursor < end){
+      const midnight = new Date(cursor);
+      midnight.setHours(24, 0, 0, 0);            // next midnight after cursor
+      const segEnd = midnight < end ? midnight : end;
+      const iso = cursor.getFullYear()+"-"+pad2(cursor.getMonth()+1)+"-"+pad2(cursor.getDate());
+      segments.push({ date: iso, hours: (segEnd - cursor)/3600000 });
+      cursor = segEnd;
     }
     return segments;
   },
@@ -68,14 +91,25 @@ const PayrollEngine = {
     // 1. Expand every assignment into midnight-split segments.
     const segmentsByEmployee = {};
     assignments.forEach(a => {
-      const segs = this.splitAtMidnight(a.date, a.start_time, a.end_time);
+      let segs, firstTime, anchorDate;
+      if(a.start_ts && a.end_ts){
+        // Actual clocked time — exact, no overnight inference.
+        segs = this.splitTimestampsAtMidnight(a.start_ts, a.end_ts);
+        const d = new Date(a.start_ts);
+        firstTime = pad2(d.getHours())+":"+pad2(d.getMinutes());
+        anchorDate = d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+      } else {
+        segs = this.splitAtMidnight(a.date, a.start_time, a.end_time);
+        firstTime = a.start_time;
+        anchorDate = a.date;
+      }
       if(!segmentsByEmployee[a.employee_id]) segmentsByEmployee[a.employee_id] = [];
       segs.forEach(s => {
         segmentsByEmployee[a.employee_id].push({
           date: s.date,
           hours: s.hours,
           // sort key keeps chronological order so overtime accrues correctly
-          sortKey: s.date + " " + (s.date === a.date ? a.start_time : "00:00")
+          sortKey: s.date + " " + (s.date === anchorDate ? firstTime : "00:00")
         });
       });
     });

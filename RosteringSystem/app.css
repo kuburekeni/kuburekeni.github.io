@@ -29,7 +29,13 @@
 }
 
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html,body{ margin:0; padding:0; }
+html,body{
+  margin:0; padding:0;
+  /* Only the nav bar should ever scroll sideways. Without this, a single wide
+     child drags the whole page right and clips every card at the edge. */
+  max-width:100%;
+  overflow-x:hidden;
+}
 body{
   background:var(--bg-app);
   color:var(--text-primary);
@@ -95,7 +101,7 @@ h1,h2,h3{ font-family:'Plus Jakarta Sans', sans-serif; margin:0; color:var(--tex
 .tabpanel.active{ display:block; }
 
 /* ================= App shell (admin / employee) ================= */
-.app-shell{ display:flex; min-height:100vh; align-items:flex-start; }
+.app-shell{ display:flex; min-height:100vh; align-items:flex-start; max-width:100%; }
 
 .sidebar{
   width:250px; flex-shrink:0; background:var(--bg-sidebar);
@@ -146,7 +152,7 @@ h1,h2,h3{ font-family:'Plus Jakarta Sans', sans-serif; margin:0; color:var(--tex
 }
 .icon-btn:hover{ background:var(--danger-tint); color:var(--danger); }
 
-.main{ flex:1; min-width:0; padding:28px 32px 60px; max-width:1120px; }
+.main{ flex:1; min-width:0; width:100%; padding:28px 32px 60px; max-width:1120px; }
 
 .page-head{ margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; }
 .page-head h1{ font-weight:800; font-size:23px; }
@@ -347,7 +353,7 @@ h1,h2,h3{ font-family:'Plus Jakarta Sans', sans-serif; margin:0; color:var(--tex
 @media (max-width:860px){
   .app-shell{ flex-direction:column; }
   .sidebar{
-    width:100%; height:auto; border-right:none; border-bottom:1px solid var(--border);
+    width:100%; max-width:100%; height:auto; border-right:none; border-bottom:1px solid var(--border);
     flex-direction:row; align-items:center; gap:14px;
     /* Scroll the nav horizontally, but never clip it vertically. */
     overflow-x:auto; overflow-y:visible;

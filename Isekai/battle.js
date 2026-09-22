@@ -13,6 +13,7 @@ const BG = {
   dojo:   ['#3a2a1a', '#8a6a44', '#b8905c', '#8a6a44'],
   village:['#8ac0e0', '#f0e0c0', '#5ea84a', '#3a7a30']
 };
+const PS = 88; // size party members are drawn at in battle
 const ELEM_COL = { fire: '#f07a2a', ice: '#9ae0ff', thunder: '#f2e94c', dark: '#b04aff', heal: '#7ed36f', none: '#ffffff' };
 
 // ---------------------------------------------------------------- turn clock
@@ -73,7 +74,8 @@ class BattleScene {
     this.isBoss = this.enemies.some(e => e.boss);
     this.noRun = this.opts.noRun || this.isBoss || this.opts.tutorial || this.opts.spar || this.opts.permadeath;
   }
-  memberPos(m) { const i = G.party.indexOf(m); return [470 + i * 26, 150 + i * 74]; }
+  // feet positions on the floor (the floor starts at y=230); leader in front, companions staggered behind
+  memberPos(m) { const i = G.party.indexOf(m); return [[446, 304], [528, 262], [548, 326]][i] || [446, 304]; }
 
   // ------------------------------------------------------------ helpers
   async say(m, t = 0.75) { this.msg = m; await wait(Input.held('ok') ? t * 0.5 : t); }
@@ -86,7 +88,7 @@ class BattleScene {
     if (k === 'def' && u.status.defup) v *= 1.5;
     return v;
   }
-  pos(u) { if (u.enemy) return [u.x, u.y - u.size / 2]; const [x, y] = this.memberPos(u); return [x + 32, y - 30]; }
+  pos(u) { if (u.enemy) return [u.x, u.y - u.size / 2]; const [x, y] = this.memberPos(u); return [x + PS / 2, y - PS / 2]; }
   num(u, txt, col) { const [x, y] = this.pos(u); this.fx.push({ type: 'num', x: x + rand(-8, 8), y: y - 10, txt: String(txt), col, t: 0, dur: 1.0 }); }
   burst(u, col) { const [x, y] = this.pos(u); this.fx.push({ type: 'burst', x, y, col, t: 0, dur: 0.5 }); }
 
@@ -550,20 +552,20 @@ class BattleScene {
     }
     G.party.forEach(m => {
       const [bx, by] = this.memberPos(m);
-      const x = bx + m.lunge + (m.shake > 0 ? rand(-3, 3) : 0), y = by - 64;
-      ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(bx + 32, by - 2, 22, 6, 0, 0, 7); ctx.fill();
+      const x = bx + m.lunge + (m.shake > 0 ? rand(-3, 3) : 0), y = by - PS;
+      ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(bx + PS / 2, by - 3, PS * 0.3, PS * 0.08, 0, 0, 7); ctx.fill();
       const key = m.cls;
       if (m.hp <= 0) {
-        ctx.save(); ctx.globalAlpha = 0.6; ctx.translate(x + 32, by - 14); ctx.rotate(-Math.PI / 2);
-        ctx.drawImage(charSprite(key, 'left', 0), -32, -32, 64, 64); ctx.restore(); return;
+        ctx.save(); ctx.globalAlpha = 0.6; ctx.translate(x + PS / 2, by - PS * 0.22); ctx.rotate(-Math.PI / 2);
+        ctx.drawImage(charSprite(key, 'left', 0), -PS / 2, -PS / 2, PS, PS); ctx.restore(); return;
       }
       const act = this.active === m;
       const img = charSprite(key, 'left', act ? (Math.floor(TIME * 4) % 2) : 0);
-      ctx.drawImage(m.flash > 0 && Math.floor(m.flash * 20) % 2 ? whiteSilhouette(img) : img, x, y + (act ? -4 : 0), 64, 64);
-      if (m.defending) { ctx.strokeStyle = 'rgba(111,183,242,.7)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x + 32, y + 34, 34, Math.PI * 0.7, Math.PI * 1.3); ctx.stroke(); ctx.lineWidth = 1; }
-      if (m.status.taunt) text('!', x + 32, y - 14, UI.bad, 16, 'center');
-      if (m.status.defup) { ctx.strokeStyle = 'rgba(242,201,76,.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x + 32, y + 34, 34, 38, 0, 0, 7); ctx.stroke(); ctx.lineWidth = 1; }
-      if (act) drawCursor(x - 18, y + 24);
+      ctx.drawImage(m.flash > 0 && Math.floor(m.flash * 20) % 2 ? whiteSilhouette(img) : img, x, y + (act ? -4 : 0), PS, PS);
+      if (m.defending) { ctx.strokeStyle = 'rgba(111,183,242,.7)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x + PS / 2, y + PS * 0.53, PS * 0.53, Math.PI * 0.7, Math.PI * 1.3); ctx.stroke(); ctx.lineWidth = 1; }
+      if (m.status.taunt) text('!', x + PS / 2, y - 6, UI.bad, 16, 'center');
+      if (m.status.defup) { ctx.strokeStyle = 'rgba(242,201,76,.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x + PS / 2, y + PS * 0.53, PS * 0.53, PS * 0.6, 0, 0, 7); ctx.stroke(); ctx.lineWidth = 1; }
+      if (act) drawCursor(x - 14, y + PS * 0.4);
     });
     for (const f of this.fx) {
       const p = f.t / f.dur;
@@ -600,10 +602,11 @@ class BattleScene {
     if (BattleClock.active || (this.active && BattleClock.t > 0)) {
       const f = BattleClock.t / BattleClock.max;
       const col = f > 0.5 ? UI.hp : f > 0.25 ? UI.gold : UI.bad;
-      drawWindow(232, 290, 392, 34);
-      text(`⏱ ${BattleClock.t.toFixed(1)}s`, 248, 298, col, 15);
-      bar(330, 303, 280, 8, BattleClock.t, BattleClock.max, col);
-      if (f < 0.25 && Math.floor(TIME * 6) % 2) { ctx.strokeStyle = UI.bad; ctx.lineWidth = 2; ctx.strokeRect(233, 291, 390, 32); ctx.lineWidth = 1; }
+      const ty = 82;   // just under the message bar, clear of the fighters
+      drawWindow(232, ty, 392, 34);
+      text(`⏱ ${BattleClock.t.toFixed(1)}s`, 248, ty + 8, col, 15);
+      bar(330, ty + 13, 280, 8, BattleClock.t, BattleClock.max, col);
+      if (f < 0.25 && Math.floor(TIME * 6) % 2) { ctx.strokeStyle = UI.bad; ctx.lineWidth = 2; ctx.strokeRect(233, ty + 1, 390, 32); ctx.lineWidth = 1; }
     }
     // status window
     drawWindow(232, 330, 392, 142);

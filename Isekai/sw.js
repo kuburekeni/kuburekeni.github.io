@@ -1,7 +1,7 @@
 // Service worker: lets the game load with no signal (on the train, on a plane).
 // Network-first so updates you push to the repo show up straight away when online;
 // falls back to the cached copy when offline. Cloud saves queue until you reconnect.
-const CACHE = 'isekai-v4';
+const CACHE = 'isekai-v6';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png',
   'data.js', 'audio.js', 'engine.js', 'gfx.js', 'cloud.js', 'controls.js', 'state.js', 'ui.js', 'maps.js',
   'world.js', 'battle.js', 'story.js', 'quests.js', 'main.js'];

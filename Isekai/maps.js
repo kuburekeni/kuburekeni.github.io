@@ -315,7 +315,7 @@ const MAPS = {
     warps: [{ x: 25, y: 11, w: 1, h: 1, to: 'konbini', tx: 5, ty: 6, dir: 'up' }],
     triggers: [
       { x: 8, y: 12, w: 2, h: 1, script: 'tLeaveSchool' },
-      { x: 30, y: 13, w: 2, h: 1, script: 'tCrossing' }
+      { x: 30, y: 14, w: 2, h: 1, script: 'tCrossing' }
     ],
     chests: [],
     signs: { '12,4': 'Seiryo High School — Kendo Club. "Discipline is remembering what you want."', '37,11': 'Kitazawa Inari Shrine. Pray for those you love.', '21,12': '' }

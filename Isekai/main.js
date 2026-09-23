@@ -211,6 +211,12 @@ function goTitle() {
   Scenes.push(new TitleScene());
   fadeIn(0.6);
 }
+// Cloud Save from the title screen; afterwards the menu reflects whether a save now exists
+async function titleCloud() {
+  await cloudMenu(false);
+  const t = Scenes.stack.find(s => s instanceof TitleScene);
+  if (t) { t.opts = [hasSave() ? 'Continue' : 'New Game', hasSave() ? 'New Game' : null, 'Cloud Save', 'Settings'].filter(Boolean); t.sel = 0; }
+}
 async function continueGame() {
   if (!loadGame()) { toast('No save found.', UI.bad); return; }
   await fadeOut(0.4);

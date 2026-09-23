@@ -475,22 +475,139 @@ function babySprite(cry) {
 }
 
 // weapons are drawn separately so battle swings can rotate them. (x, y) is the hand.
-function drawWeapon(kind, x, y, ang, sc, flip) {
+// Every weapon item has its own look: practice gear is wood and bamboo, and each
+// tier of steel, stave, axe, knife, bow and mace is visibly different.
+const WEAPON_LOOK = {
+  stick:      { k: 'wood', len: 12, wood: '#c8aa78', dk: '#8a6a40', wrap: '#e8e0d0' },
+  shinai:     { k: 'shinai', len: 17 },
+  wsword:     { k: 'wood', len: 15, wood: '#a8784a', dk: '#6a4526', guard: '#4a2e16' },
+  valensword: { k: 'sword', len: 16, blade: '#dfe4ee', hi: '#ffffff', dk: '#8a94a8', guard: '#d8a840', grip: '#2e3f82', gem: '#5a8ae8', fuller: 1 },
+  isword:     { k: 'sword', len: 15, blade: '#a4aab4', hi: '#ccd0d8', dk: '#62686f', guard: '#56565e', grip: '#4a2a10' },
+  ssword:     { k: 'sword', len: 17, blade: '#e0e6f0', hi: '#ffffff', dk: '#8a92a0', guard: '#9a9aa8', grip: '#2a1a10', fuller: 1, cross: 1 },
+  msword:     { k: 'sword', len: 17, blade: '#bfe6ff', hi: '#ffffff', dk: '#5a9ad0', guard: '#eef2fa', grip: '#3a5a8a', fuller: 1, cross: 1, glow: 'rgba(150,220,255,.45)', trail: 'rgba(150,220,255,.6)' },
+  otherblade: { k: 'sword', len: 19, blade: '#2a2e3e', hi: '#6af0ff', dk: '#12141e', guard: '#f28fad', grip: '#1a1a22', core: '#6af0ff', cross: 1, glow: 'rgba(106,240,255,.5)', trail: 'rgba(106,240,255,.7)' },
+  gsword1:    { k: 'sword', len: 21, w: 3, blade: '#6a6470', hi: '#9a90a8', dk: '#3e3a44', guard: '#4a3a3a', grip: '#2a1a1a', notch: 1 },
+  gsword2:    { k: 'sword', len: 22, w: 3, blade: '#1e181c', hi: '#f07a2a', dk: '#0e0a0c', guard: '#3a1a1a', grip: '#1a0e0e', core: '#f07a2a', glow: 'rgba(240,122,42,.45)', trail: 'rgba(255,140,60,.7)' },
+  wand:       { k: 'staff', len: 12, wood: '#e8e0d0', dk: '#a89a80', thin: 1, tip: '#fff4c0' },
+  ostaff:     { k: 'staff', len: 22, wood: '#8a5a30', dk: '#5a3a1a', knob: '#6a4020' },
+  valenstaff: { k: 'staff', len: 21, wood: '#4a3a5a', dk: '#2a1e36', cap: '#d8a840', gem: '#3a6ad8', glow: 'rgba(90,140,255,.45)' },
+  rstaff:     { k: 'staff', len: 22, wood: '#6a3a2a', dk: '#3e1e14', cap: '#c8a040', gem: '#e5334b', glow: 'rgba(255,70,80,.45)' },
+  astaff:     { k: 'staff', len: 24, wood: '#e8e4f0', dk: '#a8a0c0', cap: '#d8c8ff', gem: '#bfe6ff', moon: 1, glow: 'rgba(190,230,255,.55)' },
+  otherstaff: { k: 'staff', len: 24, wood: '#1e2030', dk: '#0e0e18', cap: '#6af0ff', gem: '#ffffff', prism: 1, glow: 'rgba(242,143,173,.5)' },
+  axe1:       { k: 'axe', len: 14, haft: '#6a4020', head: '#8a9098', hi: '#c0c6ce' },
+  axe2:       { k: 'axe', len: 17, haft: '#4a2e16', head: '#c8ced8', hi: '#f0f4f8', dbl: 1 },
+  axe3:       { k: 'hammer', len: 17, haft: '#3a2a20', head: '#5a5a6a', hi: '#8a8a9a', rune: '#6af0ff', glow: 'rgba(106,240,255,.4)' },
+  dagger1:    { k: 'dagger', len: 6, blade: '#b0b4bc', hi: '#d8dce4', guard: '#5a4a3a', grip: '#3a2210' },
+  dagger2:    { k: 'dagger', len: 9, w: 1, blade: '#e8ecf4', hi: '#ffffff', guard: '#c8a040', grip: '#1a1a22' },
+  dagger3:    { k: 'dagger', len: 8, blade: '#3a2a4a', hi: '#b04aff', guard: '#1a1022', grip: '#1a1022', glow: 'rgba(176,74,255,.45)', trail: 'rgba(176,74,255,.6)' },
+  bow1:       { k: 'bow', r: 9, wood: '#8a5a2a', string: '#e8e0d0' },
+  bow2:       { k: 'bow', r: 12, wood: '#5a3a1a', string: '#e8e0d0', grip: '#8a2a2a' },
+  bow3:       { k: 'bow', r: 12, wood: '#d8dce8', string: '#bfffd8', grip: '#3a8a5a', glow: 'rgba(160,255,200,.4)' },
+  mace1:      { k: 'mace', len: 12, haft: '#6a4a2a', head: '#8a8a94', hi: '#c0c0cc' },
+  mace2:      { k: 'mace', len: 13, haft: '#8a5a2a', head: '#e8c860', hi: '#fff0b0', glow: 'rgba(255,220,120,.35)' },
+  mace3:      { k: 'flail', len: 10, haft: '#6a4a2a', head: '#ffcc50', hi: '#fff4c0', glow: 'rgba(255,200,80,.6)', trail: 'rgba(255,200,80,.6)' }
+};
+function weaponLook(id, kind) { return WEAPON_LOOK[id] || WEAPON_LOOK[{ staff: 'ostaff', axe: 'axe1', dagger: 'dagger1', bow: 'bow1', mace: 'mace1', greatsword: 'gsword1' }[kind] || 'isword']; }
+function drawWeapon(kind, x, y, ang, sc, flip, id) {
+  const L = weaponLook(id, kind);
   ctx.save(); ctx.translate(x, y); ctx.rotate(ang); if (flip) ctx.scale(-1, 1); ctx.scale(sc, sc);
   const R = (X, Y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(X, Y, w, h); };
-  const O = (X, Y, w, h) => R(X - 0.6, Y - 0.6, w + 1.2, h + 1.2, UI.ink);
-  switch (kind) {
-    case 'staff': O(-1, -13, 2, 22); R(-1, -13, 2, 22, '#7a5230'); R(-1, -13, 1, 22, '#a87a48'); O(-2.5, -17, 5, 5); R(-2.5, -17, 5, 5, '#6fb7f2'); R(-1.5, -16, 2, 2, '#e8f6ff'); break;
-    case 'axe': O(-1, -12, 2, 16); R(-1, -12, 2, 16, '#6a4020'); O(1, -12, 6, 7); R(1, -12, 6, 7, '#b8c0c8'); R(1, -12, 6, 2, '#e8ecf0'); break;
-    case 'dagger': O(-1, -7, 2, 8); R(-1, -7, 2, 6, '#d8dce4'); R(-1, -7, 1, 6, '#ffffff'); R(-2, -1, 4, 1, '#8a6a3a'); R(-1, 0, 2, 2, '#4a2a10'); break;
-    case 'bow': ctx.strokeStyle = UI.ink; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.arc(-4, 0, 9, -1.2, 1.2); ctx.stroke(); ctx.strokeStyle = '#8a5a2a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(-4, 0, 9, -1.2, 1.2); ctx.stroke(); ctx.strokeStyle = '#e8e0d0'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(-1, -8.4); ctx.lineTo(-1, 8.4); ctx.stroke(); break;
-    case 'mace': O(-1, -10, 2, 13); R(-1, -10, 2, 13, '#6a4a2a'); O(-3, -15, 6, 6); R(-3, -15, 6, 6, '#c8b060'); R(-3, -15, 6, 2, '#f2e0a0'); break;
-    case 'greatsword': O(-1.5, -20, 3, 20); R(-1.5, -20, 3, 20, '#5a5060'); R(-1.5, -20, 1, 20, '#9a90a8'); R(-4, 0, 8, 2, '#8a2a2a'); R(-1, 2, 2, 4, '#2a1a1a'); break;
-    default: // sword
-      O(-1, -15, 2, 15); R(-1, -15, 2, 15, '#d8dce4'); R(-1, -15, 1, 15, '#ffffff'); R(-0.5, -16, 1, 1, '#ffffff');
-      O(-3.5, 0, 7, 1.6); R(-3.5, 0, 7, 1.6, '#c8a040'); R(-1, 1.6, 2, 4, '#4a2a10'); R(-1, 5.4, 2, 1.2, '#c8a040');
+  const O = (X, Y, w, h) => R(X - 0.7, Y - 0.7, w + 1.4, h + 1.4, UI.ink);
+  const GL = (X, Y, w, h) => { if (!L.glow) return; ctx.save(); ctx.globalCompositeOperation = 'lighter'; R(X - 2, Y - 2, w + 4, h + 4, L.glow); R(X - 1, Y - 1, w + 2, h + 2, L.glow); ctx.restore(); };
+  const n = L.len || 15;
+  switch (L.k) {
+    case 'shinai': // four bamboo slats, leather tip, round tsuba, long white grip
+      O(-1, -n, 2, n + 6);
+      R(-1, -n, 2, n, '#e8d49a'); R(-1, -n, 1, n, '#f8ecc0'); for (let i = -n + 3; i < 0; i += 4) R(-1, i, 2, 1, '#c8b070');
+      R(-1, -n, 2, 2, '#6a3a1e'); R(-1, -n + 6, 2, 1, '#6a3a1e');
+      O(-2.5, 0, 5, 1.4); R(-2.5, 0, 5, 1.4, '#2a1a10');
+      R(-1, 1.4, 2, 5, '#f4f0e8'); R(-1, 1.4, 1, 5, '#ffffff'); R(-1, 6, 2, 0.8, '#6a3a1e');
+      break;
+    case 'wood': // bokken / stick: one piece of wood, no steel
+      O(-1, -n, 2, n + 5);
+      R(-1, -n, 2, n + 5, L.wood); R(-1, -n, 1, n + 5, shade(L.wood, 0.2)); R(0, -n + 2, 1, n - 2, L.dk);
+      R(-0.5, -n - 0.6, 1, 0.8, shade(L.wood, 0.25));
+      if (L.guard) { O(-2.5, 0, 5, 1.2); R(-2.5, 0, 5, 1.2, L.guard); }
+      if (L.wrap) R(-1, 1, 2, 3, L.wrap);
+      break;
+    case 'sword': {
+      const w = L.w || 2;
+      GL(-w / 2, -n, w, n);
+      O(-w / 2, -n, w, n); R(-w / 2, -n, w, n, L.blade); R(-w / 2, -n, 1, n, L.hi); R(w / 2 - 0.6, -n, 0.6, n, L.dk);
+      R(-0.5, -n - 1, 1, 1, L.hi);                                            // point
+      if (L.fuller) R(-0.2, -n + 3, 0.5, n - 5, L.dk);
+      if (L.core) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; R(-0.3, -n + 1, 0.8, n - 2, L.core); ctx.restore(); }
+      if (L.notch) { R(w / 2 - 1, -n + 5, 1, 1, UI.ink); R(-w / 2, -n + 9, 1, 1, UI.ink); }
+      const gw = L.cross ? 9 : 7;
+      O(-gw / 2, 0, gw, 1.6); R(-gw / 2, 0, gw, 1.6, L.guard); R(-gw / 2, 0, gw, 0.6, shade(L.guard, 0.3));
+      if (L.cross) { R(-gw / 2 - 0.6, -0.6, 1.2, 2.8, L.guard); R(gw / 2 - 0.6, -0.6, 1.2, 2.8, L.guard); }
+      O(-1, 1.6, 2, 4); R(-1, 1.6, 2, 4, L.grip); R(-1, 2.4, 2, 0.5, shade(L.grip, 0.3)); R(-1, 4, 2, 0.5, shade(L.grip, 0.3));
+      O(-1.2, 5.6, 2.4, 1.4); R(-1.2, 5.6, 2.4, 1.4, L.gem || L.guard);
+      if (L.gem) R(-0.4, 5.8, 0.8, 0.6, '#ffffff');
+      break;
+    }
+    case 'staff': {
+      const w = L.thin ? 1.2 : 2;
+      O(-w / 2, -n, w, n + 8); R(-w / 2, -n, w, n + 8, L.wood); R(-w / 2, -n, w / 2, n + 8, shade(L.wood, 0.18)); R(w / 2 - 0.5, -n, 0.5, n + 8, L.dk);
+      if (L.knob) { O(-2, -n - 3, 4, 4); R(-2, -n - 3, 4, 4, L.knob); R(-2, -n - 3, 2, 1, shade(L.knob, 0.3)); }
+      if (L.tip) { R(-0.6, -n - 1.4, 1.2, 1.4, L.tip); }
+      if (L.cap) { O(-2, -n - 1, 4, 1.6); R(-2, -n - 1, 4, 1.6, L.cap); R(-1.5, 3, 3, 1, L.cap); }
+      if (L.moon) { ctx.strokeStyle = UI.ink; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(0, -n - 6, 4.5, 0.4, Math.PI - 0.4, true); ctx.stroke(); ctx.strokeStyle = L.cap; ctx.lineWidth = 1.2; ctx.stroke(); }
+      if (L.gem) {
+        const gy = L.moon ? -n - 7.5 : -n - 5;
+        if (L.glow) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = L.glow; ctx.beginPath(); ctx.arc(0, gy + 2, 6, 0, 7); ctx.fill(); ctx.restore(); }
+        if (L.prism) { ctx.fillStyle = UI.ink; ctx.beginPath(); ctx.moveTo(0, gy - 3); ctx.lineTo(3.4, gy + 2); ctx.lineTo(0, gy + 5); ctx.lineTo(-3.4, gy + 2); ctx.fill();
+          const hue = (TIME * 90) % 360; ctx.fillStyle = `hsl(${hue},90%,80%)`; ctx.beginPath(); ctx.moveTo(0, gy - 2); ctx.lineTo(2.4, gy + 2); ctx.lineTo(0, gy + 4); ctx.lineTo(-2.4, gy + 2); ctx.fill(); R(-0.6, gy - 0.5, 1, 1.5, '#ffffff'); }
+        else { O(-2, gy, 4, 4); R(-2, gy, 4, 4, L.gem); R(-1.4, gy + 0.6, 1.4, 1.4, '#ffffff'); R(0.6, gy + 2.6, 1.4, 1.4, shade(L.gem, -0.3)); }
+      }
+      break;
+    }
+    case 'axe': case 'hammer': {
+      O(-1, -n, 2, n + 5); R(-1, -n, 2, n + 5, L.haft); R(-1, -n, 1, n + 5, shade(L.haft, 0.2)); R(-1, 1, 2, 1, shade(L.haft, -0.3));
+      if (L.k === 'hammer') {
+        GL(-5, -n - 2, 10, 6);
+        O(-5, -n - 2, 10, 6); R(-5, -n - 2, 10, 6, L.head); R(-5, -n - 2, 10, 1.4, L.hi); R(-5, -n + 3, 10, 1, shade(L.head, -0.3));
+        if (L.rune) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const on = 0.6 + Math.sin(TIME * 5) * 0.4; ctx.globalAlpha = on; R(-3.5, -n, 1, 2, L.rune); R(-0.5, -n - 0.5, 1, 3, L.rune); R(2.5, -n, 1, 2, L.rune); ctx.restore(); }
+      } else {
+        const bit = (s) => { ctx.fillStyle = UI.ink; ctx.beginPath(); ctx.moveTo(s * 0.6, -n + 0.5); ctx.lineTo(s * 7.5, -n - 3); ctx.lineTo(s * 7.5, -n + 7); ctx.lineTo(s * 0.6, -n + 4.5); ctx.fill();
+          ctx.fillStyle = L.head; ctx.beginPath(); ctx.moveTo(s * 1, -n + 1.2); ctx.lineTo(s * 6.8, -n - 1.8); ctx.lineTo(s * 6.8, -n + 5.8); ctx.lineTo(s * 1, -n + 3.8); ctx.fill();
+          R(s > 0 ? 5.6 : -6.8, -n - 1.8, 1.2, 7.6, L.hi); };
+        bit(1); if (L.dbl) bit(-1);
+      }
+      break;
+    }
+    case 'dagger': {
+      const w = L.w || 2;
+      GL(-w / 2, -n, w, n);
+      O(-w / 2, -n, w, n); R(-w / 2, -n, w, n, L.blade); R(-w / 2, -n, Math.min(1, w), n, L.hi); R(-0.5, -n - 1, 1, 1, L.hi);
+      O(-2, 0, 4, 1); R(-2, 0, 4, 1, L.guard); O(-1, 1, 2, 3); R(-1, 1, 2, 3, L.grip);
+      break;
+    }
+    case 'bow': {
+      const r = L.r || 9;
+      if (L.glow) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = L.glow; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(-4, 0, r, -1.2, 1.2); ctx.stroke(); ctx.restore(); }
+      ctx.strokeStyle = UI.ink; ctx.lineWidth = 2.8; ctx.beginPath(); ctx.arc(-4, 0, r, -1.2, 1.2); ctx.stroke();
+      ctx.strokeStyle = L.wood; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(-4, 0, r, -1.2, 1.2); ctx.stroke();
+      ctx.strokeStyle = shade(L.wood, 0.3); ctx.lineWidth = 0.6; ctx.beginPath(); ctx.arc(-4.4, 0, r, -1.1, 1.1); ctx.stroke();
+      const ey = Math.sin(1.2) * r, ex = -4 + Math.cos(1.2) * r;
+      ctx.strokeStyle = L.string; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(ex, -ey); ctx.lineTo(ex, ey); ctx.stroke();
+      if (L.grip) R(r - 5.2, -1.5, 1.6, 3, L.grip);
+      break;
+    }
+    case 'mace': case 'flail': {
+      O(-1, -n, 2, n + 5); R(-1, -n, 2, n + 5, L.haft); R(-1, -n, 1, n + 5, shade(L.haft, 0.2));
+      let hx = 0, hy = -n - 3;
+      if (L.k === 'flail') { const sw = Math.sin(TIME * 6) * 3; hx = sw; hy = -n - 7; ctx.strokeStyle = '#8a8a94'; ctx.lineWidth = 0.9; ctx.setLineDash([1, 0.8]); ctx.beginPath(); ctx.moveTo(0, -n); ctx.lineTo(hx, hy); ctx.stroke(); ctx.setLineDash([]); }
+      if (L.glow) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = L.glow; ctx.beginPath(); ctx.arc(hx, hy, 7, 0, 7); ctx.fill(); ctx.restore(); }
+      ctx.fillStyle = UI.ink; ctx.beginPath(); ctx.arc(hx, hy, 4, 0, 7); ctx.fill();
+      for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283; R(hx + Math.cos(a) * 4.2 - 0.8, hy + Math.sin(a) * 4.2 - 0.8, 1.6, 1.6, UI.ink); R(hx + Math.cos(a) * 4 - 0.5, hy + Math.sin(a) * 4 - 0.5, 1, 1, L.hi); }
+      ctx.fillStyle = L.head; ctx.beginPath(); ctx.arc(hx, hy, 3.2, 0, 7); ctx.fill();
+      R(hx - 1.6, hy - 1.8, 1.4, 1.2, L.hi);
+      break;
+    }
   }
   ctx.restore();
+  return L;
 }
 
 // ---------------------------------------------------------------- monsters

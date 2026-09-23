@@ -14,6 +14,7 @@ function startNewGame(name, gender) {
   G.party[0].hp = maxHP(G.party[0]); G.party[0].mp = maxMP(G.party[0]);
   for (const id of COMPANION_IDS) G.roster[id] = { status: 'unmet', morale: 60, member: null };
   addItem('potion', 2);
+  G.gold = 2000;            // pocket money in Tokyo: enough for Mei's cake and a drink on the way home
   return G;
 }
 function newGameState() {

@@ -964,6 +964,18 @@ class BattleScene {
       const draw = (im, ox, a) => { ctx.globalAlpha = u.alpha * a; ctx.drawImage(im, u.x - dw / 2 - u.lunge + (sx - (u.x - u.size / 2 - u.lunge)) - ox, u.y - dh + bob, dw, dh); };
       if (Math.abs(u.lunge) > 6) { draw(img, -u.lunge * 0.5, 0.25); draw(img, -u.lunge * 0.25, 0.4); }
       draw(u.flash > 0 && Math.floor(u.flash * 20) % 2 ? whiteSilhouette(img) : img, 0, 1);
+      // armed people hold their weapon (Daichi's shinai, a bandit's sword…), mirrored because they face right
+      const wid = !mon && ENEMIES[u.id] && ENEMIES[u.id].wpn;
+      if (wid && img.hand && u.alpha > 0.3) {
+        const ex = u.x - dw / 2 - u.lunge + (sx - (u.x - u.size / 2 - u.lunge)), ey = u.y - dh + bob;
+        const hx = ex + img.hand[0] * dw / 32, hy = ey + img.hand[1] * dh / 32, pose = u.pose || '';
+        let ang = -0.4;
+        if (pose === 'windup') ang = -2.1; else if (pose === 'attack') ang = -2.1 + (u.swing || 0) * 3.0; else if (pose === 'guard') ang = -1.3;
+        ctx.globalAlpha = u.alpha;
+        const wl = drawWeapon(ITEMS[wid].kind, hx, hy, -ang, u.size / 32 * 0.95, false, wid);
+        if (pose === 'attack' && (u.swing || 0) > 0.15) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = wl.trail || (wl.k === 'wood' || wl.k === 'shinai' ? 'rgba(240,220,170,.35)' : 'rgba(255,255,255,.5)'); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(hx, hy, 40, 2.1 - Math.PI - u.swing * 3.0, 2.1 - Math.PI, false); ctx.stroke(); ctx.restore(); }
+        ctx.globalAlpha = 1;
+      }
       ctx.globalAlpha = 1;
       if (u.charging) { const p = 0.5 + Math.sin(TIME * 9) * 0.5; glow(u.x, u.y - u.size * 0.6, 40 + p * 16, 'rgba(229,83,75,.5)'); text('⚠ ' + SKILLS[u.charging].name, u.x, sy - 28, UI.bad, 13, 'center'); }
       this.drawStatusIcons(u, u.x, sy - 8);
@@ -1003,9 +1015,9 @@ class BattleScene {
       else if (pose === 'cast') ang = -0.2;
       else if (pose === 'guard') ang = -1.3;
       else if (pose === 'victory') ang = -0.9;
-      drawWeapon(it.kind || 'sword', hx, hy, ang, sc * 0.95, true);
+      const wl = drawWeapon(it.kind || 'sword', hx, hy, ang, sc * 0.95, true, m.equip.weapon);
       if (pose === 'attack' && (m.swing || 0) > 0.15) {
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 3;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = wl.trail || (wl.k === 'wood' || wl.k === 'shinai' ? 'rgba(240,220,170,.35)' : 'rgba(255,255,255,.5)'); ctx.lineWidth = 3;
         ctx.beginPath(); ctx.arc(hx, hy, 40, -2.1 + Math.PI, (-2.1 + m.swing * 3.0) + Math.PI); ctx.stroke(); ctx.restore();
       }
     }

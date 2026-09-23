@@ -363,6 +363,7 @@ class WorldScene {
       ctx.fillStyle = UI.gold; ctx.fillRect(sx + 14, sy + 16, 4, 5);
       if (!open) { ctx.fillStyle = '#ffe8a0'; ctx.fillRect(sx + 7, sy + 12, 6, 1); }
     }
+    this.drawDoorSigns(camX, camY);
     this.drawLifeGround(camX, camY);
     // entities, y-sorted
     const ents = [];
@@ -394,6 +395,7 @@ class WorldScene {
       const fl = ch === 'O' || ch === 'z' || ch === '!' ? 0.86 + Math.sin(TIME * 9 + lx) * 0.1 + Math.sin(TIME * 23) * 0.04 : 1;
       FX.addLight(lx, ly, r * 1.5 * fl, col.replace(/[\d.]+\)$/, '1)'), 0.8);
     }
+    for (const [lx, ly] of this._doorLights || []) FX.addLight(lx, ly, 70 + Math.sin(TIME * 8 + lx) * 4, 'rgba(255,200,120,1)', 0.7);
     if (this.map.dark) FX.addLight(px_ + 16, py_ + 16, 210 + Math.sin(TIME * 7) * 6, 'rgba(255,206,140,1)', 0.95);
     if (sun) FX.addLight(sun[0], sun[1], 320, `rgba(${sun[2].join(',')},1)`, 0.45);
     FX.endLights();
@@ -414,6 +416,7 @@ class WorldScene {
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.42)');
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     Weather.drawScreen();
+    for (const [name, cx, ty, al] of this._plates || []) { const tw = textWidth(name, 13) + 20; ctx.globalAlpha = al; drawWindow(cx - tw / 2, ty, tw, 24, 0.92); text(name, cx, ty + 4, UI.gold, 13, 'center'); ctx.globalAlpha = 1; }
     // area banner
     const bt = TIME - (this.bannerStart || 0);
     if (this.banner && bt < 3.2) {
@@ -541,6 +544,89 @@ class WorldScene {
       const bx = Math.round(sx + 6 + i * 2.5 + sway * (i % 2 ? 1 : -1)), h = 5 + (i * 7) % 4;
       ctx.fillStyle = i % 3 === 0 ? '#2f7428' : '#46963a'; ctx.fillRect(bx, sy + 30 - h, 1, h);
       ctx.fillStyle = '#84d068'; ctx.fillRect(bx, sy + 30 - h, 1, 1);
+    }
+  }
+
+  // ------------------------------------------------------------ shop fronts
+  // every door that leads somewhere public gets a sign, an awning and a name
+  // that appears as you walk up to it, so shops, inns and taverns read at a glance
+  doorKind(to) {
+    if (!to || to[0] === '@') return null;
+    if (/shop|konbini|market|smith/.test(to)) return 'shop';
+    if (/inn|lodge/.test(to)) return 'inn';
+    if (/tavern|bar/.test(to)) return 'tavern';
+    if (/chapel|church|shrine/.test(to)) return 'chapel';
+    if (/palace|manor|hall/.test(to)) return 'hall';
+    return null;
+  }
+  drawDoorSigns(camX, camY) {
+    this._doorLights = []; this._plates = [];
+    if (this.map.interior || !this.map.warps) return;
+    const S = {
+      shop:   { board: '#2e6a3a', rim: '#d8a840', aw: ['#c83a3a', '#f4ecd8'] },
+      inn:    { board: '#2e3f82', rim: '#d8a840', aw: ['#3a5aa8', '#f4ecd8'], lamp: 1 },
+      tavern: { board: '#6a3a1e', rim: '#c8a040', aw: ['#3a7a4a', '#f0e0b0'], lamp: 1 },
+      chapel: { board: '#e8e4f0', rim: '#d8a840', aw: null },
+      hall:   { board: '#6a1426', rim: '#f2c94c', aw: null, banner: 1 }
+    };
+    const p = this.player;
+    for (const wp of this.map.warps) {
+      const kind = this.doorKind(wp.to); if (!kind) continue;
+      const st = S[kind], dw = (wp.w || 1) * TS, dx = wp.x * TS - camX, dy = wp.y * TS - camY;
+      if (dx < -96 || dx > W + 96 || dy < -96 || dy > H + 96) continue;
+      const cx = dx + dw / 2;
+      const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+      // awning over the door
+      if (st.aw) {
+        const aw = dw + 16, ax = cx - aw / 2, ay = dy - 5;
+        R(ax - 1, ay - 1, aw + 2, 11, UI.ink);
+        for (let i = 0; i < aw; i += 4) R(ax + i, ay, 4, 8, (i / 4) % 2 ? st.aw[1] : st.aw[0]);
+        R(ax, ay, aw, 1, 'rgba(255,255,255,.35)');
+        for (let i = 0; i < aw; i += 4) R(ax + i + 1, ay + 8, 2, 2, (i / 4) % 2 ? st.aw[1] : st.aw[0]);
+        R(ax, ay + 10, aw, 2, 'rgba(0,0,0,.25)');
+      }
+      // hanging signboard beside the door, on an iron bracket
+      const sx0 = cx + dw / 2 + 2, sy0 = dy - 16;
+      ctx.save(); ctx.translate(sx0, sy0); ctx.scale(1.5, 1.5); ctx.translate(-sx0, -sy0);
+      const sx = sx0, sy = sy0;
+      R(sx - 2, sy - 2, 14, 2, '#2a2a30'); R(sx + 10, sy - 2, 2, 5, '#2a2a30');
+      R(sx + 1, sy, 1, 3, '#4a4a52'); R(sx + 8, sy, 1, 3, '#4a4a52');
+      const swing = Math.sin(TIME * 1.6 + wp.x) * 0.6;
+      const bx = sx - 4 + swing, by = sy + 3;
+      R(bx - 1, by - 1, 20, 18, UI.ink); R(bx, by, 18, 16, st.rim); R(bx + 1, by + 1, 16, 14, st.board);
+      R(bx + 1, by + 1, 16, 1, 'rgba(255,255,255,.25)');
+      const ix = bx + 9, iy = by + 8;
+      if (kind === 'shop') {         // potion flask
+        R(ix - 1, iy - 6, 3, 2, '#e8e0d0'); R(ix - 2, iy - 4, 5, 1, '#8a5a30');
+        R(ix - 4, iy - 3, 9, 7, UI.ink); R(ix - 3, iy - 2, 7, 5, '#e5534b'); R(ix - 3, iy - 2, 7, 2, '#ffffff'); R(ix - 2, iy - 1, 2, 1, '#ffd0d0');
+      } else if (kind === 'inn') {   // bed
+        R(ix - 6, iy - 2, 2, 7, '#e8c898'); R(ix + 4, iy, 2, 5, '#e8c898');
+        R(ix - 4, iy + 1, 8, 3, '#e8e0f0'); R(ix - 4, iy - 1, 3, 2, '#ffffff'); R(ix - 1, iy, 5, 3, '#c83a3a');
+        R(ix + 2, iy - 5, 1, 1, '#fff3a0'); R(ix + 4, iy - 6, 1, 1, '#fff3a0');
+      } else if (kind === 'tavern') { // frothing mug
+        R(ix - 4, iy - 3, 7, 8, UI.ink); R(ix - 3, iy - 2, 5, 6, '#e8b040'); R(ix - 3, iy - 4, 5, 2, '#ffffff'); R(ix - 4, iy - 5, 3, 1, '#ffffff');
+        R(ix + 3, iy - 1, 2, 1, '#8a5a30'); R(ix + 4, iy - 1, 1, 4, '#8a5a30'); R(ix + 3, iy + 2, 2, 1, '#8a5a30');
+      } else if (kind === 'chapel') { // gold star
+        R(ix - 1, iy - 6, 2, 12, '#d8a840'); R(ix - 5, iy - 1, 10, 2, '#d8a840'); R(ix - 3, iy - 3, 6, 6, '#f2c94c'); R(ix - 1, iy - 1, 2, 2, '#fff4c0');
+      } else {                        // crown
+        R(ix - 5, iy - 1, 10, 5, '#f2c94c'); R(ix - 5, iy - 4, 2, 3, '#f2c94c'); R(ix - 1, iy - 5, 2, 4, '#f2c94c'); R(ix + 3, iy - 4, 2, 3, '#f2c94c'); R(ix - 1, iy + 1, 2, 2, '#e5534b');
+      }
+      ctx.restore();
+      if (st.banner) for (const bxx of [dx - 8, dx + dw + 2]) { R(bxx, dy - 20, 6, 22, UI.ink); R(bxx + 1, dy - 19, 4, 20, '#8a2234'); R(bxx + 2, dy - 15, 2, 3, '#f2c94c'); R(bxx + 1, dy + 1, 2, 2, '#8a2234'); R(bxx + 3, dy + 1, 2, 2, '#8a2234'); }
+      // lanterns either side of inns and taverns
+      if (st.lamp) for (const lx of [dx - 5, dx + dw + 1]) {
+        R(lx - 1, dy + 6, 6, 1, '#2a2a30'); R(lx, dy + 7, 5, 9, UI.ink); R(lx + 1, dy + 8, 3, 7, '#ffd070'); R(lx + 1, dy + 8, 1, 2, '#fff4c0'); R(lx, dy + 16, 5, 1, '#2a2a30');
+        this._doorLights.push([lx + 2, dy + 8]);
+      }
+      // name plate as you come near
+      const dist = Math.hypot(p.x - (wp.x + ((wp.w || 1) - 1) / 2), p.y - wp.y);
+      const a = clamp((3.2 - dist) / 1.2, 0, 1);
+      if (a > 0 && this.lock === 0) {
+        const nm = (MAPS[wp.to] && MAPS[wp.to].name) || wp.to;
+        const tag = { shop: 'Shop', inn: 'Inn', tavern: 'Tavern', chapel: 'Chapel', hall: '' }[kind];
+        const name = tag && !nm.toLowerCase().includes(tag.toLowerCase()) ? `${tag} · ${nm}` : nm;
+        this._plates.push([name, cx, dy - 44 - (1 - a) * 6, a]);
+      }
     }
   }
   drawChar(key, dir, frame, sx, sy, n) {

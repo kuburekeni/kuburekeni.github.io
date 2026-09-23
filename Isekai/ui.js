@@ -180,7 +180,7 @@ class PartyPanel {
     ctx.fillStyle = 'rgba(10,8,24,.55)'; ctx.fillRect(0, 0, W, H);
     G.party.forEach((m, i) => drawMemberCard(m, 196, 16 + i * 108, W - 224, 100, this.focus === i));
     drawWindow(16, H - 118, 168, 102);
-    text(`${G.gold} G`, 34, H - 102, UI.gold, 17);
+    text(`${G.gold} ${cur()}`, 34, H - 102, UI.gold, 17);
     text(fmtTime(G.playTime), 34, H - 76, UI.paper, 15);
     text(areaName(G.map), 34, H - 52, UI.dim, 13, 'left', false);
   }

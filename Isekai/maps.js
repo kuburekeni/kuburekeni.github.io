@@ -459,12 +459,29 @@ function buildCastle() {
   b.rect(2, 2, 22, 26, 'p');
   b.rect(2, 14, 22, 1, '#');
   b.rect(11, 14, 4, 1, 'p');
-  b.set(4, 14, 'p').set(21, 14, 'p');
-  for (let y = 5; y < 27; y += 4) { b.set(7, y, 'P'); b.set(18, y, 'P'); }
+  // side rooms off both halls, divided from the nave by walls with doorways
+  b.rect(8, 2, 1, 12, '#').rect(17, 2, 1, 12, '#').set(8, 8, 'p').set(17, 8, 'p');
+  b.rect(8, 15, 1, 13, '#').rect(17, 15, 1, 13, '#').set(8, 18, 'p').set(17, 18, 'p').set(8, 24, 'p').set(17, 24, 'p');
+  b.rect(2, 21, 6, 1, '#').rect(18, 21, 6, 1, '#').set(5, 21, 'o').set(20, 21, 'o');
+  // wooden floors in the lived-in rooms
+  b.rect(2, 2, 6, 12, 'o').rect(18, 2, 6, 12, 'o').rect(2, 15, 6, 6, 'o').rect(18, 15, 6, 6, 'o').rect(2, 22, 6, 6, 'o').rect(18, 22, 6, 6, 'o');
+  b.set(8, 8, 'o').set(17, 8, 'o').set(8, 18, 'o').set(17, 18, 'o').set(8, 24, 'o').set(17, 24, 'o').set(5, 21, 'o').set(20, 21, 'o');
+  // NW: the royal archive
+  b.rect(2, 2, 6, 1, 'b').rect(3, 6, 3, 1, 't').set(2, 6, 'u').set(6, 6, 'u').rect(2, 10, 2, 1, 'b').set(7, 12, 'k');
+  // NE: the war room and Seris's quarters
+  b.rect(19, 5, 4, 1, 't').rect(19, 6, 4, 1, 'u').set(23, 2, '{').set(22, 2, 'e').set(18, 12, 'k').set(23, 12, 'k');
+  // SW, upper: the armoury. lower: the barracks
+  b.set(2, 17, 'e').set(2, 18, 'e').set(7, 15, 'k').set(7, 20, 'k');
+  b.set(2, 22, '{').set(4, 22, '{').set(6, 22, '{').set(2, 27, '{').set(4, 27, '{');
+  // SE, upper: the kitchens. lower: the old chapel of the Ash
+  b.set(21, 15, 'z').set(22, 15, 'z').rect(19, 18, 3, 1, 't').set(23, 18, 'k').set(23, 19, 'k').set(18, 20, 'h');
+  b.rect(19, 25, 4, 1, 'u').set(20, 23, 'e');
+  // the nave: pillars, the carpet, braziers
+  for (let y = 5; y < 27; y += 4) { if (y === 13) continue; b.set(10, y, 'P'); b.set(15, y, 'P'); }
   b.rect(12, 4, 2, 26, 'K');
   b.set(12, 3, 'H').set(13, 3, 'H');
   b.rect(12, 28, 2, 2, 'K');
-  b.set(4, 3, 'L').set(21, 3, 'L');
+  b.set(9, 3, 'L').set(16, 3, 'L');
   return b.rows();
 }
 

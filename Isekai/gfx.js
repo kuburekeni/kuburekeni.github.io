@@ -894,7 +894,27 @@ function drawTile(x, ch, theme, v, frame, mask, up, under) {
       break;
     }
     case 'Q': G_(); px(x, '#5a3a1e', 6, 18, 3, 14); px(x, '#5a3a1e', 23, 18, 3, 14); px(x, '#7a4e2a', 2, 3, 28, 18); px(x, '#a8784a', 4, 5, 24, 14); px(x, '#f3e6c4', 6, 7, 8, 6); px(x, '#e8dcc0', 16, 8, 9, 8); px(x, '#f3e6c4', 9, 13, 7, 5); px(x, '#e5534b', 9, 7, 2, 2); px(x, '#e5534b', 20, 8, 2, 2); px(x, '#3a2a1a', 7, 10, 6, 1); px(x, '#3a2a1a', 17, 11, 7, 1); break;
-    case 'F': G_(); px(x, '#a8784a', 0, 10, 32, 3); px(x, '#a8784a', 0, 20, 32, 3); px(x, '#6a4526', 0, 12, 32, 1); px(x, '#6a4526', 0, 22, 32, 1); px(x, '#8a5a32', 4, 5, 4, 24); px(x, '#8a5a32', 24, 5, 4, 24); px(x, '#c8986a', 4, 5, 4, 2); px(x, '#c8986a', 24, 5, 4, 2); break;
+    case 'F': { // fence: rails join up with neighbouring fence tiles, a post in the middle of each tile
+      G_();
+      const U = !(mask & 1), Rr = !(mask & 2), D = !(mask & 4), Lf = !(mask & 8);
+      const lone = !U && !Rr && !D && !Lf;
+      const hl = Lf || lone || (!U && !D), hr = Rr || lone || (!U && !D);
+      // soft shadows first
+      x.fillStyle = 'rgba(20,12,8,.22)';
+      if (hl) x.fillRect(0, 24, 16, 3); if (hr) x.fillRect(16, 24, 16, 3);
+      if (U) x.fillRect(19, 0, 3, 16); if (D) x.fillRect(19, 16, 3, 16);
+      // horizontal rails
+      const rail = (x0, x1) => { for (const ry of [11, 19]) { px(x, '#6a4526', x0, ry, x1 - x0, 4); px(x, '#a8784a', x0, ry, x1 - x0, 2); px(x, '#c8986a', x0, ry, x1 - x0, 1); } };
+      if (hl) rail(0, 16); if (hr) rail(16, 32);
+      // vertical run: a single rail seen from above, running through the post
+      const vrail = (y0, y1) => { px(x, '#6a4526', 13, y0, 6, y1 - y0); px(x, '#a8784a', 14, y0, 4, y1 - y0); px(x, '#c8986a', 14, y0, 1, y1 - y0); };
+      if (U) vrail(0, 16); if (D) vrail(16, 32);
+      // the post
+      px(x, 'rgba(20,12,8,.3)', 12, 25, 10, 3);
+      px(x, '#4a2e18', 12, 6, 8, 20); px(x, '#8a5a32', 13, 6, 6, 19); px(x, '#a8784a', 13, 6, 2, 19);
+      px(x, '#c8986a', 12, 5, 8, 2); px(x, '#e0b888', 13, 5, 4, 1);
+      break;
+    }
     case 'S': (theme === 'ash' || theme === 'town' || theme === 'tokyo') ? speckle(x, r, THEME_GROUND[theme], [shade(THEME_GROUND[theme], -0.1)], 30) : G_(); px(x, '#5a3a1e', 14, 16, 4, 16); px(x, '#a8784a', 4, 4, 24, 14); px(x, '#7a4e2a', 4, 16, 24, 2); px(x, '#4a2a10', 8, 8, 16, 2); px(x, '#4a2a10', 8, 12, 12, 2); break;
     case 'N': { (theme === 'ash' ? speckle(x, r, '#5a5055', ['#4a4045'], 30) : G_()); x.fillStyle = '#8a6a3a'; x.beginPath(); x.moveTo(2, 30); x.lineTo(16, 3); x.lineTo(30, 30); x.fill(); x.fillStyle = '#a8844a'; x.beginPath(); x.moveTo(8, 30); x.lineTo(16, 3); x.lineTo(20, 30); x.fill(); px(x, '#2a1a0a', 12, 20, 8, 10); px(x, '#5a3a1a', 15, 2, 2, 4); break; }
     case 'O': { (theme === 'ash' ? speckle(x, r, '#5a5055', ['#4a4045'], 30) : G_()); for (let i = 0; i < 6; i++) px(x, '#6a6a6a', 6 + i * 4, 24 + (i % 2), 4, 4); px(x, '#5a3a1e', 8, 20, 16, 4); px(x, '#3a2410', 12, 18, 8, 3); const f = frame; x.fillStyle = '#e5534b'; x.beginPath(); x.moveTo(8, 22); x.quadraticCurveTo(16, -2 + f * 3, 24, 22); x.fill(); x.fillStyle = '#f2a03a'; x.beginPath(); x.moveTo(11, 22); x.quadraticCurveTo(16 + (f ? 2 : -2), 6, 21, 22); x.fill(); x.fillStyle = '#fff3a0'; x.beginPath(); x.moveTo(13, 22); x.quadraticCurveTo(16, 12 + f * 2, 19, 22); x.fill(); break; }
@@ -1215,6 +1235,7 @@ function sameGroup(a, b) {
   if (a === 'r') return b === 'r';
   if (a === 'R') return b === 'R';
   if (a === 'L') return b === 'L';
+  if (a === 'F') return b === 'F';
   if (a === '#') return b === '#';
   if (a === '+' || a === '[') return '+[]'.includes(b);
   if (a === 'A' || a === 'Y') return b === 'A' || b === 'Y';

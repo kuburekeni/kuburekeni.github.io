@@ -95,41 +95,69 @@ function buildAcademy() {
   return b.rows();
 }
 function roomRows(w, h, fn) { const b = MB(w, h, 'o', 5); b.border('V'); fn(b); return b.rows(); }
-const AC_HALL_ROWS = roomRows(22, 12, b => {
-  for (const x of [3, 7, 14, 18]) b.set(x, 0, 'y');
+const AC_HALL_ROWS = roomRows(30, 12, b => {
+  for (const x of [3, 7, 14, 18, 24, 27]) b.set(x, 0, 'y');
   b.rect(1, 1, 3, 1, 'b').rect(18, 1, 3, 1, 'b').set(10, 1, 'z').set(11, 1, 'z');
   b.rect(10, 2, 2, 10, '-');
   for (const y of [4, 7]) { b.rect(2, y, 6, 1, 't'); b.rect(14, y, 6, 1, 't'); b.rect(2, y + 1, 6, 1, 'u'); b.rect(14, y + 1, 6, 1, 'u'); }
   b.set(1, 10, 'k').set(20, 10, 'k').set(10, 11, 'x').set(11, 11, 'x');
+  // the kitchens, through a door in the east wall
+  b.rect(21, 1, 1, 10, 'V').set(21, 6, 'o');
+  b.set(26, 1, 'z').set(27, 1, 'z').rect(22, 1, 3, 1, 'h').set(28, 1, 'h');
+  b.rect(24, 4, 3, 1, 't').rect(24, 7, 3, 1, 't').set(28, 5, 'k').set(28, 6, 'k').set(22, 10, 'k').set(28, 10, 'k');
 });
-const AC_BLADE_ROWS = roomRows(16, 10, b => {
-  for (const x of [3, 12]) b.set(x, 0, 'y');
+const AC_BLADE_ROWS = roomRows(22, 10, b => {
+  for (const x of [3, 12, 18]) b.set(x, 0, 'y');
   b.rect(2, 1, 4, 1, 'e').rect(10, 1, 4, 1, 'e');
   b.rect(4, 3, 8, 4, '-');
-  b.set(1, 8, 'k').set(14, 8, 'k').set(1, 3, 'k').set(14, 3, 'k');
+  b.set(1, 8, 'k').set(1, 3, 'k');
   b.set(7, 9, 'x').set(8, 9, 'x');
+  // the armoury
+  b.rect(15, 1, 1, 8, 'V').set(15, 5, 'o');
+  b.rect(16, 1, 5, 1, 'e').set(20, 3, 'e').set(20, 4, 'e').set(16, 8, 'k').set(17, 8, 'k').set(20, 8, 'k').rect(17, 5, 2, 1, 't');
 });
-const AC_ARCANE_ROWS = roomRows(16, 10, b => {
-  for (const x of [3, 12]) b.set(x, 0, 'y');
+const AC_ARCANE_ROWS = roomRows(22, 10, b => {
+  for (const x of [3, 12, 18]) b.set(x, 0, 'y');
   b.rect(1, 1, 5, 1, 'b').rect(10, 1, 5, 1, 'b');
   b.rect(3, 4, 2, 1, 't').rect(11, 4, 2, 1, 't').set(2, 4, 'u').set(5, 4, 'u').set(10, 4, 'u').set(13, 4, 'u');
-  b.set(1, 7, 'e').set(14, 7, 'e').rect(6, 3, 4, 3, '-');
+  b.set(1, 7, 'e').rect(6, 3, 4, 3, '-');
   b.set(7, 9, 'x').set(8, 9, 'x');
+  // the alchemy lab
+  b.rect(15, 1, 1, 8, 'V').set(15, 6, 'o');
+  b.set(19, 1, 'z').set(20, 1, 'z').rect(16, 1, 2, 1, 'b').rect(17, 4, 3, 1, 't').set(16, 7, 'e').set(20, 7, 'e').set(20, 5, 'k');
 });
-const AC_DORM_ROWS = roomRows(16, 10, b => {
-  for (const x of [3, 12]) b.set(x, 0, 'y');
-  for (const x of [1, 3, 5, 10, 12, 14]) { b.set(x, 1, '{'); b.set(x, 2, 'k'); }
-  for (const x of [1, 14]) { b.set(x, 5, '{'); b.set(x, 6, 'k'); }
-  b.rect(6, 4, 4, 1, 't').set(6, 5, 'u').set(9, 5, 'u');
-  b.set(7, 9, 'x').set(8, 9, 'x');
+// the dormitory: a corridor with rooms off it
+const AC_DORM_ROWS = roomRows(24, 14, b => {
+  for (const x of [3, 11, 19]) b.set(x, 0, 'y');
+  b.rect(1, 7, 22, 1, '-');                                          // the corridor runner
+  b.rect(8, 1, 1, 6, 'V').rect(15, 1, 1, 6, 'V').rect(1, 6, 22, 1, 'V');   // north rooms
+  b.set(4, 6, 'o').set(11, 6, 'o').set(12, 6, 'o').set(19, 6, 'o');
+  b.rect(1, 8, 22, 1, 'V').rect(8, 9, 1, 4, 'V').rect(15, 9, 1, 4, 'V');   // south rooms
+  b.set(4, 8, 'o').set(19, 8, 'o').set(11, 8, 'o').set(12, 8, 'o');
+  // west dorm (yours)
+  for (const x of [1, 3, 6]) { b.set(x, 1, '{'); b.set(x, 2, 'k'); }
+  b.set(1, 4, '{').set(7, 4, 'e');
+  // the common room
+  b.set(11, 1, 'z').set(12, 1, 'z').rect(9, 1, 2, 1, 'b').rect(13, 1, 2, 1, 'b').rect(10, 3, 4, 1, 't').set(9, 4, 'u').set(14, 4, 'u');
+  // east dorm
+  for (const x of [16, 18, 21]) { b.set(x, 1, '{'); b.set(x, 2, 'k'); }
+  b.set(22, 4, '{');
+  // washroom (south-west) and Brim's office (south-east)
+  b.set(1, 9, 'k').set(2, 9, 'k').set(1, 12, 'e').set(6, 12, 'e').set(7, 9, 'k');
+  b.rect(16, 9, 3, 1, 'b').rect(18, 11, 3, 1, 't').set(22, 9, 'h').set(22, 12, 'k');
+  b.rect(9, 13, 6, 1, 'V');
+  b.set(11, 13, 'x').set(12, 13, 'x');
 });
-const AC_LIB_ROWS = roomRows(18, 12, b => {
-  for (const x of [4, 13]) b.set(x, 0, 'y');
-  b.rect(1, 1, 14, 1, 'b');
+const AC_LIB_ROWS = roomRows(24, 12, b => {
+  for (const x of [4, 13, 20]) b.set(x, 0, 'y');
+  b.rect(1, 1, 15, 1, 'b');
   for (const y of [4, 7]) { b.rect(2, y, 5, 1, 'b'); b.rect(10, y, 5, 1, 'b'); }
-  b.set(16, 1, 'G');
-  b.rect(7, 9, 3, 1, 't').set(1, 10, 'k').set(16, 10, 'k');
+  b.rect(7, 9, 3, 1, 't').set(1, 10, 'k');
   b.set(8, 11, 'x').set(9, 11, 'x');
+  // the restricted section, with the vault door at the back
+  b.rect(16, 1, 1, 10, 'V').set(16, 8, 'o');
+  b.rect(17, 1, 3, 1, 'b').set(21, 1, 'G').rect(22, 1, 1, 1, 'b');
+  b.rect(18, 4, 4, 1, 'b').rect(18, 7, 4, 1, 'b').set(22, 10, 'k');
 });
 function buildAcWoods() {
   const b = MB(40, 24, '.', 515);
@@ -178,7 +206,7 @@ Object.assign(MAPS, {
       { x: 22, y: 6, w: 2, h: 1, to: 'ac_hall', tx: 10, ty: 10, dir: 'up' },
       { x: 7, y: 6, w: 1, h: 1, to: 'ac_blade', tx: 7, ty: 8, dir: 'up' },
       { x: 38, y: 6, w: 1, h: 1, to: 'ac_arcane', tx: 7, ty: 8, dir: 'up' },
-      { x: 7, y: 22, w: 1, h: 1, to: 'ac_dorm', tx: 7, ty: 8, dir: 'up' },
+      { x: 7, y: 22, w: 1, h: 1, to: 'ac_dorm', tx: 11, ty: 12, dir: 'up' },
       { x: 38, y: 23, w: 1, h: 1, to: 'ac_lib', tx: 8, ty: 10, dir: 'up' },
       { x: 45, y: 15, w: 1, h: 1, to: 'acwoods', tx: 1, ty: 12, dir: 'right' }
     ],
@@ -193,7 +221,9 @@ Object.assign(MAPS, {
       { id: 'crane', x: 11, y: 3, spr: 'headmistress', dir: 'down', script: 'crane' },
       { id: 'sableNight', x: 19, y: 9, spr: 'sable', dir: 'left', script: 'sableNight', show: 'ac_night&!ac_thief' },
       { id: 'acDiner1', x: 4, y: 6, spr: 'cadet', dir: 'up', script: 'crowd', name: 'Hungry Cadet', lines: [`Porridge again. It's always porridge. The porridge is sentient.`] },
-      { id: 'acDiner2', x: 17, y: 9, spr: 'cadet2', dir: 'up', script: 'crowd', name: 'Senior', lines: [`Enjoy first year. After this they start sending you places.`] }
+      { id: 'acDiner2', x: 17, y: 9, spr: 'cadet2', dir: 'up', script: 'crowd', name: 'Senior', lines: [`Enjoy first year. After this they start sending you places.`] },
+      { id: 'acCook', x: 25, y: 2, spr: 'shop', dir: 'down', script: 'crowd', name: 'Cook Marta', lines: [`Out of my kitchen! …Unless you're hungry. Are you hungry? Sit.`, `Somebody's been at my bread every night. Somebody small, with a lot of nerve.`] },
+      { id: 'acScullion', x: 23, y: 8, spr: 'kid2', dir: 'right', script: 'crowd', name: 'Scullion', wander: 1, lines: [`I peel four hundred potatoes a day. I've named some of them.`] }
     ],
     warps: [{ x: 10, y: 11, w: 2, h: 1, to: 'academy', tx: 22, ty: 7, dir: 'down', clamp: true }], chests: [], signs: {}
   },
@@ -201,35 +231,40 @@ Object.assign(MAPS, {
     name: 'Blade Hall', music: 'training', theme: 'interior', edge: 'V', interior: true, ambient: 'rgba(255,190,110,.10)', encounters: null,
     rows: AC_BLADE_ROWS, pois: [{ x: 3, y: 2, dir: 'up', act: 'display' }, { x: 12, y: 7, dir: 'up', act: 'sit' }, { x: 8, y: 8, dir: 'down', act: 'door' }],
     npcs: [{ id: 'dorran', x: 8, y: 2, spr: 'dorran', dir: 'down', script: 'dorran' },
-           { id: 'acSpar', x: 5, y: 7, spr: 'cadet', dir: 'right', script: 'crowd', name: 'Cadet', lines: [`Shoulders down. Weight forward. Cry later.`] }],
+           { id: 'acSpar', x: 5, y: 7, spr: 'cadet', dir: 'right', script: 'crowd', name: 'Cadet', lines: [`Shoulders down. Weight forward. Cry later.`] },
+           { id: 'acArmourer', x: 18, y: 3, spr: 'smith', dir: 'down', script: 'crowd', name: 'Armourer Hodd', lines: [`Practice blades, left. Real blades, right. If you touch the right, Dorran touches you.`] }],
     warps: [{ x: 7, y: 9, w: 2, h: 1, to: 'academy', tx: 7, ty: 7, dir: 'down', clamp: true }], chests: [], signs: {}
   },
   ac_arcane: {
     name: 'Arcane Hall', music: 'void', theme: 'interior', edge: 'V', interior: true, ambient: 'rgba(160,170,255,.14)', encounters: null,
     rows: AC_ARCANE_ROWS, pois: [{ x: 3, y: 2, dir: 'up', act: 'book' }, { x: 12, y: 2, dir: 'up', act: 'book' }, { x: 8, y: 8, dir: 'down', act: 'door' }],
     npcs: [{ id: 'oriel', x: 7, y: 2, spr: 'oriel', dir: 'down', script: 'oriel' },
-           { id: 'acMage', x: 11, y: 6, spr: 'cadet2', dir: 'up', script: 'crowd', name: 'Arcane Student', lines: [`I set my eyebrows on fire. Both of them. At once. Oriel said it was "ambitious".`] }],
+           { id: 'acMage', x: 11, y: 6, spr: 'cadet2', dir: 'up', script: 'crowd', name: 'Arcane Student', lines: [`I set my eyebrows on fire. Both of them. At once. Oriel said it was "ambitious".`] },
+           { id: 'acAlch', x: 18, y: 5, spr: 'oriel', dir: 'up', script: 'crowd', name: 'Alchemist Pym', lines: [`Don't breathe through your nose in here. Or your mouth, ideally.`] }],
     warps: [{ x: 7, y: 9, w: 2, h: 1, to: 'academy', tx: 38, ty: 7, dir: 'down', clamp: true }], chests: [], signs: {}
   },
   ac_dorm: {
     name: 'First-Year Dormitory', music: 'manor', theme: 'interior', edge: 'V', interior: true, ambient: 'rgba(255,180,110,.10)', encounters: null,
-    rows: AC_DORM_ROWS, pois: [{ x: 7, y: 3, dir: 'up', act: 'sit' }, { x: 2, y: 3, dir: 'up', act: 'book' }, { x: 8, y: 8, dir: 'down', act: 'door' }],
-    npcs: [{ id: 'brim', x: 8, y: 3, spr: 'brim', dir: 'down', script: 'brim' },
-           { id: 'acBed', x: 12, y: 3, spr: 'student', dir: 'down', script: 'crowd', name: 'Roommate', lines: [`You snore. Just so you know. It's fine. It's rhythmic.`, `My mum sends cake every week and it's gone by morning. The Gutter rats, Brim says.`] }],
-    warps: [{ x: 7, y: 9, w: 2, h: 1, to: 'academy', tx: 7, ty: 23, dir: 'down', clamp: true }], chests: [], signs: {}
+    rows: AC_DORM_ROWS, pois: [{ x: 11, y: 2, dir: 'up', act: 'fire' }, { x: 10, y: 4, dir: 'up', act: 'sit' }, { x: 12, y: 11, dir: 'down', act: 'door' }],
+    npcs: [{ id: 'brim', x: 19, y: 10, spr: 'brim', dir: 'down', script: 'brim' },
+           { id: 'acDormS1', x: 12, y: 4, spr: 'cadet2', dir: 'down', script: 'crowd', name: 'Prefect Anwen', lines: [`Common room rules: no duelling, no singing after ten, and nobody touches the good chair.`, `Housemaster Brim's office is the south-east door. Knock. He hates it when you don't knock.`] },
+           { id: 'acDormS2', x: 18, y: 3, spr: 'cadetf', dir: 'left', script: 'crowd', name: 'East-dorm Cadet', wander: 1, lines: [`Somebody ate my mother's cake again. The Gutter rats, Brim says. I think it's the Gutter rat.`] },
+           { id: 'acBed', x: 5, y: 4, spr: 'student', dir: 'down', script: 'crowd', name: 'Roommate', lines: [`You snore. Just so you know. It's fine. It's rhythmic.`, `My mum sends cake every week and it's gone by morning. The Gutter rats, Brim says.`] }],
+    warps: [{ x: 11, y: 13, w: 2, h: 1, to: 'academy', tx: 7, ty: 23, dir: 'down', clamp: true }], chests: [{ id: 'acd1', x: 22, y: 5, item: 'potion', qty: 2 }], signs: {}
   },
   ac_lib: {
     name: 'The Academy Library', music: 'void', theme: 'interior', edge: 'V', interior: true, ambient: 'rgba(200,180,255,.10)', encounters: null,
     rows: AC_LIB_ROWS, pois: [{ x: 4, y: 3, dir: 'up', act: 'book' }, { x: 12, y: 6, dir: 'up', act: 'book' }, { x: 8, y: 10, dir: 'down', act: 'door' }],
-    npcs: [{ id: 'librarian', x: 8, y: 8, spr: 'elder', dir: 'down', script: 'crowd', name: 'Librarian Soames', lines: () => G.flags.ac_vaultOpen && !G.flags.ac_vault ? [`The seal is broken. The Ashcombe boy went down an hour ago. Go! Go on!`] : [`Shh.`, `The door in the corner goes to the Sealed Archive. It is sealed. It is in the name.`, `Three hundred years ago a boy from nowhere left something down there, and the Academy was built on top to keep it.`] }],
-    warps: [{ x: 8, y: 11, w: 2, h: 1, to: 'academy', tx: 38, ty: 24, dir: 'down', clamp: true }, { x: 16, y: 1, w: 1, h: 1, to: 'vault', tx: 15, ty: 20, dir: 'up' }],
+    npcs: [{ id: 'restrictedGuard', x: 17, y: 8, spr: 'guard', dir: 'left', script: 'crowd', name: 'Archive Warden', lines: () => G.flags.ac_vaultOpen ? [`The seal's broken. Go — I'll hold the door.`] : [`Restricted section. Seniors and masters only. The door at the back is not a door. It's a warning.`], show: '!ac_vaultOpen' },
+           { id: 'librarian', x: 8, y: 8, spr: 'elder', dir: 'down', script: 'crowd', name: 'Librarian Soames', lines: () => G.flags.ac_vaultOpen && !G.flags.ac_vault ? [`The seal is broken. The Ashcombe boy went down an hour ago. Go! Go on!`] : [`Shh.`, `The door in the corner goes to the Sealed Archive. It is sealed. It is in the name.`, `Three hundred years ago a boy from nowhere left something down there, and the Academy was built on top to keep it.`] }],
+    warps: [{ x: 8, y: 11, w: 2, h: 1, to: 'academy', tx: 38, ty: 24, dir: 'down', clamp: true }, { x: 21, y: 1, w: 1, h: 1, to: 'vault', tx: 15, ty: 20, dir: 'up' }],
     chests: [], signs: {}
   },
   acwoods: {
     name: 'The Academy Woods', music: 'field', theme: 'grass', edge: 'T', lvl: 3, fx: 'leaves', ambient: 'rgba(20,60,40,.10)',
     rows: buildAcWoods(), encounters: [['slime', 3], ['bat', 2], ['wolf', 1]], bg: 'forest',
     npcs: [
-      { id: 'kestrelAc', x: 14, y: 11, spr: 'kestrel', dir: 'right', script: 'kestrelAc', show: 'ac_huntAsked&!ac_hunt' },
+      { id: 'kestrelAc', x: 14, y: 11, spr: 'kestrel', dir: 'right', script: 'kestrelAc', show: 'ac_huntAsked&!ac_hunt&!in_kestrel' },
       { id: 'greymane', x: 35, y: 6, spr: 'm:direwolf', dir: 'left', script: 'greymane', show: '!ac_hunt' }
     ],
     warps: [{ x: 0, y: 11, w: 1, h: 3, to: 'academy', tx: 44, ty: 15, dir: 'left', clamp: true }],
@@ -243,7 +278,7 @@ Object.assign(MAPS, {
       { id: 'wraith', x: 24, y: 18, spr: 'm:ashwraith', dir: 'left', script: 'wraith', show: '!ac_vault' },
       { id: 'lucanTrapped', x: 22, y: 16, spr: 'lucan', dir: 'right', script: 'wraith', show: '!ac_vault' }
     ],
-    warps: [{ x: 14, y: 21, w: 3, h: 1, to: 'ac_lib', tx: 16, ty: 2, dir: 'down', clamp: true }],
+    warps: [{ x: 14, y: 21, w: 3, h: 1, to: 'ac_lib', tx: 21, ty: 2, dir: 'down', clamp: true }],
     chests: [{ id: 'vt1', x: 4, y: 5, item: 'hipotion', qty: 2 }, { id: 'vt2', x: 15, y: 9, item: 'tonic', qty: 1 }, { id: 'vt3', x: 26, y: 16, gold: 150 }],
     signs: {}, safe: [[13, 18, 5, 4]]
   }
@@ -498,7 +533,7 @@ STORY.kestrelAc = async function () {
   ]);
   const r = rosterOf('kestrel');
   if (!r.member) r.member = makeMember('kestrel', 'Kestrel', heroLevel());
-  if (await joinParty('kestrel', 70)) { G.flags.kestrelJoined = true; await say(N, `High ground's mine. You take the shouting.`, 'c:kestrel'); }
+  if (await joinParty('kestrel', 70)) { G.flags.kestrelJoined = true; World.refreshNpcs(true); await say(N, `High ground's mine. You take the shouting.`, 'c:kestrel'); }
 };
 STORY.greymane = async function () {
   await say(null, 'The den. Bones in the bracken. And rising out of the dark between two rocks, grey to the muzzle and scarred all over: the wolf.');

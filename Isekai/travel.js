@@ -209,6 +209,9 @@ class TravelScene {
     const FAR = ['tree', 'pine', 'deadtree', 'cottage'];
     const push = (type, sc) => {
       const far = FAR.includes(type);
+      // never let two big things stand in the same spot (towers, cottages, signposts clipping through each other)
+      const wide = { tower: 78, cottage: 90, post: 60, cart: 70, fence: 70 }[type];
+      if (wide && this.objs.some(o => (type === 'tower' ? o.type === 'tower' : ['cottage', 'post', 'cart', 'fence'].includes(o.type)) && Math.abs(o.sx - sx) < wide)) return;
       const base = type === 'tower' ? 300 : far ? rand(298, 326) : rand(318, 342);
       const sp = type === 'tower' ? 0.35 : 0.58 + (base - 296) / 48 * 0.42;
       const s0 = (sc || rand(0.85, 1.15)) * (type === 'tower' ? 1 : 0.8 + (base - 296) / 48 * 0.3);
@@ -425,11 +428,15 @@ class TravelScene {
       R(x - 26 * s, y + 10 * s, 12 * s, 10 * s, '#f2d88a');
       glow(x + 20 * s, y + 15 * s, 30 * s, 'rgba(255,220,140,.25)');
     } else if (o.type === 'tower') {
-      const s2 = s, h = 150 * s2, y = g;
-      ctx.fillStyle = '#d8d4c8'; ctx.fillRect(x - 24 * s2, y - h + 60, 48 * s2, h);
-      ctx.fillStyle = '#b8b4a8'; ctx.fillRect(x - 24 * s2, y - h + 60, 8 * s2, h);
-      ctx.fillStyle = '#3e4e7e'; ctx.beginPath(); ctx.moveTo(x - 30 * s2, y - h + 60); ctx.lineTo(x, y - h + 10); ctx.lineTo(x + 30 * s2, y - h + 60); ctx.fill();
-      ctx.fillStyle = '#8a7a50'; ctx.fillRect(x - 8 * s2, y - h + 96, 16 * s2, 22 * s2);
+      // a far tower of the city wall: it stands on the horizon line, so nothing nearer ever cuts into it
+      const s2 = s * 0.8, h = 120 * s2, y = g, top = y - h;
+      ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.beginPath(); ctx.ellipse(x, y, 30 * s2, 3, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#d8d4c8'; ctx.fillRect(x - 24 * s2, top, 48 * s2, h);
+      ctx.fillStyle = '#b8b4a8'; ctx.fillRect(x - 24 * s2, top, 8 * s2, h);
+      ctx.fillStyle = '#c8c4b8'; for (let k = 0; k < 4; k++) ctx.fillRect(x - 24 * s2 + k * 13 * s2, top - 6 * s2, 8 * s2, 6 * s2);
+      ctx.fillStyle = '#3e4e7e'; ctx.beginPath(); ctx.moveTo(x - 30 * s2, top - 6 * s2); ctx.lineTo(x, top - 56 * s2); ctx.lineTo(x + 30 * s2, top - 6 * s2); ctx.fill();
+      ctx.fillStyle = '#8a7a50'; ctx.fillRect(x - 8 * s2, top + 30 * s2, 16 * s2, 22 * s2);
+      ctx.fillStyle = '#5a4a3a'; ctx.fillRect(x - 9 * s2, y - 30 * s2, 18 * s2, 30 * s2);
     } else if (o.type === 'post') {
       R(x, g - 30 * s, 5 * s, 30 * s, '#6a5230');
       R(x - 12 * s, g - 38 * s, 30 * s, 12 * s, '#a8884a'); R(x - 12 * s, g - 38 * s, 30 * s, 2 * s, '#c8a868');

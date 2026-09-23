@@ -40,7 +40,7 @@
       document.body.appendChild(el);
     }
     const need = { 'data.js': 'UI', 'audio.js': 'Sound', 'engine.js': 'Scenes', 'gfx.js': 'drawTile', 'fx.js': 'FX', 'cloud.js': 'Cloud', 'controls.js': 'Controls', 'state.js': 'startNewGame',
-      'ui.js': 'DialogScene', 'maps.js': 'MAPS', 'world.js': 'WorldScene', 'travel.js': 'TravelScene', 'battle.js': 'BattleScene', 'story.js': 'STORY', 'quests.js': 'questBoard', 'town.js': 'drawCritter', 'sidequests.js': 'SIDE', 'academy.js': 'seniorYear', 'activities.js': 'busk', 'menus.js': 'PauseScene', 'resolve.js': 'ResolveCut', 'stage.js': 'StageScene', 'epilogue.js': 'epilogueChapter', 'main.js': 'TitleScene' };
+      'ui.js': 'DialogScene', 'maps.js': 'MAPS', 'world.js': 'WorldScene', 'travel.js': 'TravelScene', 'battle.js': 'BattleScene', 'story.js': 'STORY', 'quests.js': 'questBoard', 'town.js': 'drawCritter', 'sidequests.js': 'SIDE', 'academy.js': 'seniorYear', 'activities.js': 'busk', 'menus.js': 'PauseScene', 'resolve.js': 'ResolveCut', 'stage.js': 'StageScene', 'epilogue.js': 'epilogueChapter', 'soundscape.js': 'SOUNDSCAPE', 'detail.js': 'Detail', 'main.js': 'TitleScene' };
     const missing = Object.keys(need).filter(f => { try { return typeof eval(need[f]) === 'undefined'; } catch (e) { return true; } });
     el.innerHTML = `<h2 style="color:#f28fad;margin-top:0">I Got Isekai'd couldn't start</h2>` +
       (missing.length ? `<p>These files are missing, misnamed, or out of date in this folder:</p><p style="color:#e5b53a"><b>${missing.join(', ')}</b></p><p>Every game file must sit in the same folder as this index.html, with exactly these lowercase names.</p>` : '') +
@@ -70,6 +70,8 @@
 <script src="resolve.js"></script>
 <script src="stage.js"></script>
 <script src="epilogue.js"></script>
+<script src="soundscape.js"></script>
+<script src="detail.js"></script>
 <script src="main.js"></script>
 <script>
   // F toggles fullscreen on desktop (F11 also works as normal browser fullscreen)

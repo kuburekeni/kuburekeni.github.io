@@ -396,18 +396,20 @@ async function settingsMenu() {
     const items = [
       { label: 'Music volume', right: Math.round(Sound.vol.music * 100) + '%' },
       { label: 'Sound effects', right: Math.round(Sound.vol.sfx * 100) + '%' },
+      { label: 'Ambient sound', right: Math.round((Sound.vol.amb ?? 0.7) * 100) + '%', desc: 'Wind, birdsong, crowds, rain, rivers and fires around you.' },
       { label: 'Bloom & lighting', right: onoff(Gfx.bloom), desc: 'Soft light bleed and coloured lighting over the pixel art. Turn off if the game runs slowly.' },
       { label: 'Lens flare', right: onoff(Gfx.flare), desc: 'Sun flare and streaks when you look toward a light.' },
       { label: 'Weather', right: onoff(Gfx.weather), desc: 'Rain, storms, snow, mist and ashfall out in the world.' },
       { label: 'Rain on the screen', right: onoff(Gfx.drops), desc: 'Raindrops land on the screen itself and run down it.' },
       { label: 'Screen shake', right: onoff(Gfx.shake), desc: 'Impacts shake the view.' },
+      { label: 'Map detail & tall trees', right: onoff(Gfx.detail !== false), desc: 'Big trees you walk behind, moving grass, ground detail, water and lava effects, cloud shadows and fireflies. Turn off if the game runs slowly.' },
       { label: 'Controls', desc: Controls.mode === 'touch' ? 'Touch: slide your thumb on the D-pad to move. A confirms, B goes back, MENU opens the menu, RUN toggles running. ⛶ goes fullscreen. Keyboards and controllers also work — the game switches automatically.' : Controls.mode === 'pad' ? 'Controller: D-pad / left stick to move. A confirm, B back, Start menu, hold X or a shoulder button to run.' : 'Move: Arrows / WASD.  Confirm: Z, Enter, Space.  Cancel: X, Backspace.  Menu: C, M or Tab.  Hold Shift to run.  F: fullscreen (hold Esc to leave). Touch and controllers switch in automatically.' }
     ];
-    const GKEYS = [null, null, 'bloom', 'flare', 'weather', 'drops', 'shake'];
-    const l = new ListScene({ x: 196, y: 16, w: W - 224, items, title: 'Settings  (◀ ▶ to adjust)', index: i, rows: 9 });
+    const GKEYS = [null, null, null, 'bloom', 'flare', 'weather', 'drops', 'shake', 'detail'];
+    const l = new ListScene({ x: 196, y: 16, w: W - 224, items, title: 'Settings  (◀ ▶ to adjust)', index: i, rows: 10 });
     l.onSide = (idx, d) => {
       if (GKEYS[idx]) { Gfx[GKEYS[idx]] = !Gfx[GKEYS[idx]]; saveSettings(); Sound.sfx('cursor'); l.items[idx].right = Gfx[GKEYS[idx]] ? 'On' : 'Off'; if (!Gfx.weather) Weather.set('clear', 0); else Weather.forMap(G ? G.map : 'village'); return; }
-      const k = idx === 0 ? 'music' : idx === 1 ? 'sfx' : null; if (!k) return;
+      const k = idx === 0 ? 'music' : idx === 1 ? 'sfx' : idx === 2 ? 'amb' : null; if (!k) return;
       Sound.vol[k] = clamp(Math.round((Sound.vol[k] + d * 0.1) * 10) / 10, 0, 1);
       Sound.applyVolume(); saveSettings(); Sound.sfx('cursor');
       l.items[idx].right = Math.round(Sound.vol[k] * 100) + '%';
@@ -416,8 +418,8 @@ async function settingsMenu() {
     i = await l.promise;
     if (i < 0) return;
     if (GKEYS[i]) { Gfx[GKEYS[i]] = !Gfx[GKEYS[i]]; saveSettings(); Sound.sfx('ok'); if (!Gfx.weather) Weather.set('clear', 0); else if (G) Weather.forMap(G.map); continue; }
-    if (i >= 7) continue;
-    if (i < 2) { const k = i === 0 ? 'music' : 'sfx'; Sound.vol[k] = Sound.vol[k] >= 1 ? 0 : Math.round((Sound.vol[k] + 0.2) * 10) / 10; if (Sound.vol[k] > 1) Sound.vol[k] = 1; Sound.applyVolume(); saveSettings(); }
+    if (i >= 9) continue;
+    if (i < 3) { const k = i === 0 ? 'music' : i === 1 ? 'sfx' : 'amb'; Sound.vol[k] = Sound.vol[k] >= 1 ? 0 : Math.round((Sound.vol[k] + 0.2) * 10) / 10; if (Sound.vol[k] > 1) Sound.vol[k] = 1; Sound.applyVolume(); saveSettings(); }
   }
 }
 

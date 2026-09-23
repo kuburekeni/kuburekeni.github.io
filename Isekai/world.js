@@ -341,10 +341,11 @@ class WorldScene {
       if (tx < 0 || ty < 0 || tx >= this.w || ty >= this.h) continue;
       const ch = this.tile(tx, ty);
       const v = hash2(tx, ty) % 4;
-      const img = tileCanvas(ch, theme, v, ANIMATED.has(ch) ? frame : 0, this.tileMask(tx, ty, ch), this.tile(tx, ty - 1), ON_GROUND.has(ch) ? this.groundUnder(tx, ty) : '');
+      const img = (typeof Detail !== 'undefined' && Detail.tileImg(this, ch, tx, ty, theme, v)) || tileCanvas(ch, theme, v, ANIMATED.has(ch) ? frame : 0, this.tileMask(tx, ty, ch), this.tile(tx, ty - 1), ON_GROUND.has(ch) ? this.groundUnder(tx, ty) : '');
       ctx.drawImage(img, tx * TS - camX, ty * TS - camY);
       if (LIGHT_TILES[ch]) lights.push([tx * TS - camX + 16, ty * TS - camY + 16, ch]);
     }
+    if (typeof Detail !== 'undefined') Detail.ground(this, camX, camY, x0, y0);
     // herbs
     for (const q of G.quests) if (q.type === 'gather' && q.map === G.map) for (const [hx, hy] of q.spots) {
       const sx = hx * TS - camX, sy = hy * TS - camY, b = Math.sin(TIME * 4 + hx) * 2;
@@ -383,9 +384,11 @@ class WorldScene {
     }
     const [px_, py_] = lerp(p, p.t);
     ents.push({ y: py_, draw: () => { this.drawChar('hero', p.dir, p.t < 1 ? stepFrame(p.anim) : 0, px_, py_, p); this.drawGrassOver(p, px_, py_); } });
+    if (typeof Detail !== 'undefined') Detail.ents(this, ents, camX, camY, x0, y0);
     ents.sort((a, b) => a.y - b.y).forEach(e => e.draw());
     this.drawLifeAir(camX, camY);
     Particles.draw(camX, camY);
+    if (typeof Detail !== 'undefined') Detail.air(this, camX, camY);
 
     // ---- the lighting pass: everything above is multiplied by the ambient, then lit
     const sun = this.sunPos();
@@ -398,6 +401,7 @@ class WorldScene {
     for (const [lx, ly] of this._doorLights || []) FX.addLight(lx, ly, 70 + Math.sin(TIME * 8 + lx) * 4, 'rgba(255,200,120,1)', 0.7);
     if (this.map.dark) FX.addLight(px_ + 16, py_ + 16, 210 + Math.sin(TIME * 7) * 6, 'rgba(255,206,140,1)', 0.95);
     if (sun) FX.addLight(sun[0], sun[1], 320, `rgba(${sun[2].join(',')},1)`, 0.45);
+    if (typeof Detail !== 'undefined') Detail.lights(this, camX, camY);
     FX.endLights();
     // additive sparkle on top of the lit scene
     for (const [lx, ly, ch] of lights) {
@@ -409,6 +413,7 @@ class WorldScene {
       FX.godRays(sun[0], sun[1], `rgba(${sun[2].join(',')},.07)`);
       FX.lensFlare(sun[0], sun[1], 0.85 + Math.sin(TIME * 0.7) * 0.06, sun[2]);
     }
+    if (typeof Detail !== 'undefined') Detail.post(this, camX, camY);
     Weather.drawWorld();
     FX.bloom(this.map.dark ? 0.42 : 0.26);
     // vignette

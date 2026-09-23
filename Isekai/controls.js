@@ -16,7 +16,7 @@ const Controls = {
     fitCanvas();
   },
   label(a) {
-    const L = { keys: { ok: 'Z', cancel: 'X', menu: 'Esc' }, touch: { ok: 'A', cancel: 'B', menu: 'MENU' }, pad: { ok: 'Ⓐ', cancel: 'Ⓑ', menu: 'Start' } };
+    const L = { keys: { ok: 'Z', cancel: 'X', menu: 'C' }, touch: { ok: 'A', cancel: 'B', menu: 'MENU' }, pad: { ok: 'Ⓐ', cancel: 'Ⓑ', menu: 'Start' } };
     return L[this.mode][a];
   },
   // space the canvas must leave free at the bottom (portrait phones)

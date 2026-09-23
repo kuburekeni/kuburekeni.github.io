@@ -831,7 +831,7 @@ async function magicTraining() {
   const N = 'Court Mage Isolde', s = 'courtmage';
   await talk([
     [N, `Sit. Hands flat. Good.`, s],
-    [N, `A spell is a sequence. The rune appears; you answer it before it fades. Answer wrongly and nothing happens, which is the polite outcome.`, s],
+    [N, `A spell is a sequence. Each rune carries a mark: ${Runes.keys() ? 'a letter. Type that letter' : 'an arrow. Press that direction'} before the rune fades. Answer wrongly and nothing happens, which is the polite outcome.`, s],
     [N, `Twelve runes. One attempt. Begin when the first one lights.`, s]
   ]);
   if (!(await confirm(N, `Ready?`, s))) { await say(N, `Then come back when you are.`, s); return; }
@@ -887,18 +887,28 @@ async function millNight() {
   World.refreshNpcs(true);
   await say(null, 'Two wolves have a girl backed against the mill wall. She is your age. She has a pitchfork and no idea what to do with it.');
   await say('Girl', `Get back! GET BACK!`, 'wrenkid');
-  const c = await ask(null, 'You are standing in the dark, and they have not seen you.', ['Run in now.', 'Stay in the dark and watch a moment.'], null, false);
+  await say(null, 'One of the wolves lunges. The pitchfork goes flying. She screams.');
+  const c = await askTimed(null, 'You are standing in the dark, and they have not seen you. MOVE — or don\'t.', ['Run in now!', 'Stay in the dark and watch a moment.'], 5);
   if (c === 0) {
     G.flags.millWatched = false;
     G.personality = 'extro';
     await say(null, 'You do not decide to move. You are already moving, shouting, waving your arms like a lunatic.');
-  } else {
+  } else if (c === 1) {
     G.flags.millWatched = true;
     G.personality = 'intro';
     await say(null, 'You wait. You count the wolves, you watch how they circle, you pick the one to hit first.');
     await say(null, 'It takes eleven seconds. It is a long eleven seconds for her.');
     await say('Girl', `IS SOMEONE THERE? I CAN SEE YOU!`, 'wrenkid');
     await say(null, 'Then you come out of the dark.');
+  } else {
+    // too slow: the moment chose for you
+    G.flags.millWatched = true; G.flags.millFroze = true;
+    G.personality = 'intro';
+    Sound.sfx('buzz');
+    await say(null, 'You mean to move. Your legs do not agree. Your heart is so loud you are sure the wolves can hear it.');
+    await say(null, 'Somewhere very far away there is a road, and headlights, and a girl in a yellow coat — and this time you are standing still.');
+    await say('Girl', `PLEASE! SOMEBODY!`, 'wrenkid');
+    await say(null, 'It is her voice that breaks it. You come out of the dark late, and you both know it.');
   }
   const res = await startBattle(['ywolf', 'ywolf'], { bg: 'night', noRun: true, music: 'battle', intro: 'The wolves turn on you.' });
   if (res === 'lose') return;
@@ -911,7 +921,7 @@ async function millNight() {
     await talk([
       ['Girl', `…You were there. Before. In the dark.`, s],
       ['Girl', `I saw you. I was shouting and you were standing there.`, s],
-      [hero(), `I was working out how to win.`, 'hero'],
+      [hero(), G.flags.millFroze ? `I… couldn't move. I'm sorry.` : `I was working out how to win.`, 'hero'],
       ['Girl', `I'm Wren. I work the Valen stables. You're the Valen child, aren't you.`, s],
       ['Girl', `Thank you for the end bit. I mean that. I'm just going to be honest and say the first bit is going to sit with me.`, s]
     ]);
@@ -1135,6 +1145,12 @@ async function enterThrone() {
   G.flags.noSave = false;
   const res = await startBattle(['king'], { bg: 'castle', music: 'boss', permadeath: true, keepDark: true });
   if (res === 'lose') return;
+  // the fight ends: bring the hall back up so the last words happen in front of you, not over black
+  Sound.stop();
+  const king = World.npcs && World.npcs.find(n => n.spr === 'demonking' || n.id === 'demonking' || n.id === 'king');
+  if (king) { king.dir = 'down'; }
+  await fadeIn(0.9);
+  await wait(0.4);
   G.flags.kingDone = true;
   if (res === 'deal') await endingDeal();
   else await endingPurge();

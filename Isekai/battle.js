@@ -544,13 +544,13 @@ class BattleScene {
   }
 
   // a blow aimed at you can be turned aside if you react in time
-  async tryParry(tgt) {
+  async tryParry(tgt, src) {
     if (!tgt || tgt.enemy || tgt.cls !== 'hero' || tgt.hp <= 0) return 1;
-    const p = new ParryScene(this, tgt);
+    const p = new ParryScene(this, tgt, src);
     Scenes.push(p);
     const r = await p.promise;
     if (r === 'perfect') {
-      Sound.sfx('buff'); this.num(tgt, 'PARRY', UI.mp); this.gainResolve(8);
+      this.gainResolve(8);
       tgt.pose = 'guard'; setTimeout(() => { tgt.pose = ''; }, 300);
       return tgt.status.riposte ? 0 : 0.35;
     }
@@ -588,7 +588,7 @@ class BattleScene {
     if (a.type === 'attack') {
       const t = this.retarget(s, a.tgt); if (!t) return;
       let guardMult = 1;
-      if (s.enemy) guardMult = await this.tryParry(t);
+      if (s.enemy) guardMult = await this.tryParry(t, s);
       await this.lunge(s);
       this.slashFx(t, '#ffffff');
       if (s.enemy && (Math.random() < 0.05 || (t.status && t.status.evade && Math.random() < 0.4))) { Sound.sfx('miss'); this.num(t, 'Miss', UI.dim); await this.say(`${s.name} attacks, and misses.`, 0.7); return; }
@@ -707,7 +707,7 @@ class BattleScene {
       const hits = sk.hits || 1;
       const lines = [];
       let anyGuard = 1;
-      if (s.enemy && targets.length === 1 && sk.kind === 'phys') anyGuard = await this.tryParry(targets[0]);
+      if (s.enemy && targets.length === 1 && sk.kind === 'phys') anyGuard = await this.tryParry(targets[0], s);
       for (let h = 0; h < hits; h++) {
         for (const t of targets) {
           if (t.hp <= 0) continue;
@@ -856,6 +856,7 @@ class BattleScene {
       this.parts = this.parts.filter(p => p.t < p.life);
     }
     if (this.punch > 0) this.punch -= dt;
+
     this.bgT = (this.bgT || 0) + dt;
   }
 
@@ -913,6 +914,18 @@ class BattleScene {
   }
 
   // drifting clouds, swaying grass in front of the camera, floating motes
+  // zoom the camera in on whoever is about to be hit
+  applyFocus() {
+    const f = this.focus; if (!f || f.k <= 0) return;
+    const k = f.k * f.k * (3 - 2 * f.k), z = 1 + 0.6 * k;
+    const tx = (W / 2 - f.x) * k * 0.9, ty = (H * 0.45 - f.y) * k * 0.9;
+    ctx.translate(f.x + tx, f.y + ty); ctx.scale(z, z); ctx.translate(-f.x, -f.y);
+  }
+  focusPt(x, y) {
+    const f = this.focus; if (!f || f.k <= 0) return [x, y];
+    const k = f.k * f.k * (3 - 2 * f.k), z = 1 + 0.6 * k;
+    return [(x - f.x) * z + f.x + (W / 2 - f.x) * k * 0.9, (y - f.y) * z + f.y + (H * 0.45 - f.y) * k * 0.9];
+  }
   drawForeground() {
     const t = this.bgT || 0, outdoors = ['forest', 'village', 'road', 'yard', 'night'].includes(this.bg);
     if (outdoors) {
@@ -1036,6 +1049,10 @@ class BattleScene {
     const sh = this.shakeT > 0 && Gfx.shake ? rand(-5, 5) : 0;
     ctx.save(); ctx.translate(sh, sh * 0.5);
     if (this.punch > 0 && Gfx.shake) { const z = 1 + this.punch * 0.12; ctx.translate(this.punchX, this.punchY); ctx.scale(z, z); ctx.translate(-this.punchX, -this.punchY); }
+    // let go of a parry zoom on real time, whatever else is going on
+    { const now = performance.now() / 1000, dtr = Math.min(0.1, now - (this._fl || now)); this._fl = now;
+      if (this.focus && this.focus.release) { this.focus.k -= dtr * 3.5; if (this.focus.k <= 0) this.focus = null; } }
+    this.applyFocus();
     this.drawBackground();
     for (const e of this.enemies) this.drawFighter(e);
     G.party.forEach(m => this.drawFighter(m));
@@ -1054,6 +1071,18 @@ class BattleScene {
     FX.bloom(0.32);
     if (this.bg === 'forest' || this.bg === 'village' || this.bg === 'road' || this.bg === 'yard') FX.lensFlare(W * 0.8, 70, 0.55, [255, 245, 200]);
     Weather.drawScreen();
+    // parry moment: the world drains to grey, only you and the blow keep their colour
+    if (this.focus && this.focus.k > 0) {
+      const k = clamp(this.focus.k, 0, 1);
+      ctx.save(); ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = `rgba(128,128,128,${k})`; ctx.fillRect(0, 0, W, H); ctx.restore();
+      ctx.fillStyle = `rgba(8,6,18,${0.4 * k})`; ctx.fillRect(0, 0, W, H);
+      ctx.save(); ctx.translate(sh, sh * 0.5); this.applyFocus();
+      if (this.focus.src && this.focus.src.hp > 0) this.drawFighter(this.focus.src);
+      this.drawFighter(this.focus.who);
+      ctx.restore();
+      const vg = ctx.createRadialGradient(W / 2, H * 0.42, H * 0.25, W / 2, H * 0.42, H * 0.8);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(0,0,0,${0.55 * k})`); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    }
     // Last Crossing: darkness, two headlights, white
     if (this.cross) {
       const t = this.cross.t;
@@ -1224,7 +1253,7 @@ class StrikeScene {
   constructor(battle, kind, label) {
     this.transparent = true; this.b = battle; this.kind = kind; this.label = label;
     this.p = 0; this.dir = 1; this.done = false; this.flash = 0;
-    this.speed = [0, 1.05, 1.3, 1.5, 1.7][Math.min(4, G.party.length)];
+    this.speed = [0, 0.58, 0.7, 0.82, 0.94][Math.min(4, G.party.length)];
     this.good = kind === 'mag' ? 0.2 : 0.17;
     this.perfect = 0.045;
     this.center = rand(0.35, 0.65);
@@ -1270,7 +1299,7 @@ class ChainScene {
     this.n = Math.max(2, Math.min(5, (sk.hits || 1) + 1));
     this.zones = [];
     for (let i = 0; i < this.n; i++) this.zones.push({ c: (i + 0.5) / this.n + rand(-0.04, 0.04), hit: 0 });
-    this.p = 0; this.speed = 0.62 + this.n * 0.06 + G.party.length * 0.04;
+    this.p = 0; this.speed = 0.34 + this.n * 0.035 + G.party.length * 0.025;
     this.done = false; this.flash = 0; this.i = 0;
     this.promise = new Promise(r => this.resolve = r);
   }
@@ -1323,17 +1352,38 @@ class ChainScene {
 }
 
 // ---------------------------------------------------------------- rune sequences for spells
-const GLYPHS = [
-  { a: 'up', icon: '▲' }, { a: 'down', icon: '▼' }, { a: 'left', icon: '◀' }, { a: 'right', icon: '▶' },
-  { a: 'ok', icon: '●' }, { a: 'cancel', icon: '■' }
-];
+// A rune is just a number; how you answer it depends on what you're playing with.
+// Keyboard: it shows a letter and you type that letter. Touch or controller: it shows
+// an arrow and you press that direction on the D-pad.
+const RUNE_LETTERS = 'ASDFGHJKLQWERTUP'.split('');
+const RUNE_DIRS = ['up', 'right', 'down', 'left'];
+const Runes = {
+  make() { return { n: irand(0, 9999) }; },
+  keys() { return Controls.mode === 'keys'; },
+  want(r) { return this.keys() ? 'Key' + RUNE_LETTERS[r.n % RUNE_LETTERS.length] : RUNE_DIRS[r.n % 4]; },
+  // what the player answered this frame, or null
+  pressed() {
+    if (this.keys()) { for (const k of Input.pressedSet) if (/^Key[A-Z]$/.test(k) && !['KeyZ', 'KeyX', 'KeyC', 'KeyM'].includes(k)) return k; return null; }
+    for (const d of RUNE_DIRS) if (Input.pressed(d)) return d;
+    return null;
+  },
+  hint() { return this.keys() ? 'Type the letter' : 'Press the arrow'; },
+  draw(r, cx, cy, size, col) {
+    if (this.keys()) { text(RUNE_LETTERS[r.n % RUNE_LETTERS.length], cx, cy - size * 0.55, col, size, 'center'); return; }
+    const d = RUNE_DIRS[r.n % 4], a = { up: -Math.PI / 2, right: 0, down: Math.PI / 2, left: Math.PI }[d], s = size * 0.5;
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(a);
+    ctx.fillStyle = UI.ink; ctx.beginPath(); ctx.moveTo(s + 3, 0); ctx.lineTo(-s * 0.2, -s - 3); ctx.lineTo(-s * 0.2, -s * 0.4); ctx.lineTo(-s - 3, -s * 0.4); ctx.lineTo(-s - 3, s * 0.4); ctx.lineTo(-s * 0.2, s * 0.4); ctx.lineTo(-s * 0.2, s + 3); ctx.fill();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(s, 0); ctx.lineTo(-s * 0.1, -s); ctx.lineTo(-s * 0.1, -s * 0.3); ctx.lineTo(-s, -s * 0.3); ctx.lineTo(-s, s * 0.3); ctx.lineTo(-s * 0.1, s * 0.3); ctx.lineTo(-s * 0.1, s); ctx.fill();
+    ctx.restore();
+  }
+};
 class GlyphScene {
   constructor(battle, sk) {
     this.transparent = true; this.b = battle; this.sk = sk;
     this.n = sk.glyphs || 3;
-    this.seq = Array.from({ length: this.n }, () => pick(GLYPHS));
+    this.seq = Array.from({ length: this.n }, () => Runes.make());
     this.i = 0; this.good = 0; this.wrong = 0;
-    this.per = Math.max(0.55, 1.25 - G.party.length * 0.08 - this.n * 0.03);
+    this.per = Math.max(1.0, 1.9 - G.party.length * 0.08 - this.n * 0.03);
     this.t = 0; this.done = false; this.flash = 0;
     this.promise = new Promise(r => this.resolve = r);
   }
@@ -1347,9 +1397,9 @@ class GlyphScene {
     if (this.done) { this.flash -= dt; if (this.flash <= 0) { Scenes.remove(this); this.resolve(this.result); } return; }
     this.t += dt;
     const want = this.seq[this.i];
-    for (const g of GLYPHS) {
-      if (!Input.pressed(g.a)) continue;
-      if (g.a === want.a) { this.good++; this.seq[this.i].ok = true; Sound.sfx('cursor'); }
+    const got = Runes.pressed();
+    if (got) {
+      if (got === Runes.want(want)) { this.good++; this.seq[this.i].ok = true; Sound.sfx('cursor'); }
       else { this.wrong++; this.seq[this.i].ok = false; Sound.sfx('buzz'); }
       this.i++; this.t = 0;
       if (this.i >= this.n) this.finish();
@@ -1361,7 +1411,7 @@ class GlyphScene {
     const w = Math.min(460, W - 80), x = (W - w) / 2, y = 180;
     drawWindow(x, y, w, 120);
     text(this.sk.name.toUpperCase(), x + 20, y + 12, UI.mp, 14);
-    text('Match the runes', x + w - 20, y + 12, UI.dim, 13, 'right', false);
+    text(Runes.hint() + (Runes.keys() ? 's' : 's'), x + w - 20, y + 12, UI.dim, 13, 'right', false);
     const gw = w / (this.n + 1);
     this.seq.forEach((g, i) => {
       const gx = x + gw * (i + 0.5) + gw * 0.25, gy = y + 48;
@@ -1370,7 +1420,7 @@ class GlyphScene {
       if (cur) { glow(gx + 14, gy + 16, 34, 'rgba(111,183,242,.6)'); ctx.strokeStyle = UI.sakura; ctx.lineWidth = 2; ctx.strokeRect(gx - 4, gy - 4, 36, 40); }
       ctx.fillStyle = UI.ink; ctx.fillRect(gx, gy, 28, 32);
       ctx.fillStyle = '#2a2448'; ctx.fillRect(gx + 2, gy + 2, 24, 28);
-      text(g.icon, gx + 14, gy + 8, col, 18, 'center');
+      Runes.draw(g, gx + 14, gy + 17, 20, col);
     });
     if (!this.done) bar(x + 20, y + 100, w - 40, 6, this.per - this.t, this.per, this.t > this.per * 0.6 ? UI.bad : UI.mp);
     else text(this.good === this.n ? 'PERFECT CASTING!' : this.good ? `${this.good}/${this.n} runes` : 'FIZZLE', W / 2, y + 96, this.good === this.n ? UI.gold : this.good ? UI.paper : UI.bad, 16, 'center');
@@ -1379,34 +1429,71 @@ class GlyphScene {
 
 // ---------------------------------------------------------------- parrying
 class ParryScene {
-  constructor(battle, who) {
-    this.transparent = true; this.b = battle; this.who = who;
-    this.t = 0; this.window = [rand(0.32, 0.55), 0];
-    this.window[1] = this.window[0] + 0.26;
-    this.dur = this.window[1] + 0.18;
-    this.result = 'none'; this.pressed = false;
+  // Time slows, the camera closes in on you, the world goes grey, and a ring
+  // closes around you. Press when it lands.
+  constructor(battle, who, src) {
+    this.transparent = true; this.b = battle; this.who = who; this.src = src;
+    this.t = 0; this.window = [0.72, 1.18];
+    this.dur = 1.4; this.result = 'none'; this.pressed = false; this.endAt = 0;
+    const [x, y] = battle.pos(who);
+    battle.focus = { x, y: y - 20, k: 0, who, src, release: false };
+    this.lunge0 = src ? src.lunge : 0;
+    if (src && src.sprKey && !src.sprKey.startsWith('m:')) src.pose = 'windup';
+    Sound.sfx('charge');
     this.promise = new Promise(r => this.resolve = r);
   }
   update(dt) {
-    this.b.tick(dt);
+    this.b.tick(dt * 0.35);                       // everything else in slow motion
     this.t += dt;
-    if (!this.pressed && Input.pressed('ok')) {
+    const f = this.b.focus;
+    if (f && !f.release) f.k = Math.min(1, this.t / 0.3);
+    if (this.src && !this.pressed) this.src.lunge = this.lunge0 + Math.min(1, this.t / this.window[0]) * 40;
+    if (!this.pressed && this.t > 0.15 && Input.pressed('ok')) {
       this.pressed = true;
       this.result = (this.t >= this.window[0] && this.t <= this.window[1]) ? 'perfect' : 'early';
+      if (this.result === 'perfect') {
+        Sound.sfx('parry'); Sound.sfx('resolve'); this.b.shakeT = 0.2; this.flash = 1;
+        const [x, y] = this.b.pos(this.who); this.b.impact(this.who, true, '#9ad0ff');
+        if (this.src) this.src.lunge = this.lunge0 - 10;
+      } else Sound.sfx('miss');
+      this.endAt = this.t + (this.result === 'perfect' ? 0.7 : 0.35);
     }
-    if (this.t >= this.dur) { Scenes.remove(this); this.resolve(this.result); }
+    if (this.flash > 0) this.flash -= dt * 4;
+    if ((this.pressed && this.t >= this.endAt) || (!this.pressed && this.t >= this.dur)) {
+      if (this.src) { this.src.lunge = this.lunge0; if (this.src.pose === 'windup') this.src.pose = ''; }
+      if (this.b.focus) this.b.focus.release = true;
+      Scenes.remove(this); this.resolve(this.result);
+    }
   }
   draw() {
-    const [x, y] = this.b.pos(this.who);
-    const live = this.t >= this.window[0] && this.t <= this.window[1];
-    if (live && !this.pressed) {
-      glow(x, y - 54, 40, 'rgba(242,143,173,.7)');
-      text('!', x, y - 74, UI.sakura, 34, 'center');
-      text(`${Controls.label('ok')}`, x, y - 36, UI.paper, 13, 'center');
-    } else if (!this.pressed) {
-      ctx.globalAlpha = 0.5; text('!', x, y - 74, UI.dim, 26, 'center'); ctx.globalAlpha = 1;
+    const [x0, y0] = this.b.pos(this.who);
+    const [x, y] = this.b.focusPt(x0, y0 - 20);
+    const [w0, w1] = this.window, t = this.t;
+    const live = t >= w0 && t <= w1;
+    if (!this.pressed) {
+      // the closing ring
+      const q = clamp((t - 0.1) / (w0 - 0.1), 0, 1), r = 170 - q * 110;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = live ? `rgba(242,143,173,${0.7 + 0.3 * Math.sin(TIME * 30)})` : 'rgba(255,255,255,.55)';
+      ctx.lineWidth = live ? 7 : 3; ctx.beginPath(); ctx.arc(x, y, live ? 60 : r, 0, 7); ctx.stroke();
+      ctx.strokeStyle = 'rgba(242,143,173,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 60, 0, 7); ctx.stroke();
+      ctx.restore();
+      if (live) {
+        glow(x, y - 96, 60, 'rgba(242,143,173,.6)');
+        text('PARRY!', x, y - 118, UI.sakura, 30, 'center');
+        const lbl = Controls.label('ok'), kw = Math.max(34, textWidth(lbl, 18) + 18);
+        drawWindow(x - kw / 2, y - 80, kw, 30, 0.95); text(lbl, x, y - 74, UI.paper, 18, 'center');
+      } else if (t < w0) {
+        text('Get ready…', x, y - 110, 'rgba(240,230,210,.85)', 16, 'center');
+      }
+    } else if (this.result === 'perfect') {
+      const p = clamp((t - (this.endAt - 0.7)) / 0.7, 0, 1), sz = Math.round(38 + (1 - p) * 20);
+      glow(x, y - 100, 90, 'rgba(154,208,255,.7)');
+      text('PARRIED!', x + 2, y - 118 + 2, UI.ink, sz, 'center'); text('PARRIED!', x, y - 118, '#bfe6ff', sz, 'center');
+      if (this.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${this.flash * 0.6})`; ctx.fillRect(0, 0, W, H); }
+    } else {
+      text('Too early!', x, y - 110, UI.dim, 20, 'center');
     }
-    if (this.pressed) text(this.result === 'perfect' ? 'PARRY!' : 'too early', x, y - 74, this.result === 'perfect' ? UI.mp : UI.dim, this.result === 'perfect' ? 22 : 14, 'center');
   }
 }
 

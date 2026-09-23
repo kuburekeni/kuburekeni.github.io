@@ -703,12 +703,12 @@ function monsterSprite(id, flip, res = 48) {
 
 // ---------------------------------------------------------------- tiles
 // solid (blocks movement). Z = the boss door (opens after the final battle)
-const SOLID = new Set('T~RWDQFSNOrXL#PHZVyCbhetzkAJIUvgiqlw12357789+[]046*^@<>!?{}$EMGn'.split(''));
+const SOLID = new Set('T~RWDQFSNOrXL#PHZVyCbhetzkAJIUvgiqlw12357789+[]046*^@<>!?{}$EMGn()|/£'.split(''));
 // doors you walk INTO (the warp fires when you bump them, so you never stand on top of a door)
 const DOOR_TILES = new Set(['E', ']', 'M', 'G', 'n']);
-const ANIMATED = new Set(['~', 'L', 'O', 'z', 'I', 'l', 'v', '6', '^', '!']);
+const ANIMATED = new Set(['~', 'L', 'O', 'z', 'I', 'l', 'v', '6', '^', '!', '|']);
 const TALL = new Set('RWDE#VyJIUw58gin9b+[]M'.split(''));   // building fronts that cast a soft shadow on the tile below (trees and rocks draw their own)
-const GRASSY = new Set('.,fQFSNOTX2q7%&04>?'.split(''));
+const GRASSY = new Set('.,fQFSNOTX2q7%&04>?"'.split(''));
 const THEME_GROUND = { grass: '#5ea84a', night: '#5ea84a', town: '#8f8a80', city: '#9a948a', cave: '#4a3a30', ash: '#5a5055', castle: '#2a2238', tokyo: '#6a6470', interior: '#7a5a3a' };
 
 function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -739,7 +739,7 @@ function grassBase(x, r, theme) {
     for (let i = 0; i < 3; i++) { const a = 3 + Math.floor(r() * 26), b = 3 + Math.floor(r() * 26); px(x, '#3a3236', a, b, 3, 2); px(x, '#7a7075', a, b, 2, 1); }
     return;
   }
-  const P = theme === 'tokyo' ? ['#3a6232', '#436e3a', '#4e7a44', '#5a8a4e', '#6a9a5a'] : ['#478a38', '#529a42', '#5ea84a', '#6ab454', '#7ac262'];
+  const P = theme === 'tokyo' ? ['#3a6232', '#436e3a', '#4e7a44', '#5a8a4e', '#6a9a5a'] : ['#438c36', '#4f9d41', '#5bad4a', '#69bb55', '#7ecb66'];
   px(x, P[2], 0, 0, 32, 32);
   ditherBlob(x, r, P[1], 3, 4, 9);
   ditherBlob(x, r, P[3], 3, 3, 7);
@@ -1138,12 +1138,69 @@ function drawTile(x, ch, theme, v, frame, mask, up, under) {
       }
       break;
     }
+    // ------------------------------------------------ town dressing (added for busier streets)
+    case '(': { // crates and a barrel
+      (theme === 'city' || theme === 'town') ? speckle(x, r, THEME_GROUND[theme], [shade(THEME_GROUND[theme], -0.08)], 20) : G_();
+      x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(2, 26, 29, 5);
+      const crate = (a, b, s) => { px(x, UI.ink, a - 1, b - 1, s + 2, s + 2); px(x, '#a8743a', a, b, s, s); px(x, '#c8945a', a, b, s, 2); px(x, '#7a4e22', a, b + s - 2, s, 2); px(x, '#7a4e22', a + (s >> 1) - 1, b, 2, s); px(x, '#6a4020', a, b, 1, s); px(x, '#6a4020', a + s - 1, b, 1, s); };
+      crate(2, 15, 12); crate(4, 5, 9);
+      px(x, UI.ink, 16, 9, 14, 20); px(x, '#8a5a2e', 17, 10, 12, 18); px(x, '#a8743a', 18, 10, 4, 18); px(x, '#5a5a64', 17, 12, 12, 2); px(x, '#5a5a64', 17, 23, 12, 2); px(x, '#b8b8c4', 18, 12, 3, 1);
+      if (v % 2) { px(x, '#e5534b', 6, 3, 3, 3); px(x, '#7ed36f', 9, 2, 2, 2); px(x, '#f2c94c', 20, 7, 3, 3); }
+      break;
+    }
+    case ')': { // flower planter
+      (theme === 'city' || theme === 'town') ? speckle(x, r, THEME_GROUND[theme], [shade(THEME_GROUND[theme], -0.08)], 20) : G_();
+      x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(3, 26, 27, 5);
+      px(x, UI.ink, 2, 15, 28, 13); px(x, '#8a5a32', 3, 16, 26, 11); px(x, '#a8784a', 3, 16, 26, 2); px(x, '#6a4020', 3, 25, 26, 2);
+      const fl = [['#f28fad', '#fff3a0'], ['#e5534b', '#ffd070'], ['#a8c8ff', '#ffffff'], ['#f2a03a', '#f28fad']][v];
+      for (let i = 0; i < 9; i++) { const a = 4 + i * 3, b = 8 + (i * 5) % 7; px(x, '#2f7428', a + 1, b + 2, 1, 16 - b); px(x, '#46963a', a - 1, b + 5, 2, 2); px(x, fl[i % 2], a, b, 3, 3); px(x, '#ffffff', a + 1, b, 1, 1); }
+      break;
+    }
+    case '|': { // pennant pole (bunting is strung between neighbouring poles)
+      (theme === 'city' || theme === 'town') ? speckle(x, r, THEME_GROUND[theme], [shade(THEME_GROUND[theme], -0.08)], 20) : G_();
+      x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(12, 27, 10, 4);
+      px(x, UI.ink, 14, 1, 5, 29); px(x, '#8a5a2e', 15, 2, 3, 27); px(x, '#b8844a', 15, 2, 1, 27); px(x, '#f2c94c', 14, 0, 5, 3);
+      const pc = ['#c83a3a', '#2e3f82', '#3a9a4a', '#d8a030'][v];
+      x.fillStyle = pc; x.beginPath(); x.moveTo(18, 3); x.lineTo(30, 7 + frame); x.lineTo(18, 11); x.fill();
+      px(x, shade(pc, 0.35), 18, 4, 6, 1);
+      break;
+    }
+    case '"': { // flowerbed you can walk through
+      G_();
+      const cols = [['#f28fad', '#fff3a0', '#ffffff'], ['#e5534b', '#f2c94c', '#ffffff'], ['#a8c8ff', '#f28fad', '#fff3a0'], ['#c88aff', '#ffffff', '#f2a03a']][v];
+      for (let i = 0; i < 16; i++) {
+        const a = 2 + Math.floor(r() * 27), b = 4 + Math.floor(r() * 25), c0 = cols[i % 3];
+        px(x, '#2f7428', a + 1, b + 2, 1, 3); px(x, c0, a, b, 3, 2); px(x, c0, a + 1, b - 1, 1, 4); px(x, shade(c0, 0.4), a + 1, b, 1, 1);
+      }
+      break;
+    }
+    case '/': { // a handcart piled with produce (or ore, in Ironhold)
+      (theme === 'city' || theme === 'town') ? speckle(x, r, THEME_GROUND[theme], [shade(THEME_GROUND[theme], -0.08)], 20) : G_();
+      x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(2, 26, 29, 5);
+      px(x, UI.ink, 1, 12, 30, 11); px(x, '#8a5a2e', 2, 13, 28, 9); px(x, '#b8844a', 2, 13, 28, 2); px(x, '#6a4020', 9, 13, 1, 9); px(x, '#6a4020', 20, 13, 1, 9);
+      const ore = theme === 'town';
+      const goods = ore ? ['#5a5a64', '#8a8a94', '#6a5a50', '#d8a840'] : ['#e5534b', '#7ed36f', '#f2c94c', '#f2a03a'];
+      for (let i = 0; i < 11; i++) { const a = 3 + i * 2.5, b = 6 + (i % 3) * 2; x.fillStyle = goods[i % 4]; x.beginPath(); x.arc(a + 1, b + 3, 2.4, 0, 7); x.fill(); px(x, '#ffffff', Math.round(a), b + 2, 1, 1); }
+      for (const wx of [7, 23]) { x.fillStyle = UI.ink; x.beginPath(); x.arc(wx, 24, 5, 0, 7); x.fill(); x.fillStyle = '#6a4020'; x.beginPath(); x.arc(wx, 24, 4, 0, 7); x.fill(); px(x, '#b8844a', wx - 1, 21, 2, 6); px(x, '#b8844a', wx - 3, 23, 6, 2); }
+      px(x, '#6a4020', 28, 16, 4, 2);
+      break;
+    }
+    case '£': { // a statue on a plinth
+      (theme === 'city' || theme === 'town') ? speckle(x, r, THEME_GROUND[theme], [shade(THEME_GROUND[theme], -0.08)], 20) : G_();
+      x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(3, 26, 27, 5);
+      px(x, UI.ink, 4, 19, 24, 10); px(x, '#b8b2a4', 5, 20, 22, 8); px(x, '#d8d2c4', 5, 20, 22, 2); px(x, '#8a8478', 5, 26, 22, 2);
+      const st = '#9aa8a0', sd = '#6a7a72', sl = '#c8d8d0';
+      px(x, UI.ink, 11, 1, 10, 19); px(x, st, 12, 2, 8, 6); px(x, sl, 12, 2, 3, 2); px(x, st, 11, 8, 10, 11); px(x, sd, 18, 8, 3, 11); px(x, sl, 11, 8, 2, 11);
+      px(x, UI.ink, 21, 0, 3, 14); px(x, sl, 22, 1, 1, 12); px(x, sd, 20, 12, 5, 2);
+      px(x, '#f2c94c', 15, 22, 2, 2);
+      break;
+    }
     default: px(x, '#ff00ff', 0, 0, 32, 32);
   }
 }
 function pick2(r, a) { return a[Math.floor(r() * a.length)]; }
 // props that normally stand on grass; in a yard or street they take the ground around them
-const ON_GROUND = new Set('!&*04<>?@FNOQSTq'.split(''));
+const ON_GROUND = new Set('!&*04<>?@FNOQSTq()|/£'.split(''));
 function tileCanvas(ch, theme, v, frame, mask = 0, up = '', under = '') {
   const key = ch + theme + v + frame + ':' + mask + (TALL.has(up) ? up : '') + (under ? '/' + under : '');
   if (TileCache[key]) return TileCache[key];

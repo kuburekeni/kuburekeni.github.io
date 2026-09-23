@@ -20,6 +20,14 @@ class DialogScene {
     this.chars = Math.min(this.full, this.chars + dt * 55);
     if (Math.floor(this.chars) !== prev && Math.floor(this.chars) % 3 === 0 && this.chars < this.full) Sound.sfx('talk');
     const last = this.page === this.pages.length - 1;
+    if (this.chars >= this.full && last && this.options && this.timer) {
+      // a decision against the clock: say nothing, and the moment decides for you
+      if (this.left === undefined) this.left = this.timer;
+      const before = this.left;
+      this.left -= dt;
+      if (Math.floor(before * 2) !== Math.floor(this.left * 2) && this.left > 0) Sound.sfx(this.left < 1.5 ? 'buzz' : 'cursor');
+      if (this.left <= 0) { Scenes.remove(this); this.resolve(-1); return; }
+    }
     if (this.chars >= this.full && last && this.options) {
       if (Input.pressed('up')) { this.sel = (this.sel + this.options.length - 1) % this.options.length; Sound.sfx('cursor'); }
       if (Input.pressed('down')) { this.sel = (this.sel + 1) % this.options.length; Sound.sfx('cursor'); }
@@ -60,6 +68,16 @@ class DialogScene {
       ctx.fillStyle = UI.sakura; ctx.beginPath();
       ctx.moveTo(x + w - 30, y + h - 22 + b); ctx.lineTo(x + w - 18, y + h - 22 + b); ctx.lineTo(x + w - 24, y + h - 15 + b); ctx.fill();
     }
+    if (this.options && last && this.chars >= this.full && this.timer) {
+      const p = clamp((this.left === undefined ? this.timer : this.left) / this.timer, 0, 1);
+      const urgent = p < 0.35 && Math.floor(TIME * 8) % 2;
+      // the edges of the screen close in while you wait
+      const vg = ctx.createRadialGradient(W / 2, H / 2, H * (0.2 + p * 0.3), W / 2, H / 2, H * 0.8);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(60,0,10,${0.25 + (1 - p) * 0.5})`);
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+      drawWindow(x, y - 30, 210, 26, 0.9);
+      bar(x + 12, y - 21, 186, 8, p, 1, urgent ? '#ffffff' : p < 0.35 ? UI.bad : UI.gold);
+    }
     if (this.options && last && this.chars >= this.full) {
       const ow = Math.max(...this.options.map(o => textWidth(o, 16))) + 60;
       const oh = this.options.length * 30 + 20;
@@ -77,6 +95,11 @@ async function talk(lines) { for (const l of lines) await say(l[0], l[1], l[2]);
 function ask(name, str, options, spr, cancel = true) {
   options.cancel = cancel;
   const d = new DialogScene(name, str, spr, options); Scenes.push(d); return d.promise;
+}
+// like ask(), but the options only wait `secs` seconds; silence resolves to -1
+function askTimed(name, str, options, secs, spr) {
+  options.cancel = false;
+  const d = new DialogScene(name, str, spr, options); d.timer = secs; Scenes.push(d); return d.promise;
 }
 async function confirm(name, str, spr) { return (await ask(name, str, ['Yes', 'No'], spr)) === 0; }
 
@@ -378,7 +401,7 @@ async function settingsMenu() {
       { label: 'Weather', right: onoff(Gfx.weather), desc: 'Rain, storms, snow, mist and ashfall out in the world.' },
       { label: 'Rain on the screen', right: onoff(Gfx.drops), desc: 'Raindrops land on the screen itself and run down it.' },
       { label: 'Screen shake', right: onoff(Gfx.shake), desc: 'Impacts shake the view.' },
-      { label: 'Controls', desc: Controls.mode === 'touch' ? 'Touch: slide your thumb on the D-pad to move. A confirms, B goes back, MENU opens the menu, RUN toggles running. ⛶ goes fullscreen. Keyboards and controllers also work — the game switches automatically.' : Controls.mode === 'pad' ? 'Controller: D-pad / left stick to move. A confirm, B back, Start menu, hold X or a shoulder button to run.' : 'Move: Arrows / WASD.  Confirm: Z, Enter, Space.  Cancel: X, Backspace.  Menu: Esc / M.  Hold Shift to run.  F: fullscreen. Touch and controllers switch in automatically.' }
+      { label: 'Controls', desc: Controls.mode === 'touch' ? 'Touch: slide your thumb on the D-pad to move. A confirms, B goes back, MENU opens the menu, RUN toggles running. ⛶ goes fullscreen. Keyboards and controllers also work — the game switches automatically.' : Controls.mode === 'pad' ? 'Controller: D-pad / left stick to move. A confirm, B back, Start menu, hold X or a shoulder button to run.' : 'Move: Arrows / WASD.  Confirm: Z, Enter, Space.  Cancel: X, Backspace.  Menu: C, M or Tab.  Hold Shift to run.  F: fullscreen (hold Esc to leave). Touch and controllers switch in automatically.' }
     ];
     const GKEYS = [null, null, 'bloom', 'flare', 'weather', 'drops', 'shake'];
     const l = new ListScene({ x: 196, y: 16, w: W - 224, items, title: 'Settings  (◀ ▶ to adjust)', index: i, rows: 9 });

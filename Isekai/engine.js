@@ -43,7 +43,7 @@ const Input = {
   map: {
     up: ['ArrowUp', 'KeyW'], down: ['ArrowDown', 'KeyS'], left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'],
     ok: ['KeyZ', 'Enter', 'Space'], cancel: ['KeyX', 'Backspace', 'Escape'],
-    menu: ['Escape', 'KeyM', 'KeyC'], run: ['ShiftLeft', 'ShiftRight']
+    menu: ['KeyC', 'KeyM', 'Tab', 'Escape'], run: ['ShiftLeft', 'ShiftRight']
   },
   held(a) { return this.map[a].some(k => this.down.has(k)); },
   pressed(a) { return this.map[a].some(k => this.pressedSet.has(k)); },

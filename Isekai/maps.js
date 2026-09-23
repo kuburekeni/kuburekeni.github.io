@@ -136,6 +136,22 @@ function buildValenford() {
   b.rect(3, 29, 10, 1, '4');
   for (let i = 4; i < 12; i += 2) { b.set(i, 31, '?'); b.set(i + 1, 33, '?'); }
   b.set(24, 34, 'S');
+  // --- a busier town: more homes, a proper market day, flowers and bunting
+  house(b, 36, 11, 6, 38, 'D');
+  house(b, 8, 11, 5, 10, 'D');
+  house(b, 14, 30, 5, 16, 'D');
+  house(b, 27, 29, 5, 29, 'D');
+  frontClear(b, [[38, 14], [10, 14], [16, 33], [29, 32]], '.');
+  b.set(30, 17, 'E');                                   // Aldra's cottage opens now
+  for (const [x, y] of [[19, 22], [29, 24], [19, 26], [28, 26]]) b.set(x, y, '*');
+  b.set(20, 24, '/').set(17, 21, '|').set(30, 21, '|').set(4, 19, '|').set(12, 19, '|');
+  b.set(26, 24, '£');
+  for (const [x, y] of [[5, 18], [10, 18], [13, 18], [34, 21], [44, 18]]) b.set(x, y, '(');
+  for (const [x, y] of [[14, 7], [33, 7]]) b.set(x, y, ')');
+  for (let x = 25; x < 33; x++) b.set(x, 14, '"');
+  for (let x = 1; x < 4; x++) b.set(x, 22, '"');
+  for (let x = 36; x < 44; x++) if (b.get(x, 19) === '.') b.set(x, 19, '"');
+  b.set(5, 14, '"').set(6, 14, '"').set(18, 14, '"');
   return b.rows();
 }
 const MANOR_ROWS = (() => {
@@ -210,6 +226,16 @@ function buildBrookvale() {
   b.rect(33, 19, 8, 2, '&').rect(33, 22, 8, 2, '&');
   b.path([[36, 8], [36, 15]], ';');
   b.set(2, 14, 'S').set(41, 14, 'S');
+  // --- more village: cottages on the south green, a riverside market, bunting over the road
+  house(b, 4, 23, 6, 6, 'D'); house(b, 12, 23, 5, 14, 'D'); house(b, 19, 23, 6, 21, 'D');
+  frontClear(b, [[6, 26], [14, 26], [21, 26]], '.');
+  b.set(22, 20, 'E');                                   // the Cobb house (miller's family) opens
+  for (const [x, y] of [[12, 16], [15, 16], [24, 14]]) b.set(x, y, '*');
+  b.set(4, 14, '|').set(9, 14, '|').set(19, 16, '|').set(26, 16, '|');
+  b.set(3, 16, '(').set(26, 13, '(').set(33, 14, '/');
+  b.set(4, 7, ')').set(17, 7, ')');
+  for (const x of [2, 3, 4, 7, 8, 16, 17, 23, 24]) if (b.get(x, 13) === '.' || b.get(x, 13) === ',') b.set(x, 13, '"');
+  for (const x of [3, 4, 5, 13, 14, 20, 21]) if (b.get(x, 17) === '.' || b.get(x, 17) === ',') b.set(x, 17, '"');
   return b.rows();
 }
 const CHAPEL_ROWS = (() => {
@@ -251,6 +277,7 @@ function buildFernhollow() {
   b.blob(22, 26, 3, 2, '~', ['.', ',', 'T', 'f']);
   b.set(3, 9, 'S');
   b.rect(0, 9, 2, 3, '.').set(0, 10, '=').set(1, 10, '=');
+  b.set(5, 12, '(').set(18, 5, '<').set(9, 13, '"').set(10, 13, '"').set(15, 13, '"').set(16, 13, '"').set(21, 7, '(');
   return b.rows();
 }
 
@@ -289,6 +316,16 @@ function buildSolmere() {
   b.rect(24, 40, 4, 2, ':');
   b.set(23, 39, '!').set(28, 39, '!');
   b.set(22, 37, 'S');
+  // --- the capital on a market day: bunting, a second row of stalls, a statue, carts, more houses
+  for (let x = 18; x < 34; x += 3) b.set(x, 24, '*');
+  b.set(17, 18, '|').set(34, 18, '|').set(17, 25, '|').set(34, 25, '|').set(3, 12, '|').set(13, 12, '|').set(38, 12, '|').set(48, 12, '|');
+  b.set(25, 19, '£').set(26, 19, ')');
+  b.set(16, 21, '/').set(35, 21, '/').set(35, 24, '(').set(16, 24, '(').set(20, 33, '(').set(45, 33, '/');
+  house(b, 4, 19, 8, 7, 'D'); house(b, 39, 26, 8, 43, 'D');
+  house(b, 20, 28, 6, 22, 'D'); house(b, 27, 28, 6, 30, 'E');   // the antiquarian's shop
+  frontClear(b, [[7, 22], [43, 29], [22, 31], [30, 31]], ':');
+  for (const [x, y] of [[13, 14], [13, 16], [36, 18], [47, 18], [3, 18], [12, 18]]) b.set(x, y, ')');
+  for (let x = 3; x < 13; x++) { b.set(x, 10, '"'); b.set(x + 37, 10, '"'); }
   return b.rows();
 }
 const PALACE_ROWS = (() => {
@@ -375,6 +412,9 @@ function buildIronhold() {
   b.set(3, 8, '_').set(26, 17, '=');
   // keep door fronts clear
   [[6, 7], [23, 7], [7, 16], [22, 16]].forEach(([x, y]) => b.set(x, y, '='));
+  // --- a working hold: ore carts, crates, braziers
+  b.set(11, 12, '/').set(18, 19, '/').set(3, 18, '(').set(25, 19, '(').set(9, 9, '(').set(20, 11, '(').set(26, 12, '(');
+  b.set(12, 6, '!').set(17, 6, '!').set(12, 19, '!').set(17, 19, '!').set(3, 10, '!').set(26, 10, '!');
   return b.rows();
 }
 
@@ -407,6 +447,7 @@ function buildWastes() {
   b.path([[0, 13], [30, 13], [30, 3]], 'd');
   b.set(30, 2, 'G');
   b.set(12, 11, 'O').set(9, 11, 'N').set(15, 11, 'N');
+  b.set(8, 15, '<').set(16, 15, '<').set(9, 10, '(').set(15, 10, '!').set(9, 16, '!');
   b.set(3, 12, 'S');
   b.rect(0, 12, 1, 3, 'a').set(0, 13, 'd');
   return b.rows();
@@ -646,7 +687,7 @@ const MAPS = {
       { id: 'bkid', x: 17, y: 16, spr: 'kid', dir: 'down', script: 'brookKid', wander: 2 },
       { id: 'miller', x: 37, y: 8, spr: 'miller', dir: 'down', script: 'miller' },
       { id: 'ghost', x: 22, y: 5, spr: 'ghostgirl', dir: 'down', script: 'ghostgirl', show: '!elsieDone' },
-      { id: 'bguard', x: 41, y: 16, spr: 'guard', dir: 'left', script: 'brookGuard' }
+      { id: 'bguard', x: 40, y: 16, spr: 'guard', dir: 'left', script: 'brookGuard' }
     ],
     warps: [
       { x: 10, y: 6, w: 2, h: 1, to: 'brookvale_chapel', tx: 7, ty: 10, dir: 'up' },
@@ -688,7 +729,9 @@ const MAPS = {
   // ============================================================ ALDMERE
   village: {
     name: 'Aldmere Village', music: 'village', theme: 'grass', edge: 'T', fx: 'leaves', ambient: 'rgba(255,200,120,.05)', node: 'village',
-    rows: withDoors(VILLAGE_ROWS, [[16, 4, 'E'], [25, 5, 'E']]), encounters: null,
+    rows: withDoors(VILLAGE_ROWS, [[16, 4, 'E'], [25, 5, 'E'], [5, 4, 'E'],
+      [11, 6, '@'], [21, 6, '@'], [8, 8, '|'], [23, 8, '|'], [12, 9, '*'], [21, 9, '*'], [19, 12, '/'], [27, 5, '('], [2, 7, '('],
+      [2, 5, ')'], [9, 5, ')'], [12, 5, '"'], [13, 5, '"'], [19, 5, '"'], [20, 5, '"'], [3, 15, '"'], [4, 15, '"'], [5, 15, '"'], [20, 15, '"'], [21, 15, '"'], [22, 15, '"']]), encounters: null,
     npcs: [
       { id: 'elder', x: 5, y: 5, spr: 'elder', dir: 'down', script: 'elder' },
       { id: 'kid', x: 8, y: 12, spr: 'kid', dir: 'down', script: 'kid', wander: 2 },
@@ -774,7 +817,7 @@ const MAPS = {
       { id: 'fh1', x: 8, y: 29, item: 'ether', qty: 2 },
       { id: 'fh2', x: 42, y: 33, item: 'bow2', qty: 1 },
       { id: 'fh3', x: 39, y: 23, gold: 120 },
-      { id: 'fh4', x: 24, y: 27, item: 'phoenix', qty: 1 }
+      { id: 'fh4', x: 27, y: 27, item: 'phoenix', qty: 1 }
     ],
     signs: { '3,9': 'FERNHOLLOW. Rangers\' lodge. The deep woods to the south-east are not safe after dark.' }
   },

@@ -40,7 +40,7 @@
       document.body.appendChild(el);
     }
     const need = { 'data.js': 'UI', 'audio.js': 'Sound', 'engine.js': 'Scenes', 'gfx.js': 'drawTile', 'fx.js': 'FX', 'cloud.js': 'Cloud', 'controls.js': 'Controls', 'state.js': 'startNewGame',
-      'ui.js': 'DialogScene', 'maps.js': 'MAPS', 'world.js': 'WorldScene', 'travel.js': 'TravelScene', 'battle.js': 'BattleScene', 'story.js': 'STORY', 'quests.js': 'questBoard', 'main.js': 'TitleScene' };
+      'ui.js': 'DialogScene', 'maps.js': 'MAPS', 'world.js': 'WorldScene', 'travel.js': 'TravelScene', 'battle.js': 'BattleScene', 'story.js': 'STORY', 'quests.js': 'questBoard', 'town.js': 'drawCritter', 'sidequests.js': 'SIDE', 'academy.js': 'seniorYear', 'activities.js': 'busk', 'menus.js': 'PauseScene', 'main.js': 'TitleScene' };
     const missing = Object.keys(need).filter(f => { try { return typeof eval(need[f]) === 'undefined'; } catch (e) { return true; } });
     el.innerHTML = `<h2 style="color:#f28fad;margin-top:0">I Got Isekai'd couldn't start</h2>` +
       (missing.length ? `<p>These files are missing, misnamed, or out of date in this folder:</p><p style="color:#e5b53a"><b>${missing.join(', ')}</b></p><p>Every game file must sit in the same folder as this index.html, with exactly these lowercase names.</p>` : '') +
@@ -62,6 +62,11 @@
 <script src="battle.js"></script>
 <script src="story.js"></script>
 <script src="quests.js"></script>
+<script src="town.js"></script>
+<script src="sidequests.js"></script>
+<script src="academy.js"></script>
+<script src="activities.js"></script>
+<script src="menus.js"></script>
 <script src="main.js"></script>
 <script>
   // F toggles fullscreen on desktop (F11 also works as normal browser fullscreen)
@@ -71,7 +76,13 @@
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen().catch(() => {});
   });
-  document.addEventListener('fullscreenchange', () => setTimeout(() => { Controls.layout(); fitCanvas(); }, 50));
+  document.addEventListener('fullscreenchange', () => {
+    setTimeout(() => { Controls.layout(); fitCanvas(); }, 50);
+    // in fullscreen, keep Esc for the game (Chrome/Edge): a tap is Back, holding it leaves fullscreen
+    try { if (document.fullscreenElement && navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape']); else if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (e) {}
+  });
+  // Tab opens the menu instead of moving browser focus
+  window.addEventListener('keydown', e => { if (e.code === 'Tab') e.preventDefault(); });
   // offline support once hosted (GitHub Pages etc). Skipped when opened straight from a file.
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
   window.focus();

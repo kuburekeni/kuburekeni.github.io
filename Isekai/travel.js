@@ -55,7 +55,7 @@ async function travelFrom(warp) {
     return {
       label: NODES[d].name, right: lock ? '✕' : `${e ? e.dur : 10} min`,
       disabled: !!lock,
-      desc: lock || `Walk to ${NODES[d].name}. ${ROUTE_DESC[e ? e.kind : 'farm'] || ''}`
+      desc: lock || `Walk to ${NODES[d].name}. ${ROUTE_DESC[e ? e.kind : 'farm'] || ''}${e && e.kind !== 'rift' && e.kind !== 'fromrift' ? ` Or ride with the carter: ${cartFare(e.dur)} G.` : ''}`
     };
   });
   items.push({ label: 'Stay here', desc: 'Turn back into town.' });
@@ -66,7 +66,71 @@ async function travelFrom(warp) {
   p.fx = p.x; p.fy = p.y; p.x += back[0]; p.y += back[1]; p.t = 0;
   World.syncFollowers();
   if (i < 0 || i >= dests.length) return;
-  await travelTo(here, dests[i]);
+  const to = dests[i], e = edgeBetween(here, to) || { dur: 12, kind: 'farm' };
+  if (e.kind !== 'rift' && e.kind !== 'fromrift') {
+    const fare = cartFare(e.dur);
+    const c = await ask('Carter', `Going to ${NODES[to].name}? I'll have you and yours there before you can blink. ${fare} G for the lot of you.`,
+      ['Walk (free)', `Take the cart (${fare} G)`], null, false);
+    if (c < 0) return;
+    if (c === 1) {
+      if (G.gold < fare) { Sound.sfx('buzz'); await say('Carter', `That's not ${fare}. Walk it, then, or come back with coin.`); return; }
+      G.gold -= fare; Sound.sfx('coin');
+      await cartTo(here, to);
+      return;
+    }
+  }
+  await travelTo(here, to);
+}
+
+// ---------------------------------------------------------------- the carter
+// skip the walk: pay, climb in the back, and you're there. No road events, no fights.
+function cartFare(dur) { return Math.round((dur * 4 + 8 * G.party.length) / 5) * 5; }
+async function cartTo(from, to) {
+  const node = NODES[to];
+  Sound.stop();
+  await fadeOut(0.4);
+  const cs = new CartRideScene(from, to);
+  Scenes.push(cs);
+  Sound.play('travel');
+  await fadeIn(0.3);
+  await cs.promise;
+  await fadeOut(0.4);
+  Scenes.remove(cs);
+  const at = (node.from && node.from[from]) || node.at;
+  World.load(node.map, at[0], at[1], at[2]);
+  G.flags.travelled = true;
+  await fadeIn(0.5);
+  await say(null, `The carter drops you at ${node.name}, touches his cap, and turns the horse around.`);
+  await onEnterMap(node.map);
+  saveGame(true);
+}
+class CartRideScene {
+  constructor(from, to) { this.from = from; this.to = to; this.t = 0; this.promise = new Promise(r => this.resolve = r); this.done = false; }
+  update(dt) { this.t += dt; if (!this.done && (this.t > 2.2 || (this.t > 0.4 && Input.pressed('ok')))) { this.done = true; this.resolve(); } }
+  draw() {
+    const t = this.t, g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#f0a868'); g.addColorStop(0.55, '#f6d8a0'); g.addColorStop(0.56, '#6a9a4e'); g.addColorStop(1, '#3a6a30');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#7ea070'; for (let i = 0; i < 8; i++) { const x = ((i * 160 - t * 90) % (W + 200) + W + 200) % (W + 200) - 100; ctx.beginPath(); ctx.ellipse(x, H * 0.56, 120, 34, 0, Math.PI, 0); ctx.fill(); }
+    ctx.fillStyle = '#c4a468'; ctx.fillRect(0, H * 0.72, W, H * 0.12);
+    for (let i = 0; i < 18; i++) { const x = ((i * 70 - t * 420) % (W + 100) + W + 100) % (W + 100) - 50; ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fillRect(x, H * 0.76 + (i % 3) * 8, 26, 3); }
+    // horse and cart, bouncing
+    const cx = W / 2 - 40, cy = H * 0.72, b = Math.abs(Math.sin(t * 14)) * 3;
+    ctx.fillStyle = '#5a3a22'; ctx.fillRect(cx + 70, cy - 46 - b, 70, 26); ctx.fillRect(cx + 130, cy - 66 - b, 18, 30); ctx.fillRect(cx + 140, cy - 72 - b, 22, 14);
+    for (let k = 0; k < 4; k++) ctx.fillRect(cx + 76 + k * 16, cy - 22 - b, 6, 22 + (k % 2 ? Math.sin(t * 14) * 4 : -Math.sin(t * 14) * 4));
+    ctx.fillStyle = '#3a2616'; ctx.fillRect(cx + 150, cy - 70 - b, 6, 10); ctx.fillRect(cx + 60, cy - 36 - b, 34, 3);   // mane, shafts
+    ctx.fillStyle = '#2a1a10'; ctx.fillRect(cx + 62, cy - 46 - b + Math.sin(t * 9) * 2, 10, 4);               // tail
+    ctx.fillStyle = '#1a1210'; ctx.fillRect(cx + 154, cy - 66 - b, 3, 3);                                       // eye
+    ctx.fillStyle = '#8a3a2a'; ctx.fillRect(cx + 128, cy - 48 - b, 4, 14);                                     // harness
+    ctx.fillStyle = '#7a5230'; ctx.fillRect(cx - 90, cy - 50 - b, 150, 24); ctx.fillStyle = '#9a7040'; ctx.fillRect(cx - 90, cy - 50 - b, 150, 4);
+    G.party.forEach((m, i) => ctx.drawImage(charSprite(memberKey(m), 'right', 0), cx - 86 + i * 34, cy - 94 - b + (i % 2) * 4, 48, 48));
+    ctx.fillStyle = '#7a5230'; ctx.fillRect(cx - 90, cy - 38 - b, 150, 14);
+    for (const wx of [cx - 60, cx + 30]) { ctx.fillStyle = '#3a2616'; ctx.beginPath(); ctx.arc(wx, cy - 14, 16, 0, 7); ctx.fill(); ctx.strokeStyle = '#8a6a40'; ctx.lineWidth = 2; for (let k = 0; k < 4; k++) { const a = t * 12 + k * 0.785; ctx.beginPath(); ctx.moveTo(wx - Math.cos(a) * 14, cy - 14 - Math.sin(a) * 14); ctx.lineTo(wx + Math.cos(a) * 14, cy - 14 + Math.sin(a) * 14); ctx.stroke(); } }
+    ctx.lineWidth = 1;
+    drawWindow(W / 2 - 180, 28, 360, 56);
+    text(`${NODES[this.from].name}  →  ${NODES[this.to].name}`, W / 2, 40, UI.paper, 16, 'center');
+    bar(W / 2 - 150, 66, 300, 8, Math.min(1, t / 2.2), 1, UI.gold);
+  }
 }
 
 const ROUTE_DESC = {
@@ -112,11 +176,14 @@ class TravelScene {
     this.from = from; this.to = to; this.kind = kind; this.dur = dur;
     this.p = 0; this.t = 0; this.scroll = 0; this.spawnX = 0;
     this.objs = []; this.busy = false; this.done = false;
-    this.events = [0.26, 0.58, 0.84].filter(() => true);
-    this.fired = [];
+    // 3–5 things happen on each walk, spread along the road
+    const nEv = irand(3, 5);
+    this.events = Array.from({ length: nEv }, (_, i) => clamp((i + 0.5) / nEv + rand(-0.06, 0.06), 0.12, 0.9));
+    this.fired = []; this.seen = new Set();
+    this.spawnDist = 0;
     this.portalStop = false;
     this.promise = new Promise(r => this.resolve = r);
-    for (let i = 0; i < 40; i++) this.spawnAhead(rand(0, W + 200));
+    for (let x = -120; x < W + 160; x += rand(22, 60)) this.spawnAhead(x);
   }
   biome(p) {
     const k = this.kind;
@@ -132,20 +199,30 @@ class TravelScene {
     if (k === 'fromrift') return p < 0.3 ? 'ash' : p < 0.55 ? 'dead' : 'forest';
     return 'farm';
   }
-  spawnAhead(atX) {
-    const p = clamp(this.p + (atX - this.scroll % 1) / (this.dur * SCROLL), 0, 1);
+  // Everything stands on the ground at a "base" line. The further back the base,
+  // the smaller and slower it scrolls, and things are drawn back-to-front by base,
+  // so wheat never floats in front of a house or through a cart.
+  spawnAhead(sx) {
+    const p = clamp(this.p + sx / (this.dur * SCROLL), 0, 1);
     const b = this.biome(p);
     const r = Math.random();
-    const push = (type, layer, y, s) => this.objs.push({ x: atX, type, layer, y, s: s || rand(0.85, 1.2), seed: Math.random() * 99 });
-    if (b === 'forest' || b === 'edge') { if (r < (b === 'forest' ? 0.85 : 0.45)) push('tree', 1, rand(250, 300)); else if (r < 0.9) push('bush', 2, rand(320, 350)); else push('rock', 2, 340); }
-    else if (b === 'pines') { if (r < 0.8) push('pine', 1, rand(240, 290)); else push('rock', 2, 340); }
-    else if (b === 'rock') { if (r < 0.55) push('rock', 1, rand(280, 330)); else if (r < 0.8) push('pine', 1, rand(250, 290)); else push('bush', 2, 344); }
-    else if (b === 'farm') { if (r < 0.45) push('crop', 2, rand(300, 344)); else if (r < 0.6) push('fence', 2, 318); else if (r < 0.72) push('tree', 1, rand(255, 285)); else if (r < 0.78) push('hay', 2, 322); else if (r < 0.84) push('cottage', 1, 292); else push('bush', 2, 340); }
-    else if (b === 'village') { if (r < 0.5) push('cottage', 1, 292); else if (r < 0.7) push('fence', 2, 318); else push('tree', 1, 270); }
-    else if (b === 'road') { if (r < 0.3) push('post', 2, 318); else if (r < 0.55) push('crop', 2, 330); else if (r < 0.75) push('cart', 2, 320); else push('tree', 1, 268); }
-    else if (b === 'city') { if (r < 0.65) push('tower', 0, 250); else push('post', 2, 318); }
-    else if (b === 'dead') { if (r < 0.7) push('deadtree', 1, rand(250, 300)); else push('rock', 2, 340); }
-    else if (b === 'ash') { if (r < 0.5) push('rock', 1, rand(290, 330)); else if (r < 0.8) push('deadtree', 1, rand(250, 300)); else push('bones', 2, 340); }
+    const FAR = ['tree', 'pine', 'deadtree', 'cottage'];
+    const push = (type, sc) => {
+      const far = FAR.includes(type);
+      const base = type === 'tower' ? 300 : far ? rand(298, 326) : rand(318, 342);
+      const sp = type === 'tower' ? 0.35 : 0.58 + (base - 296) / 48 * 0.42;
+      const s0 = (sc || rand(0.85, 1.15)) * (type === 'tower' ? 1 : 0.8 + (base - 296) / 48 * 0.3);
+      this.objs.push({ sx, type, base, sp, s: s0, seed: Math.random() * 99 });
+    };
+    if (b === 'forest' || b === 'edge') { if (r < (b === 'forest' ? 0.8 : 0.45)) push('tree'); else if (r < 0.9) push('bush'); else push('rock'); }
+    else if (b === 'pines') { if (r < 0.8) push('pine'); else push('rock'); }
+    else if (b === 'rock') { if (r < 0.55) push('rock', rand(1, 1.6)); else if (r < 0.8) push('pine'); else push('bush'); }
+    else if (b === 'farm') { if (r < 0.42) push('crop'); else if (r < 0.54) push('fence'); else if (r < 0.66) push('tree'); else if (r < 0.74) push('hay'); else if (r < 0.82) push('cottage'); else push('bush'); }
+    else if (b === 'village') { if (r < 0.45) push('cottage'); else if (r < 0.65) push('fence'); else if (r < 0.8) push('tree'); else push('crop'); }
+    else if (b === 'road') { if (r < 0.25) push('post'); else if (r < 0.5) push('crop'); else if (r < 0.65) push('cart'); else push('tree'); }
+    else if (b === 'city') { if (r < 0.6) push('tower'); else push('post'); }
+    else if (b === 'dead') { if (r < 0.7) push('deadtree'); else push('rock'); }
+    else if (b === 'ash') { if (r < 0.5) push('rock'); else if (r < 0.8) push('deadtree'); else push('bones'); }
   }
 
   update(dt) {
@@ -154,12 +231,13 @@ class TravelScene {
     const fast = Input.held('ok') || Input.held('run') ? 2.2 : 1;
     const step = dt * fast;
     this.p = Math.min(1, this.p + step / this.dur);
-    this.scroll += SCROLL * step * fast * 0 + SCROLL * step;
-    // scenery
-    this.objs = this.objs.filter(o => o.x - this.scroll > -260);
-    let last = 0;
-    for (const o of this.objs) last = Math.max(last, o.x);
-    while (last < this.scroll + W + 320) { last += rand(26, 90); this.spawnAhead(last); }
+    const d = SCROLL * step;
+    this.scroll += d;
+    // scenery: each thing slides at its own depth's speed, spawns off the right edge
+    for (const o of this.objs) o.sx -= d * o.sp;
+    this.objs = this.objs.filter(o => o.sx > -220);
+    this.spawnDist -= d;
+    while (this.spawnDist <= 0) { this.spawnDist += rand(22, 60); this.spawnAhead(W + 180 + rand(0, 40)); }
     // events on the way
     for (let i = 0; i < this.events.length; i++) {
       if (this.fired[i] || this.p < this.events[i]) continue;
@@ -175,7 +253,7 @@ class TravelScene {
     }
   }
   async runEvent() {
-    this.busy = true;
+    this.busy = true; this.wobble = 0;
     try { await roadEvent(this); }
     catch (e) { console.error(e); }
     this.busy = false;
@@ -236,15 +314,12 @@ class TravelScene {
     ctx.beginPath(); ctx.moveTo(0, 344); ctx.lineTo(W, 344); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.fill();
     ctx.fillStyle = 'rgba(0,0,0,.12)';
     for (let i = 0; i < 40; i++) { const x = (i * 46 - this.scroll) % (W + 60) - 30; ctx.fillRect(x, 350 + (i % 5) * 12, 18 + (i % 3) * 10, 3); }
-    // scenery, far layers first
-    for (const layer of [0, 1, 2]) {
-      const sp = layer === 0 ? 0.35 : layer === 1 ? 0.78 : 1;
-      for (const o of this.objs) {
-        if (o.layer !== layer) continue;
-        const x = o.x - this.scroll * sp;
-        if (x < -160 || x > W + 160) continue;
-        this.drawObj(o, x, o.y);
-      }
+    // scenery, back to front
+    const sorted = this.objs.slice().sort((a, b) => (a.type === 'tower' ? -1 : a.base) - (b.type === 'tower' ? -1 : b.base));
+    for (const o of sorted) {
+      if (o.sx < -160 || o.sx > W + 160) continue;
+      if (o.type !== 'tower' && o.type !== 'crop') { ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(o.sx + (o.type === 'fence' ? 35 * o.s : 0), o.base, (o.type === 'cottage' ? 38 : o.type === 'fence' ? 38 : o.type === 'cart' ? 26 : 16) * o.s, 3.5 * o.s, 0, 0, 7); ctx.fill(); }
+      this.drawObj(o, o.sx, o.base);
     }
     // the party, walking
     const frame = Math.floor(this.t * 7) % 4;
@@ -298,62 +373,74 @@ class TravelScene {
     text(`${left} min`, W / 2, 44, UI.dim, 12, 'center', false);
     if (!this.busy && !this.done) text(`Hold ${Controls.label('ok')} to walk faster`, W / 2, H - 26, 'rgba(240,230,210,.6)', 12, 'center', false);
   }
-  drawObj(o, x, y) {
+  // (x, g): g is the ground line the object stands on
+  drawObj(o, x, g) {
     const s = o.s;
     const R = (X, Y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(X, Y, w, h); };
+    const E = (X, Y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(X, Y, rx, ry, 0, 0, 7); ctx.fill(); };
+    const sway = Math.sin(this.t * 1.8 + o.seed) * 1.5 * s;
     if (o.type === 'tree') {
       const h = 60 * s;
-      R(x - 5 * s, y + h * 0.6, 10 * s, h * 0.45, '#5a3a22');
-      for (const [dy, rad, col] of [[0, 30, '#2f6b30'], [-14, 24, '#3f8a38'], [-26, 16, '#54a848']]) {
-        ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y + h * 0.55 + dy * s, rad * s, (rad * 0.8) * s, 0, 0, 7); ctx.fill();
-      }
+      R(x - 5 * s, g - h * 0.5, 10 * s, h * 0.5, '#5a3a22'); R(x - 5 * s, g - h * 0.5, 3 * s, h * 0.5, '#6e4a2e');
+      R(x - 8 * s, g - 3 * s, 16 * s, 3 * s, '#4a2e1a');
+      for (const [dy, rad, col] of [[0, 30, '#2a5e2c'], [-12, 25, '#347a34'], [-24, 17, '#46983e'], [-30, 9, '#62b252']]) E(x + sway * (1 - dy / 40) * 0.3, g - h * 0.62 + dy * s, rad * s, rad * 0.8 * s, col);
     } else if (o.type === 'pine') {
       const h = 76 * s;
-      R(x - 4 * s, y + h * 0.66, 8 * s, h * 0.38, '#4a3220');
-      ctx.fillStyle = '#1f5a32';
-      for (let i = 0; i < 3; i++) { const w = (30 - i * 7) * s; ctx.beginPath(); ctx.moveTo(x - w, y + (h * 0.7) - i * 20 * s); ctx.lineTo(x, y + (h * 0.36) - i * 22 * s); ctx.lineTo(x + w, y + (h * 0.7) - i * 20 * s); ctx.fill(); }
+      R(x - 4 * s, g - h * 0.36, 8 * s, h * 0.36, '#4a3220');
+      for (let i = 0; i < 3; i++) { const w = (30 - i * 7) * s, yb = g - h * 0.3 - i * 20 * s; ctx.fillStyle = i % 2 ? '#256a3a' : '#1f5a32'; ctx.beginPath(); ctx.moveTo(x - w, yb); ctx.lineTo(x + sway * 0.3, yb - 34 * s); ctx.lineTo(x + w, yb); ctx.fill(); }
     } else if (o.type === 'deadtree') {
-      R(x - 4 * s, y + 20 * s, 8 * s, 46 * s, '#3a2e30');
+      R(x - 4 * s, g - 46 * s, 8 * s, 46 * s, '#3a2e30');
       ctx.strokeStyle = '#3a2e30'; ctx.lineWidth = 3 * s;
-      ctx.beginPath(); ctx.moveTo(x, y + 30 * s); ctx.lineTo(x - 20 * s, y + 10 * s); ctx.moveTo(x, y + 38 * s); ctx.lineTo(x + 22 * s, y + 14 * s); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, g - 36 * s); ctx.lineTo(x - 20 * s, g - 56 * s); ctx.moveTo(x, g - 28 * s); ctx.lineTo(x + 22 * s, g - 52 * s); ctx.stroke(); ctx.lineWidth = 1;
     } else if (o.type === 'bush') {
-      ctx.fillStyle = '#3f7a38'; ctx.beginPath(); ctx.ellipse(x, y, 16 * s, 10 * s, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = '#54a848'; ctx.beginPath(); ctx.ellipse(x - 4 * s, y - 3 * s, 9 * s, 6 * s, 0, 0, 7); ctx.fill();
+      E(x, g - 8 * s, 16 * s, 10 * s, '#3f7a38'); E(x - 4 * s, g - 11 * s, 9 * s, 6 * s, '#54a848'); E(x + 6 * s, g - 9 * s, 6 * s, 4 * s, '#62b252');
     } else if (o.type === 'rock') {
-      ctx.fillStyle = '#7a7670'; ctx.beginPath(); ctx.ellipse(x, y, 18 * s, 11 * s, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = '#9a968e'; ctx.beginPath(); ctx.ellipse(x - 4 * s, y - 4 * s, 10 * s, 6 * s, 0, 0, 7); ctx.fill();
+      E(x, g - 8 * s, 18 * s, 11 * s, '#6e6a64'); E(x - 4 * s, g - 12 * s, 10 * s, 6 * s, '#9a968e'); R(x - 8 * s, g - 15 * s, 4 * s, 2 * s, '#b8b4ac');
     } else if (o.type === 'crop') {
-      ctx.fillStyle = '#c8a84a';
-      for (let i = 0; i < 7; i++) { const cx = x + i * 7 * s; ctx.fillRect(cx, y - 14 * s, 2 * s, 14 * s); ctx.fillRect(cx - 1, y - 18 * s, 4 * s, 5 * s); }
+      // a clump of wheat rooted in the soil, heads nodding in the wind
+      E(x + 18 * s, g, 26 * s, 3 * s, 'rgba(90,70,30,.35)');
+      for (let i = 0; i < 9; i++) {
+        const cx = x + i * 4.5 * s, hh = (15 + ((i * 7 + Math.floor(o.seed)) % 6)) * s, sw = Math.sin(this.t * 2.2 + o.seed + i * 0.4) * 2 * s;
+        ctx.strokeStyle = i % 2 ? '#b89a3a' : '#a8883a'; ctx.lineWidth = 1.4 * s;
+        ctx.beginPath(); ctx.moveTo(cx, g); ctx.quadraticCurveTo(cx, g - hh * 0.6, cx + sw, g - hh); ctx.stroke();
+        E(cx + sw, g - hh - 3 * s, 1.8 * s, 4 * s, i % 3 ? '#e0c060' : '#f0d478');
+        R(cx + sw - 0.5, g - hh - 6 * s, 1, 2 * s, '#fff0b0');
+      }
+      ctx.lineWidth = 1;
     } else if (o.type === 'fence') {
-      ctx.fillStyle = '#7a5230';
-      for (let i = 0; i < 4; i++) ctx.fillRect(x + i * 22 * s, y, 4 * s, 26 * s);
-      ctx.fillRect(x, y + 6 * s, 70 * s, 3 * s); ctx.fillRect(x, y + 16 * s, 70 * s, 3 * s);
+      for (let i = 0; i < 4; i++) { R(x + i * 22 * s, g - 26 * s, 4 * s, 26 * s, '#7a5230'); R(x + i * 22 * s, g - 26 * s, 1.5 * s, 26 * s, '#9a7040'); }
+      R(x, g - 20 * s, 70 * s, 3 * s, '#8a5e36'); R(x, g - 10 * s, 70 * s, 3 * s, '#8a5e36');
     } else if (o.type === 'hay') {
-      ctx.fillStyle = '#c8a050'; ctx.beginPath(); ctx.ellipse(x, y, 20 * s, 14 * s, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = '#e0c070'; ctx.beginPath(); ctx.ellipse(x - 4 * s, y - 4 * s, 12 * s, 8 * s, 0, 0, 7); ctx.fill();
+      E(x, g - 12 * s, 20 * s, 13 * s, '#c09048'); E(x - 4 * s, g - 16 * s, 12 * s, 8 * s, '#e0c070');
+      for (let i = 0; i < 5; i++) R(x - 14 * s + i * 7 * s, g - 20 * s + (i % 2) * 3 * s, 1, 8 * s, '#a87a38');
     } else if (o.type === 'cottage') {
-      const w = 64 * s, h = 40 * s;
-      ctx.fillStyle = '#e8d8b0'; ctx.fillRect(x - w / 2, y, w, h);
+      const w = 64 * s, h = 40 * s, y = g - h;
+      R(x - w / 2, y, w, h, '#e8d8b0'); R(x - w / 2, y, 5 * s, h, '#d0c098');
+      R(x - w / 2, y + h - 4 * s, w, 4 * s, '#8a7a60');
       ctx.fillStyle = '#a8413a'; ctx.beginPath(); ctx.moveTo(x - w / 2 - 8 * s, y); ctx.lineTo(x, y - 26 * s); ctx.lineTo(x + w / 2 + 8 * s, y); ctx.fill();
-      ctx.fillStyle = '#5a4030'; ctx.fillRect(x - 7 * s, y + h - 20 * s, 14 * s, 20 * s);
-      ctx.fillStyle = '#f2d88a'; ctx.fillRect(x + 14 * s, y + 10 * s, 12 * s, 10 * s);
+      ctx.fillStyle = '#c85a4a'; ctx.beginPath(); ctx.moveTo(x - w / 2 - 8 * s, y); ctx.lineTo(x, y - 26 * s); ctx.lineTo(x - 4 * s, y); ctx.fill();
+      R(x + 16 * s, y - 24 * s, 7 * s, 14 * s, '#6a5a50');
+      R(x - 7 * s, y + h - 20 * s, 14 * s, 20 * s, '#5a4030');
+      R(x + 14 * s, y + 10 * s, 12 * s, 10 * s, '#f2d88a'); R(x + 19.5 * s, y + 10 * s, 1, 10 * s, '#8a6a40');
+      R(x - 26 * s, y + 10 * s, 12 * s, 10 * s, '#f2d88a');
       glow(x + 20 * s, y + 15 * s, 30 * s, 'rgba(255,220,140,.25)');
     } else if (o.type === 'tower') {
-      const h = 150 * s;
-      ctx.fillStyle = '#d8d4c8'; ctx.fillRect(x - 24 * s, y - h + 60, 48 * s, h);
-      ctx.fillStyle = '#b8b4a8'; ctx.fillRect(x - 24 * s, y - h + 60, 8 * s, h);
-      ctx.fillStyle = '#3e4e7e'; ctx.beginPath(); ctx.moveTo(x - 30 * s, y - h + 60); ctx.lineTo(x, y - h + 10); ctx.lineTo(x + 30 * s, y - h + 60); ctx.fill();
-      ctx.fillStyle = '#8a7a50'; ctx.fillRect(x - 8 * s, y - h + 96, 16 * s, 22 * s);
+      const s2 = s, h = 150 * s2, y = g;
+      ctx.fillStyle = '#d8d4c8'; ctx.fillRect(x - 24 * s2, y - h + 60, 48 * s2, h);
+      ctx.fillStyle = '#b8b4a8'; ctx.fillRect(x - 24 * s2, y - h + 60, 8 * s2, h);
+      ctx.fillStyle = '#3e4e7e'; ctx.beginPath(); ctx.moveTo(x - 30 * s2, y - h + 60); ctx.lineTo(x, y - h + 10); ctx.lineTo(x + 30 * s2, y - h + 60); ctx.fill();
+      ctx.fillStyle = '#8a7a50'; ctx.fillRect(x - 8 * s2, y - h + 96, 16 * s2, 22 * s2);
     } else if (o.type === 'post') {
-      ctx.fillStyle = '#6a5230'; ctx.fillRect(x, y, 5, 30);
-      ctx.fillStyle = '#a8884a'; ctx.fillRect(x - 12, y - 8, 30, 12);
+      R(x, g - 30 * s, 5 * s, 30 * s, '#6a5230');
+      R(x - 12 * s, g - 38 * s, 30 * s, 12 * s, '#a8884a'); R(x - 12 * s, g - 38 * s, 30 * s, 2 * s, '#c8a868');
+      R(x - 8 * s, g - 33 * s, 18 * s, 1.5 * s, '#5a4020');
     } else if (o.type === 'cart') {
-      ctx.fillStyle = '#7a5230'; ctx.fillRect(x - 22, y - 12, 44, 16);
-      ctx.fillStyle = '#4a3220'; ctx.beginPath(); ctx.arc(x - 12, y + 6, 8, 0, 7); ctx.arc(x + 12, y + 6, 8, 0, 7); ctx.fill();
+      R(x - 22 * s, g - 22 * s, 44 * s, 12 * s, '#7a5230'); R(x - 22 * s, g - 22 * s, 44 * s, 2 * s, '#9a7040');
+      R(x - 20 * s, g - 30 * s, 40 * s, 8 * s, '#c8a050');                    // sacks
+      R(x + 22 * s, g - 16 * s, 16 * s, 2 * s, '#6a4a2a');
+      for (const wx of [-12, 12]) { E(x + wx * s, g - 7 * s, 7 * s, 7 * s, '#3a2616'); E(x + wx * s, g - 7 * s, 2 * s, 2 * s, '#8a6a40'); }
     } else if (o.type === 'bones') {
-      ctx.fillStyle = '#d8d4c4';
-      ctx.fillRect(x - 14, y, 28, 4); ctx.fillRect(x - 6, y - 8, 12, 10);
+      R(x - 14 * s, g - 4 * s, 28 * s, 4 * s, '#d8d4c4'); R(x - 6 * s, g - 12 * s, 12 * s, 9 * s, '#e8e4d4'); R(x - 3 * s, g - 9 * s, 2 * s, 2 * s, '#2a2020'); R(x + 1 * s, g - 9 * s, 2 * s, 2 * s, '#2a2020');
     }
   }
 }
@@ -365,10 +452,11 @@ function withMe(id) { return partyIds().includes(id); }
 async function roadEvent(scene) {
   const b = scene.biome(scene.p);
   const ids = partyIds();
-  const pool = ROAD_EVENTS.filter(e => e.when(b, ids, scene));
+  const pool = ROAD_EVENTS.filter(e => !scene.seen.has(e.id) && e.when(b, ids, scene));
   if (!pool.length) return;
   const weights = pool.map(e => [e, e.w || 1]);
   const ev = weighted(weights.map(([e, w], i) => [i, w]));
+  scene.seen.add(pool[ev].id);
   await pool[ev].run(scene, ids);
 }
 
@@ -565,6 +653,169 @@ const ROAD_EVENTS = [
       await say(null, 'Half buried at the side of the road: a pack that someone dropped running, a long time ago.');
       addItem(loot, 1); Sound.sfx('pickup');
       await say(null, `You take a ${ITEMS[loot].name} from it and leave the rest where it is.`);
+    }
+  },
+  // ---------------------------------------------------------------- more of the road
+  {
+    id: 'pedlar', w: 3,
+    when: (b) => b !== 'ash' && b !== 'dead',
+    run: async () => {
+      await say(null, 'A pedlar with a mule and far too many pots on it waves you down. "Road prices, friend. Cheaper than any town."');
+      const offer = [['potion', 30], ['ether', 60], ['antidote', 15], ['hipotion', 90]].filter(([id]) => ITEMS[id]);
+      const opts = offer.map(([id, pr]) => `${ITEMS[id].name} — ${pr} G`).concat(['Nothing, thanks.']);
+      for (;;) {
+        const c = await ask('Pedlar', `You've ${G.gold} G. What'll it be?`, opts, null, false);
+        if (c < 0 || c >= offer.length) break;
+        const [id, pr] = offer[c];
+        if (G.gold < pr) { Sound.sfx('buzz'); await say('Pedlar', `Not with that purse, you won't.`); continue; }
+        G.gold -= pr; addItem(id, 1); Sound.sfx('coin');
+      }
+      await say('Pedlar', `Safe roads. Mind the ditches.`);
+    }
+  },
+  {
+    id: 'wounded', w: 2,
+    when: (b) => b !== 'city',
+    run: async (s, ids) => {
+      await say(null, 'A man is sitting against a milestone with his leg bound in a torn shirt. The cloth is red through.');
+      const c = await ask(null, '"Wolves," he says. "Last night. I\'m fine. I\'m fine."', ['Use a Potion on him.', 'Bind the leg properly and walk him to the next farm.', 'Point him to the nearest town and move on.'], null, false);
+      if (c === 0 && itemCount('potion')) {
+        removeItem('potion'); G.rep += 2; moraleAll(3); Sound.sfx('heal');
+        await say(null, 'Colour comes back into his face. He presses 60 G into your hand and won\'t take it back.'); G.gold += 60;
+      } else if (c === 1) {
+        moraleAll(4); G.rep += 3; for (const id of ['oswin', 'lyra', 'wren']) if (withMe(id)) addMorale(id, 4);
+        await say(null, 'It costs you an hour. At the farm gate his daughter runs out and nearly knocks him over.');
+      } else {
+        for (const id of ['oswin', 'lyra']) if (withMe(id)) addMorale(id, -4);
+        await say(null, 'He nods like he expected it. You feel him watching you go.');
+      }
+    }
+  },
+  {
+    id: 'stuckcart', w: 2,
+    when: (b) => b === 'farm' || b === 'village' || b === 'road',
+    run: async () => {
+      await say(null, 'A farmer\'s cart is sunk to the axle in a rut, and the farmer is losing an argument with his ox.');
+      const c = await ask(null, 'He looks at your party with naked hope.', ['Put your shoulders to it.', 'Keep walking.'], null, false);
+      if (c === 0) {
+        Sound.sfx('door'); moraleAll(3); if (withMe('garrick')) addMorale('garrick', 5);
+        await say(null, 'Three heaves and it comes free with a noise like a boot leaving mud. He gives you a sack of apples and a fistful of coin.');
+        G.gold += 40; addItem('potion', 1);
+      } else if (withMe('garrick')) { addMorale('garrick', -4); await say('Garrick', `Would've taken a minute.`, 'c:garrick'); }
+    }
+  },
+  {
+    id: 'minstrel', w: 2,
+    when: (b) => b !== 'ash' && b !== 'dead',
+    run: async () => {
+      await say(null, 'A minstrel is walking the same way, playing as he goes. It is a song about a hero. It is not very accurate.');
+      const c = await ask(null, 'He holds out his hat without breaking the tune.', ['Toss him 10 G.', 'Ask him for a different song.', 'Walk faster.'], null, false);
+      if (c === 0 && G.gold >= 10) { G.gold -= 10; Sound.sfx('coin'); moraleAll(4); await say(null, 'He plays you the next mile. It goes quicker than any mile has a right to.'); }
+      else if (c === 1) { moraleAll(2); await say(null, 'He plays something slow and old about a river. Nobody talks for a while, in a good way.'); }
+      else await say(null, 'The song follows you a long way down the road.');
+    }
+  },
+  {
+    id: 'shrine', w: 2,
+    when: (b) => b !== 'city' && b !== 'ash',
+    run: async () => {
+      await say(null, 'A wayside shrine: a stone the height of a child, a bowl of rainwater, a few coins pressed into moss.');
+      const c = await ask(null, 'Travellers leave something for luck.', ['Leave 20 G and drink from the bowl.', 'Just drink.', 'Take the coins. Nobody\'s watching.'], null, false);
+      if (c === 0 && G.gold >= 20) { G.gold -= 20; for (const m of G.party) if (m.hp > 0) { m.hp = maxHP(m); m.mp = maxMP(m); } Sound.sfx('heal'); await say(null, 'The water is colder than it should be. Everyone is fully restored.'); }
+      else if (c === 1) { for (const m of G.party) if (m.hp > 0) m.mp = Math.min(maxMP(m), m.mp + Math.floor(maxMP(m) * 0.3)); Sound.sfx('magic'); await say(null, 'Your head clears a little. The party recovers some MP.'); }
+      else if (c === 2) { G.gold += 25; G.rep -= 2; for (const id of ['oswin', 'lyra']) if (withMe(id)) addMorale(id, -8); if (withMe('sable')) addMorale('sable', 4); await say(null, '25 G. It feels heavier than 25 G should.'); }
+    }
+  },
+  {
+    id: 'mushrooms', w: 2,
+    when: (b) => b === 'forest' || b === 'edge',
+    run: async () => {
+      await say(null, 'A ring of pale mushrooms in the leaf litter, fat and glossy. Some of them are faintly glowing.');
+      const c = await ask(null, 'Could be a meal. Could be a mistake.', ['Pick the glowing ones.', 'Pick the plain ones.', 'Leave them.'], null, false);
+      if (c === 0) { if (Math.random() < 0.6) { addItem('ether', 1); Sound.sfx('pickup'); await say(null, 'They hum faintly in your hand. Brewed down, that\'s an Ether.'); } else { for (const m of G.party) if (m.hp > 0) m.hp = Math.max(1, m.hp - Math.floor(maxHP(m) * 0.15)); Sound.sfx('hurt'); await say(null, 'Your fingers go numb, then everyone\'s stomachs do. The party loses some HP.'); } }
+      else if (c === 1) { for (const m of G.party) if (m.hp > 0) m.hp = Math.min(maxHP(m), m.hp + Math.floor(maxHP(m) * 0.25)); if (withMe('kestrel')) addMorale('kestrel', 4); await say(null, 'Fried on a flat stone with a little salt. Everyone recovers some HP.'); }
+    }
+  },
+  {
+    id: 'strongbox', w: 2,
+    when: (b) => b !== 'city',
+    run: async () => {
+      await say(null, 'In the ditch: a strongbox, lock rusted shut, the kind merchants chain under wagons.');
+      const c = await ask(null, 'Someone lost this. Or someone was made to lose it.', ['Force it open.', 'Leave it for whoever comes looking.'], null, false);
+      if (c === 0) {
+        const lead = G.party.find(m => m.hp > 0);
+        if (lead) lead.hp = Math.max(1, lead.hp - Math.floor(maxHP(lead) * 0.1));
+        const g = irand(60, 160); G.gold += g; Sound.sfx('chest');
+        await say(null, `It takes skinned knuckles and a lot of swearing. Inside: ${g} G, wrapped in oilcloth.`);
+        if (withMe('sable')) addMorale('sable', 5); if (withMe('oswin')) addMorale('oswin', -3);
+      } else { G.rep += 1; if (withMe('oswin')) addMorale('oswin', 4); }
+    }
+  },
+  {
+    id: 'gambler', w: 1,
+    when: (b) => b === 'road' || b === 'farm' || b === 'village',
+    run: async () => {
+      await say(null, 'A man sits on an upturned crate by the road with three cups and a pea. "Find the pea, double your coin."');
+      const c = await ask(null, 'He rattles the cups.', ['Bet 50 G.', 'Bet 20 G.', 'Not a chance.'], null, false);
+      const bet = c === 0 ? 50 : c === 1 ? 20 : 0;
+      if (!bet) return;
+      if (G.gold < bet) { await say('Gambler', `Come back when you've got it.`); return; }
+      const pickCup = await ask(null, 'The cups stop.', ['Left cup.', 'Middle cup.', 'Right cup.'], null, false);
+      const win = Math.random() < (withMe('sable') ? 0.6 : 0.34);
+      if (withMe('sable')) await say('Sable', `Middle. …No. Left. Trust me, he palms it.`, 'c:sable');
+      if (win) { G.gold += bet; Sound.sfx('coin'); await say(null, `The pea is right there. He pays up with the face of a man doing sums. (+${bet} G)`); }
+      else { G.gold -= bet; Sound.sfx('buzz'); await say(null, `Empty. Of course it's empty. (−${bet} G)`); }
+    }
+  },
+  {
+    id: 'dog', w: 2,
+    when: (b) => b === 'farm' || b === 'village' || b === 'edge',
+    run: async () => {
+      await say(null, 'A scruffy brown dog falls in beside the party as if it had always been there, tail going.');
+      const c = await ask(null, 'It keeps looking up at you.', ['Scratch its ears.', 'Share some food.', 'Shoo it home.'], null, false);
+      if (c === 0) { moraleAll(3); await say(null, 'It follows you for a mile, then trots off down a farm track, job done.'); }
+      else if (c === 1) { moraleAll(5); await say(null, 'It eats, sits, and walks you all the way to the next milestone like an escort.'); }
+      else await say(null, 'It goes, eventually, looking back twice.');
+    }
+  },
+  {
+    id: 'critters', w: 2,
+    when: (b) => (b === 'farm' || b === 'edge' || b === 'village') && !G.flags.noEncounters,
+    run: async () => {
+      await say(null, 'The barley at the edge of the road starts moving against the wind.');
+      const group = [pick(['slime', 'bat', 'ywolf'].filter(x => ENEMIES[x])), pick(['slime', 'bat'].filter(x => ENEMIES[x]))];
+      const res = await startBattle(group, { bg: 'road', returnTrack: 'travel' });
+      if (res === 'win') moraleAll(1);
+    }
+  },
+  {
+    id: 'lights', w: 2,
+    when: (b) => b === 'dead' || b === 'forest' || b === 'pines',
+    run: async () => {
+      await say(null, 'Lights between the trees. Small, blue, bobbing at head height, and moving away from the road.');
+      const c = await ask(null, 'They pause, as if waiting.', ['Follow them.', 'Stay on the road.'], null, false);
+      if (c !== 0) { await say(null, 'The lights go out one at a time, like somebody blowing out candles.'); return; }
+      if (Math.random() < 0.5) { addItem(ITEMS.hiether ? 'hiether' : 'ether', 1); Sound.sfx('chest'); await say(null, 'They lead you to a hollow stump. Inside, wrapped in old silk, a stoppered bottle that glows.'); }
+      else { const res = await startBattle(['wisp', 'wisp'].filter(x => ENEMIES[x]), { bg: 'forest', returnTrack: 'travel' }); if (res === 'win') { G.gold += 50; await say(null, 'Where they burned out, 50 G worth of old coins lie in the moss.'); } }
+    }
+  },
+  {
+    id: 'ashspring', w: 2,
+    when: (b) => b === 'ash',
+    run: async () => {
+      await say(null, 'Steam rising from a crack in the grey: a hot spring, ringed with Ashborn prayer stones.');
+      const c = await ask(null, 'The water is clear and very hot.', ['Rest here a while.', 'Keep moving. This is their land.'], null, false);
+      if (c === 0) { healParty(); if (withMe('varek')) addMorale('varek', 6); await say(null, 'The heat goes all the way to the bone. Everyone is back to full strength.'); }
+      else { if (withMe('varek')) addMorale('varek', 8); G.rep += 1; await say(null, 'You walk on. If anyone was watching from the rocks, they let you go.'); }
+    }
+  },
+  {
+    id: 'stars', w: 1,
+    when: (b, ids) => b !== 'ash',
+    run: async (s, ids) => {
+      await say(null, 'You make camp late. There is no moon, and the sky is so full of stars it looks spilled.');
+      if (ids.length) { const who = pick(ids); await say(COMPANIONS[who].name, pick([`Back home you can't see half of these.`, `My mother used to say every star's someone who got where they were going.`, `Do you think there's a sky like this where you're from? Before, I mean.`]), 'c:' + who); addMorale(who, 4); }
+      healParty(); await say(null, 'You sleep well. Everyone is back to full strength.');
     }
   },
   {

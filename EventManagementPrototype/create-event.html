@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Event – EventHub</title>
+  <meta name="description" content="Create and publish a new event on EventHub. Include details, capacity, pricing and a meaningful Acknowledgement of Country.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-calendar-event me-1"></i>EventHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="create-event.html">Create Event</a></li>
+          <li class="nav-item"><a class="nav-link" href="booking-history.html">My Bookings</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <a href="login.html" class="btn btn-outline-light btn-sm">Log in</a>
+          <a href="register.html" class="btn btn-light btn-sm text-primary">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-4 my-md-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="mb-4">
+          <h1 class="h2 section-title mb-1">Create a new event</h1>
+          <p class="text-muted mb-0">Provide clear details so attendees can decide quickly. A thoughtful Acknowledgement of Country is strongly encouraged.</p>
+        </div>
+
+        <div id="successAlert" class="alert alert-success alert-dismissible fade" role="alert">
+          <strong>Event created (prototype).</strong> In the full application this would be saved to the database and appear on the home page.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="card form-card shadow-soft">
+          <div class="card-header bg-primary text-white py-3">
+            <h2 class="h5 mb-0"><i class="bi bi-plus-circle me-1"></i>Event details</h2>
+          </div>
+          <div class="card-body p-4">
+            <form id="eventForm" class="needs-validation" novalidate>
+              <!-- Title -->
+              <div class="mb-3">
+                <label for="eventTitle" class="form-label">Event title <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="eventTitle" placeholder="e.g. Summer Music Festival" required maxlength="120">
+                <div class="invalid-feedback">Please provide a clear event title.</div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                  <select class="form-select" id="category" required>
+                    <option value="" selected disabled>Select category</option>
+                    <option value="music">Music</option>
+                    <option value="sports">Sports</option>
+                    <option value="tech">Tech / Conference</option>
+                    <option value="arts">Arts &amp; Culture</option>
+                    <option value="food">Food &amp; Drink</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <div class="invalid-feedback">Please select a category.</div>
+                </div>
+                <div class="col-md-6">
+                  <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                  <select class="form-select" id="status" required>
+                    <option value="Open" selected>Open</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Sold Out">Sold Out</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="description" rows="4" placeholder="Describe what attendees can expect, who it is for, and any key practical details..." required minlength="20"></textarea>
+                <div class="invalid-feedback">Please enter a description of at least 20 characters.</div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label for="eventDate" class="form-label">Event date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="eventDate" required>
+                  <div class="invalid-feedback">Please select a date.</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="startTime" class="form-label">Start time <span class="text-danger">*</span></label>
+                  <input type="time" class="form-control" id="startTime" required>
+                  <div class="invalid-feedback">Please provide a start time.</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="endTime" class="form-label">End time</label>
+                  <input type="time" class="form-control" id="endTime">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="venue" class="form-label">Venue / location <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="venue" placeholder="e.g. Central Park Amphitheatre, Sydney" required>
+                <div class="invalid-feedback">Please enter the venue or location.</div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label for="price" class="form-label">Ticket price (AUD) <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control" id="price" min="0" step="0.01" placeholder="0.00" required>
+                  </div>
+                  <div class="invalid-feedback">Enter a valid price (0 for free).</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="capacity" class="form-label">Capacity <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" id="capacity" min="1" placeholder="e.g. 500" required>
+                  <div class="invalid-feedback">Please enter a positive capacity.</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="imageUrl" class="form-label">Image URL (optional)</label>
+                  <input type="url" class="form-control" id="imageUrl" placeholder="https://...">
+                </div>
+              </div>
+
+              <!-- Acknowledgement of Country – thoughtful guidance -->
+              <div class="aoc-helper p-3 p-md-4 mb-4">
+                <h3 class="h6 mb-2"><i class="bi bi-globe-asia-australia me-1"></i>Acknowledgement of Country</h3>
+                <p class="small mb-3">A meaningful Acknowledgement is specific to place and people. Avoid a generic one-size-fits-all statement. Consider:</p>
+                <ul class="small mb-3">
+                  <li>Which Traditional Owners or Custodians are connected to the venue’s location?</li>
+                  <li>Is there a local language name for the place?</li>
+                  <li>Would you like to invite attendees to also pay respects?</li>
+                </ul>
+                <div class="mb-2">
+                  <label for="aocText" class="form-label">Your Acknowledgement of Country</label>
+                  <textarea class="form-control" id="aocText" rows="3" placeholder="Example: We acknowledge the Traditional Custodians of the land on which this event is held, the Gadigal people of the Eora Nation, and pay our respects to Elders past and present."></textarea>
+                  <div class="form-text">Optional but strongly recommended. Leave blank only if you will add one later. Guidance is based on common best-practice principles of specificity and respect.</div>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="aocConfirm">
+                  <label class="form-check-label small" for="aocConfirm">
+                    I understand this Acknowledgement should be place-specific and respectful; I will review it before publishing.
+                  </label>
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 justify-content-between">
+                <a href="index.html" class="btn btn-outline-secondary">Cancel</a>
+                <button type="button" class="btn btn-primary px-4" id="submitBtn">
+                  <i class="bi bi-check2-circle me-1"></i>Create event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container py-3">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+        <span class="small">&copy; 2026 EventHub – prototype</span>
+        <a href="index.html" class="small">Back to home</a>
+      </div>
+    </div>
+    <div class="aoc-footer py-3">
+      <div class="container">
+        <p class="mb-0 small">EventHub acknowledges the Traditional Owners of Country throughout Australia and recognises their continuing connection to land, waters and culture. We pay our respects to Elders past and present.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

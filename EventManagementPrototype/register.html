@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign up – EventHub</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-calendar-event me-1"></i>EventHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="create-event.html">Create Event</a></li>
+          <li class="nav-item"><a class="nav-link" href="booking-history.html">My Bookings</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="text-center mb-4">
+          <h1 class="h3 section-title">Create your account</h1>
+          <p class="text-muted">Join EventHub to book tickets and host events.</p>
+        </div>
+
+        <div class="card form-card shadow-soft">
+          <div class="card-body p-4">
+            <form id="registerForm" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label for="fullName" class="form-label">Full name</label>
+                <input type="text" class="form-control" id="fullName" required autocomplete="name">
+                <div class="invalid-feedback">Please enter your name.</div>
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="email" placeholder="you@example.com" required autocomplete="email">
+                <div class="invalid-feedback">Please enter a valid email.</div>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" required minlength="8" autocomplete="new-password">
+                <div class="form-text">At least 8 characters (prototype rule).</div>
+                <div class="invalid-feedback">Password must be at least 8 characters.</div>
+              </div>
+              <div class="mb-3">
+                <label for="password2" class="form-label">Confirm password</label>
+                <input type="password" class="form-control" id="password2" required minlength="8" autocomplete="new-password">
+                <div class="invalid-feedback">Passwords must match.</div>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="terms" required>
+                <label class="form-check-label small" for="terms">
+                  I agree to the terms of use for this student prototype.
+                </label>
+                <div class="invalid-feedback">You must agree before continuing.</div>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Create account</button>
+            </form>
+            <hr class="my-4">
+            <p class="text-center small mb-0">Already have an account? <a href="login.html">Log in</a></p>
+          </div>
+        </div>
+
+        <div class="alert alert-info mt-3 small" role="alert">
+          <strong>Prototype note:</strong> Registration is simulated client-side. The full Flask app would store users securely with hashed passwords and session management.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container py-3">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+        <span class="small">&copy; 2026 EventHub – prototype</span>
+        <a href="index.html" class="small">Back to home</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

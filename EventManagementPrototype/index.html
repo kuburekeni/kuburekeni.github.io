@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventHub – Discover & Book Events</title>
+  <meta name="description" content="EventHub is a modern event discovery and booking platform. Find concerts, sports, tech meetups, arts and more.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">
+        <i class="bi bi-calendar-event me-1"></i>EventHub
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="create-event.html">Create Event</a></li>
+          <li class="nav-item"><a class="nav-link" href="booking-history.html">My Bookings</a></li>
+        </ul>
+        <form class="d-flex me-2 mb-2 mb-lg-0" role="search" action="index.html#events" method="get">
+          <input class="form-control me-2" type="search" name="q" placeholder="Search events, venues..." aria-label="Search events" id="navSearch">
+          <button class="btn btn-outline-light" type="submit"><i class="bi bi-search"></i></button>
+        </form>
+        <div class="d-flex gap-2">
+          <a href="login.html" class="btn btn-outline-light btn-sm">Log in</a>
+          <a href="register.html" class="btn btn-light btn-sm text-primary">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero-section text-white text-center py-5">
+    <div class="container position-relative">
+      <h1 class="display-4 fw-bold mb-3">Discover Amazing Events</h1>
+      <p class="lead mb-4 col-lg-8 mx-auto">Browse curated concerts, sports, tech talks, arts and food experiences. Book securely and manage everything in one place.</p>
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="#events" class="btn btn-light btn-lg px-4">Browse Events</a>
+        <a href="create-event.html" class="btn btn-outline-light btn-lg px-4">Host an Event</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Categories -->
+  <section class="container my-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <h2 class="section-title mb-0">Browse by Category</h2>
+      <a href="#events" class="text-decoration-none small">View all events <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <a href="#events" class="card category-card text-decoration-none text-center p-3 h-100" data-category="music">
+          <i class="bi bi-music-note-beamed display-4 text-primary"></i>
+          <h5 class="mt-2 mb-0 text-dark">Music</h5>
+          <small class="text-muted">Festivals & concerts</small>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="#events" class="card category-card text-decoration-none text-center p-3 h-100" data-category="sports">
+          <i class="bi bi-trophy display-4 text-success"></i>
+          <h5 class="mt-2 mb-0 text-dark">Sports</h5>
+          <small class="text-muted">Races & matches</small>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="#events" class="card category-card text-decoration-none text-center p-3 h-100" data-category="tech">
+          <i class="bi bi-laptop display-4 text-info"></i>
+          <h5 class="mt-2 mb-0 text-dark">Tech</h5>
+          <small class="text-muted">Conferences & meetups</small>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a href="#events" class="card category-card text-decoration-none text-center p-3 h-100" data-category="arts">
+          <i class="bi bi-palette display-4 text-warning"></i>
+          <h5 class="mt-2 mb-0 text-dark">Arts</h5>
+          <small class="text-muted">Exhibitions & culture</small>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI-style recommendations (prototype) -->
+  <section class="container mb-5">
+    <div class="card border-0 shadow-soft overflow-hidden">
+      <div class="card-body p-4 bg-white">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-primary-subtle text-primary"><i class="bi bi-stars"></i> Recommended for you</span>
+          <small class="text-muted">Based on popular categories and upcoming dates</small>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="d-flex gap-3 align-items-center">
+              <img src="https://images.unsplash.com/photo-1470229722913-7c0e2aa366bb?w=120&h=80&fit=crop" class="rounded" width="80" height="56" alt="" style="object-fit:cover">
+              <div>
+                <a href="event-details.html" class="fw-semibold text-decoration-none text-dark">Summer Music Festival</a>
+                <div class="small text-muted">15 Sep · $45</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex gap-3 align-items-center">
+              <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=120&h=80&fit=crop" class="rounded" width="80" height="56" alt="" style="object-fit:cover">
+              <div>
+                <a href="event-details.html" class="fw-semibold text-decoration-none text-dark">Tech Conference 2026</a>
+                <div class="small text-muted">22 Sep · $120</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex gap-3 align-items-center">
+              <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba6851?w=120&h=80&fit=crop" class="rounded" width="80" height="56" alt="" style="object-fit:cover">
+              <div>
+                <a href="event-details.html" class="fw-semibold text-decoration-none text-dark">City Marathon 2026</a>
+                <div class="small text-muted">5 Oct · $35</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Event listings + filters -->
+  <section id="events" class="container my-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <h2 class="section-title mb-0">Upcoming Events</h2>
+      <div class="filter-bar d-flex flex-wrap align-items-center gap-2">
+        <span class="text-muted small me-1">Status:</span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Filter by status">
+          <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+          <button type="button" class="btn btn-outline-primary" data-filter="open">Open</button>
+          <button type="button" class="btn btn-outline-secondary" data-filter="soldout">Sold Out</button>
+          <button type="button" class="btn btn-outline-secondary" data-filter="cancelled">Cancelled</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4" id="eventGrid">
+      <!-- Event 1 -->
+      <div class="col-md-6 col-lg-4 event-item" data-status="open" data-category="music">
+        <div class="card event-card h-100">
+          <img src="https://images.unsplash.com/photo-1470229722913-7c0e2aa366bb?w=600&h=300&fit=crop" class="card-img-top" alt="Summer Music Festival">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-success">Open</span>
+              <small class="text-muted"><i class="bi bi-calendar3"></i> 15 Sep 2026</small>
+            </div>
+            <h5 class="card-title">Summer Music Festival</h5>
+            <p class="card-text text-muted flex-grow-1 small">Outdoor festival with live bands, food stalls and late night sets.</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <span class="fw-bold text-primary">$45.00</span>
+              <a href="event-details.html" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 2 -->
+      <div class="col-md-6 col-lg-4 event-item" data-status="soldout" data-category="tech">
+        <div class="card event-card h-100">
+          <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=300&fit=crop" class="card-img-top" alt="Tech Conference 2026">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-danger">Sold Out</span>
+              <small class="text-muted"><i class="bi bi-calendar3"></i> 22 Sep 2026</small>
+            </div>
+            <h5 class="card-title">Tech Conference 2026</h5>
+            <p class="card-text text-muted flex-grow-1 small">Talks and workshops on AI, cloud and startup growth.</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <span class="fw-bold text-primary">$120.00</span>
+              <a href="event-details.html" class="btn btn-secondary btn-sm disabled">Sold Out</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 3 -->
+      <div class="col-md-6 col-lg-4 event-item" data-status="open" data-category="sports">
+        <div class="card event-card h-100">
+          <img src="https://images.unsplash.com/photo-1461896836934-ffe607ba6851?w=600&h=300&fit=crop" class="card-img-top" alt="City Marathon">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-success">Open</span>
+              <small class="text-muted"><i class="bi bi-calendar3"></i> 5 Oct 2026</small>
+            </div>
+            <h5 class="card-title">City Marathon 2026</h5>
+            <p class="card-text text-muted flex-grow-1 small">Annual 42km race through the city. All levels welcome.</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <span class="fw-bold text-primary">$35.00</span>
+              <a href="event-details.html" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 4 -->
+      <div class="col-md-6 col-lg-4 event-item" data-status="open" data-category="food">
+        <div class="card event-card h-100">
+          <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&h=300&fit=crop" class="card-img-top" alt="Food Festival">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-success">Open</span>
+              <small class="text-muted"><i class="bi bi-calendar3"></i> 28 Oct 2026</small>
+            </div>
+            <h5 class="card-title">Gourmet Food Festival</h5>
+            <p class="card-text text-muted flex-grow-1 small">Street food, local producers and live cooking demos.</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <span class="fw-bold text-primary">$30.00</span>
+              <a href="event-details.html" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 5 -->
+      <div class="col-md-6 col-lg-4 event-item" data-status="open" data-category="tech">
+        <div class="card event-card h-100">
+          <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?w=600&h=300&fit=crop" class="card-img-top" alt="Networking Night">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-success">Open</span>
+              <small class="text-muted"><i class="bi bi-calendar3"></i> 12 Nov 2026</small>
+            </div>
+            <h5 class="card-title">Startup Networking Night</h5>
+            <p class="card-text text-muted flex-grow-1 small">Meet founders and investors over drinks.</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <span class="fw-bold text-primary">$15.00</span>
+              <a href="event-details.html" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event 6 -->
+      <div class="col-md-6 col-lg-4 event-item" data-status="cancelled" data-category="arts">
+        <div class="card event-card h-100">
+          <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=300&fit=crop" class="card-img-top" alt="Art Exhibition">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-secondary">Cancelled</span>
+              <small class="text-muted"><i class="bi bi-calendar3"></i> 18 Nov 2026</small>
+            </div>
+            <h5 class="card-title">Modern Art Exhibition</h5>
+            <p class="card-text text-muted flex-grow-1 small">Works from emerging local artists. Gallery open daily.</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <span class="fw-bold text-muted">$25.00</span>
+              <a href="event-details.html" class="btn btn-secondary btn-sm disabled">Cancelled</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p id="noResults" class="text-center text-muted mt-4 d-none">No events match the selected filter. Try another status or clear the filter.</p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container py-4">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <h5 class="text-white mb-3"><i class="bi bi-calendar-event me-1"></i>EventHub</h5>
+          <p class="small mb-0">A full-stack event discovery, booking and management platform built with Flask, Bootstrap and SQLite.</p>
+        </div>
+        <div class="col-md-4">
+          <h6 class="text-white mb-3">Quick links</h6>
+          <ul class="list-unstyled small">
+            <li class="mb-1"><a href="index.html">Browse events</a></li>
+            <li class="mb-1"><a href="create-event.html">Create an event</a></li>
+            <li class="mb-1"><a href="booking-history.html">My bookings</a></li>
+            <li class="mb-1"><a href="login.html">Log in / Sign up</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="text-white mb-3">About this prototype</h6>
+          <p class="small mb-0">Designed and built as part of a 4th-year IT assessment. Focus on usability, accessibility, responsive layout and culturally respectful design.</p>
+        </div>
+      </div>
+    </div>
+    <div class="aoc-footer py-3">
+      <div class="container">
+        <p class="mb-1 fw-semibold text-white-50">Acknowledgement of Country</p>
+        <p class="mb-0 small">EventHub acknowledges the Traditional Owners of the lands on which events take place across Australia. We pay our respects to Elders past and present, and recognise their continuing connection to land, waters and culture. Event creators are encouraged to include a meaningful, place-specific Acknowledgement of Country when publishing events.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

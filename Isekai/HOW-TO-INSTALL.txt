@@ -1,0 +1,179 @@
+I GOT ISEKAI'D — TURN YOUR RASPBERRY PI 400 INTO A GAMES CONSOLE
+================================================================
+
+What you end up with
+  Switch the Pi on -> a splash screen with the game's logo -> straight into
+  the game, fullscreen. No desktop, no logging in, no browser window.
+  Because there's no desktop running, the game gets almost all of the Pi's
+  memory and processor, and the system takes about half the SD card space
+  of the normal desktop version.
+
+What you need
+  - The Pi 400, a screen, and the power supply.
+  - An SD card (8 GB or bigger). THIS ERASES IT. If your current card has
+    anything you want to keep, use a different card or copy it off first.
+  - A computer (Windows or Mac) that can write SD cards.
+  - Internet for the Pi ONCE, during setup (Wi-Fi or a network cable).
+    After that the console works fully offline.
+  - The game: isekai.zip
+  - Optional: your Xbox One controller.
+
+It takes about 20–30 minutes, mostly waiting.
+
+
+STEP 1 — PUT RASPBERRY PI OS LITE ON THE SD CARD  (on your computer)
+--------------------------------------------------------------------
+"Lite" is Raspberry Pi OS without a desktop — that's what frees up the room.
+
+  1. Download and install Raspberry Pi Imager:  https://www.raspberrypi.com/software/
+  2. Put the SD card in your computer and open Raspberry Pi Imager.
+  3. CHOOSE DEVICE ......... Raspberry Pi 400   (or "Raspberry Pi 4")
+     CHOOSE OS ............. Raspberry Pi OS (other) > Raspberry Pi OS Lite (64-bit)
+     CHOOSE STORAGE ........ your SD card
+  4. Click NEXT. When it asks "Would you like to apply OS customisation
+     settings?", click EDIT SETTINGS and fill in:
+       - Hostname: isekai
+       - Username and password: pick your own and REMEMBER them
+         (you'll type them once in Step 3)
+       - Configure wireless LAN: your Wi-Fi name and password,
+         Wireless LAN country: AU
+       - Locale settings: Time zone Australia/Brisbane, Keyboard layout: us
+     Click SAVE, then YES, then YES again to write the card.
+  5. Wait for "Write Successful". Take the card out.
+
+
+STEP 2 — COPY THE GAME ONTO THE CARD  (still on your computer)
+--------------------------------------------------------------
+  1. Put the SD card back in your computer. A drive called "bootfs" appears.
+     (If Windows offers to FORMAT another drive, click Cancel. Never format it.)
+  2. Unzip isekai.zip on your computer (Windows: right-click > Extract All).
+     You get a folder called "isekai" with index.html inside it.
+  3. Copy that whole "isekai" folder onto the bootfs drive.
+     When you open bootfs you should see the isekai folder next to files
+     like config.txt and cmdline.txt.
+  4. Eject the card safely and put it in the Pi 400.
+
+
+STEP 3 — FIRST START AND THE ONE-TIME SETUP  (on the Pi)
+--------------------------------------------------------
+  1. Plug the screen into the HDMI port nearest the power socket, then plug
+     in the power. The first start takes a couple of minutes and may
+     restart itself once. That's normal.
+  2. You'll get a black screen of text ending in   isekai login:
+     Type your username, Enter, then your password, Enter.
+     (Nothing shows while you type the password — that's normal.)
+  3. Type this exactly, then Enter:
+
+        sudo bash /boot/firmware/isekai/pi/install-console.sh
+
+     Type your password again if asked. It downloads the browser and a tiny
+     full-screen window manager, copies the game in, and sets everything up.
+     Give it 5–15 minutes. It finishes with "All done!".
+     (If it says it couldn't reach the internet: type  sudo raspi-config ,
+     choose System Options > Wireless LAN, enter your Wi-Fi, then run the
+     line above again.)
+  4. Type:   sudo reboot
+
+That's it. From now on: power on -> splash -> game.
+
+
+THE CONTROLLER
+--------------
+  USB cable: plug it in. Done.
+  Bluetooth (Xbox One S / Series controllers):
+    1. On the title screen choose  Power > Pair a Bluetooth controller
+       (in-game: Menu > Settings > Power & controller).
+    2. Hold the small pairing button on top of the controller until the
+       Xbox logo flashes fast. Wait ~25 seconds. It says "Paired".
+    It reconnects by itself next time — just press the Xbox button.
+
+  Buttons:  Left stick / D-pad move (push the stick all the way to run)
+            A talk / confirm     B back       X (hold) run
+            Y or View  world map    Menu  pause    LB / RB  page through lists
+  If a button does the wrong thing: Settings > Controller setup.
+  The Pi 400's own keyboard always works too (arrows, Z/Enter, X, C, N).
+
+
+TURNING IT OFF
+--------------
+  Title screen > Power > Turn off   (or in game: Menu > Settings >
+  Power & controller > Turn off). Your game is saved first. Unplug once the
+  green light on the Pi has stopped blinking.
+  The Pi 400 has no power button: to turn it back on, unplug and replug it
+  (or switch it off and on at the wall).
+
+
+UPDATING THE GAME LATER
+-----------------------
+  The console checks for a new version every time it starts.
+    1. Put the new  isekai.zip  on a USB stick (just the zip, at the top
+       level of the stick — not inside another folder).
+    2. Plug the stick into the Pi.
+    3. Power > Restart.
+  It installs the new version while it starts up. Your saves are kept.
+  (Copying a new isekai.zip onto the SD card's bootfs drive works too.)
+
+
+UPDATING FROM YOUR PC (over Wi-Fi, no USB stick)
+------------------------------------------------
+One-time setup on the Pi: Power > Exit to terminal, then type
+      sudo systemctl enable --now ssh
+and then  isekai  to go back to the game.
+
+Each update after that:
+  1. Put the new isekai.zip in the same folder as  pi\update-pi.bat
+     (from the isekai folder) on your PC.
+  2. Double-click update-pi.bat. Type the Pi's password when asked
+     (twice). The Pi restarts and installs the new version.
+
+
+GETTING TO THE PI ITSELF (only if you need to)
+----------------------------------------------
+  Power > Exit to terminal   closes the game and gives you the command line.
+  Type  isekai  to go back to the game.
+  Or press Ctrl+Alt+F2 at any time for a separate login (Ctrl+Alt+F1 returns
+  to the game).
+
+
+SMOOTHNESS
+----------
+  Settings > Graphics quality is on Auto: it starts on Medium on the Pi and
+  steps down by itself if the game slows. Low is the smoothest.
+  The first minute after switching on, the Pi quietly builds the new
+  orchestra for the music; the simpler sounds play until it's ready.
+
+
+UNDOING IT
+----------
+  Power > Exit to terminal, then type:
+      sudo bash /opt/isekai-console/install-console.sh --remove
+      sudo reboot
+  The Pi goes back to a normal text login.
+
+
+IF SOMETHING GOES WRONG
+-----------------------
+  No picture at all .......... use the HDMI port nearest the power socket.
+  Stuck on text / no game .... press Ctrl+Alt+F2, log in, and type:
+                                 systemctl status isekai-server
+                               then  isekai  to try starting the game.
+                               If the setup didn't finish, run the
+                               install line from Step 3 again (it's safe
+                               to run more than once).
+  No sound ................... title screen > Power > Sound: pick the HDMI
+                               port your TV is on and play a test. Also
+                               check the TV's volume and input. Most TVs
+                               and monitors with speakers just work over
+                               HDMI.
+  Controller won't pair ...... hold the pairing button longer (until the
+                               logo flashes FAST), stand close, try again.
+                               A USB cable always works.
+
+
+PREFER TO KEEP THE NORMAL DESKTOP?
+----------------------------------
+  If your Pi already runs the desktop version and you'd rather keep it,
+  copy the isekai folder to your home folder and run
+      bash ~/isekai/pi/setup-pi.sh
+  instead. The game then opens fullscreen on top of the desktop when the
+  Pi starts. (The console way above is lighter and faster.)

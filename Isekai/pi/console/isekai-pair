@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Pair the first Bluetooth game controller that's in pairing mode.
+# Keeps one bluetoothctl session open the whole time, so the controller is
+# still being scanned while it pairs (newer Xbox controllers need that).
+# Prints progress, and a JSON result on the last line for the game.
+set -u
+log() { echo "$*" >&2; }
+rfkill unblock bluetooth 2>/dev/null || true
+systemctl start bluetooth 2>/dev/null || true
+PAT="xbox|wireless controller|gamepad|8bitdo|dualsense|dualshock|pro controller"
+
+coproc BT { bluetoothctl 2>&1; }
+send() { echo "$1" >&"${BT[1]}"; sleep "${2:-0.4}"; }
+send "power on"
+send "agent NoInputNoOutput"
+send "default-agent"
+send "pairable on"
+send "scan on"
+log "Searching for controllers..."
+MAC=""
+for _ in $(seq 1 30); do
+  MAC=$(bluetoothctl devices | grep -iE "$PAT" | head -1 | awk '{print $2}')
+  [ -n "$MAC" ] && break
+  sleep 1
+done
+if [ -z "$MAC" ]; then
+  send "scan off"; send "quit"
+  echo '{"ok": false, "error": "No controller found. Hold the pairing button until the logo flashes fast, then try again."}'
+  exit 0
+fi
+NAME=$(bluetoothctl devices | grep -i "$MAC" | cut -d' ' -f3-)
+log "Found $NAME ($MAC)"
+send "remove $MAC" 1            # forget any half-finished earlier attempt
+for _ in $(seq 1 10); do bluetoothctl devices | grep -qi "$MAC" && break; sleep 1; done
+send "pair $MAC" 8
+send "trust $MAC" 1
+send "connect $MAC" 5
+OK=0
+for _ in $(seq 1 6); do
+  bluetoothctl info "$MAC" 2>/dev/null | grep -q "Connected: yes" && { OK=1; break; }
+  send "connect $MAC" 3
+done
+send "scan off"; send "quit"
+NAME=${NAME//\"/}
+if [ "$OK" = 1 ]; then echo "{\"ok\": true, \"name\": \"$NAME\"}"
+else echo "{\"ok\": false, \"error\": \"Found $NAME but it wouldn't connect. Try once more.\"}"; fi

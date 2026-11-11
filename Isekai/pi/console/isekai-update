@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# =====================================================================
+#  At every boot, before the game starts: if there's a newer copy of the
+#  game on the SD card's boot partition or on a USB stick, install it.
+#  Looks for  isekai.zip  or an  isekai/  folder (with index.html in it)
+#  at the top of the stick or of the boot partition. Saves are untouched
+#  (they live in the browser profile, not in the game folder).
+# =====================================================================
+set -u
+GAME=${ISEKAI_GAME:-/opt/isekai}
+MNT=${ISEKAI_MNT:-/mnt/isekai-usb}
+BOOT=${ISEKAI_BOOT:-/boot/firmware}; [ -d "$BOOT" ] || BOOT=/boot
+cur=$(cat "$GAME/.stamp" 2>/dev/null || echo none)
+SEEN=${ISEKAI_SEEN:-/var/lib/isekai/seen}       # every copy we've already installed (or skipped), so an old one never comes back
+mkdir -p "$(dirname "$SEEN")"; touch "$SEEN"
+
+stamp_of() {   # a fingerprint of a zip or folder
+  if [ -f "$1" ]; then sha1sum "$1" | cut -c1-40
+  else (cd "$1" && find . -type f ! -name .stamp -printf '%P %s\n' | sort; cat index.html sw.js 2>/dev/null) | sha1sum | cut -c1-40; fi
+}
+install_from() {
+  local src="$1" st; st=$(stamp_of "$src")
+  if [ "$st" = "$cur" ] || grep -qx "$st" "$SEEN"; then return 1; fi
+  echo "$st" >> "$SEEN"
+  local tmp; tmp=$(mktemp -d)
+  if [ -f "$src" ]; then unzip -q -o "$src" -d "$tmp" || { rm -rf "$tmp"; return 1; }
+  else cp -r "$src" "$tmp/isekai"; fi
+  local idx; idx=$(find "$tmp" -maxdepth 3 -name index.html | head -1)
+  [ -n "$idx" ] || { rm -rf "$tmp"; return 1; }
+  local dir; dir=$(dirname "$idx")
+  rm -rf "$GAME.new"; cp -r "$dir" "$GAME.new" && echo "$st" > "$GAME.new/.stamp"
+  rm -rf "$GAME.old"; [ -d "$GAME" ] && mv "$GAME" "$GAME.old"; mv "$GAME.new" "$GAME"
+  rm -rf "$tmp" "$GAME.old"
+  echo "isekai-update: installed new version from $src"
+  cur=$st
+  return 0
+}
+check_dir() {
+  for c in "$1/isekai.zip" "$1/isekai"; do
+    if [ -f "$c" ] || [ -f "$c/index.html" ]; then install_from "$c" && return 0; fi
+  done
+  return 1
+}
+# USB sticks first (the newest thing you plugged in wins), then the boot partition
+mkdir -p "$MNT"
+for dev in /dev/sd[a-z][0-9]* /dev/sd[a-z]; do
+  [ -b "$dev" ] || continue
+  mount -o ro "$dev" "$MNT" 2>/dev/null || continue
+  check_dir "$MNT"; umount "$MNT" 2>/dev/null
+done
+check_dir "$BOOT"
+chmod -R a+rX "$GAME" 2>/dev/null
+# keep the console's own tools in step with the game that's installed
+if [ "$(id -u)" = 0 ] && [ -z "${ISEKAI_GAME:-}" ] && [ -f "$GAME/pi/console/refresh-tools.sh" ]; then
+  bash "$GAME/pi/console/refresh-tools.sh"
+fi
+exit 0
